@@ -14,7 +14,8 @@ evaluation tools; see for example: [1] and [2]. Rather, this was developed for u
 not currently covered by other open source software packages.
 The author encourages collaboration among these projects.
 
-NOTE: This project is under construction and is quite dynamic.
+NOTE: This project is under construction and is quite dynamic.  
+There will be breaking changes before the first major release.
 
 While the name of this project may change in the future, we selected
 _quaerite_ -- Latin imperative "seek", root of English "query" -- to
