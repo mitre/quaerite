@@ -39,21 +39,18 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
 import org.mitre.quaerite.Experiment;
 import org.mitre.quaerite.ExperimentSet;
 import org.mitre.quaerite.JudgmentList;
 import org.mitre.quaerite.Judgments;
 import org.mitre.quaerite.QueryInfo;
 import org.mitre.quaerite.ResultSet;
+import org.mitre.quaerite.connectors.QueryRequest;
+import org.mitre.quaerite.connectors.SearchServer;
+import org.mitre.quaerite.connectors.SearchServerException;
+import org.mitre.quaerite.connectors.solr.SolrServer_4x;
 import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.scorecollectors.ScoreCollector;
 
@@ -65,6 +62,7 @@ public class RunExperiments {
     static Logger LOG = Logger.getLogger(RunExperiments.class);
 
     static Options OPTIONS = new Options();
+
     static {
         OPTIONS.addOption("db", "db", true, "database folder");
         OPTIONS.addOption("freshStart", "freshStart", false, "delete all results");
@@ -74,6 +72,7 @@ public class RunExperiments {
 
     Map<String, JudgmentList> solrUrlValidatedMap = new HashMap<>();
     long batchStart = -1l;
+
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
 
@@ -108,19 +107,19 @@ public class RunExperiments {
                 int finished = 0;
                 for (String eName : experimentSet.getExperiments().keySet()) {
                     runExperiment(eName, experimentDB);
-                    long elapsed = System.currentTimeMillis()-batchStart;
+                    long elapsed = System.currentTimeMillis() - batchStart;
                     finished++;
-                    System.out.println("Finished "+finished + " in "+
-                            (double)elapsed/(double)1000 + " seconds");
-                    double perExperiment = (double)elapsed/(double)finished;
-                    int togo = experimentSet.getExperiments().entrySet().size()-finished;
-                    System.out.println("Still have "+togo + " to go; estimate: "+
-                            ((double)togo*perExperiment)/(double)1000+" seconds");
+                    System.out.println("Finished " + finished + " in " +
+                            (double) elapsed / (double) 1000 + " seconds");
+                    double perExperiment = (double) elapsed / (double) finished;
+                    int togo = experimentSet.getExperiments().entrySet().size() - finished;
+                    System.out.println("Still have " + togo + " to go; estimate: " +
+                            ((double) togo * perExperiment) / (double) 1000 + " seconds");
                 }
             } else {
                 Experiment experiment = experimentDB.getExperiments().getExperiment(experimentName);
                 if (experiment == null) {
-                    System.err.println("I'm sorry, but I couldn't find this experiment:"+experimentName);
+                    System.err.println("I'm sorry, but I couldn't find this experiment:" + experimentName);
                     return;
                 }
                 experimentDB.clearScores(experimentName);
@@ -131,11 +130,11 @@ public class RunExperiments {
 
     private void runExperiment(String experimentName, ExperimentDB experimentDB) throws SQLException {
         if (experimentDB.hasScores(experimentName)) {
-            LOG.info("Already has scores for "+experimentName+"; skipping");
+            LOG.info("Already has scores for " + experimentName + "; skipping");
             return;
         }
-        LOG.info("running experiment "+experimentName);
-        System.out.println("running "+experimentName);
+        LOG.info("running experiment " + experimentName);
+        System.out.println("running " + experimentName);
         ExperimentSet experimentSet = experimentDB.getExperiments();
         Experiment ex = experimentSet.getExperiment(experimentName);
         List<ScoreCollector> scoreCollectors = experimentSet.getScoreCollectors();
@@ -178,15 +177,15 @@ public class RunExperiments {
         long start = System.currentTimeMillis();
         insertScores(experimentDB, experimentName, scoreCollectors);
         experimentDB.insertScoresAggregated(experimentName, scoreCollectors);
-        System.out.println("took "+(System.currentTimeMillis()-start)+" milliseconds to summarize scores");
+        System.out.println("took " + (System.currentTimeMillis() - start) + " milliseconds to summarize scores");
     }
 
     private void insertScores(ExperimentDB experimentDB, String experimentName, List<ScoreCollector> scoreCollectors)
-            throws SQLException{
+            throws SQLException {
         Set<QueryInfo> queries = scoreCollectors.get(0).getScores().keySet();
         //TODO -- need to add better handling for missing queries
         Map<String, Double> tmpScores = new HashMap<>();
-        for (QueryInfo queryInfo : queries ) {
+        for (QueryInfo queryInfo : queries) {
             tmpScores.clear();
             for (ScoreCollector scoreCollector : scoreCollectors) {
                 double val = scoreCollector.getScores().get(queryInfo);
@@ -198,54 +197,54 @@ public class RunExperiments {
     }
 
     private static JudgmentList validate(String solrUrl, JudgmentList judgmentList) {
-        SolrServer solrServer = new HttpSolrServer(solrUrl);
-        try {
-            Set<String> ids = new HashSet<>();
-            for (Judgments j : judgmentList.getJudgmentsList()) {
-                ids.addAll(j.getSortedJudgments().keySet());
-            }
+        SearchServer solrServer = new SolrServer_4x(solrUrl);
 
-            Set<String> valid = new HashSet<>();
-            for (String id : ids) {
-                SolrQuery sq = new SolrQuery(judgmentList.getIdField() + ":\"" + id+"\"");
-                QueryResponse response = null;
-                try {
-                    response = solrServer.query(sq);
-                } catch (SolrServerException e) {
-                    throw new RuntimeException(e);
-                }
-                long numFound = response.getResults().getNumFound();
-                if (numFound == 0L) {
-                    LOG.warn("Couldn't find expected document: " + id);
-                } else if (numFound > 1L) {
-                    LOG.warn("Found non-unique key: " + id);
-                } else {
-                    valid.add(id);
-                }
-            }
-
-            JudgmentList retList = new JudgmentList(judgmentList.getIdField());
-            for (Judgments j : judgmentList.getJudgmentsList()) {
-                Judgments winnowedJugments = new Judgments(new QueryInfo(j.getQuerySet(), j.getQuery(), j.getQueryCount()));
-                for (Map.Entry<String, Double> e : j.getSortedJudgments().entrySet()) {
-                    if (valid.contains(e.getKey())) {
-                        winnowedJugments.addJugment(e.getKey(), e.getValue());
-                    }
-                }
-                if (winnowedJugments.getSortedJudgments().size() > 0) {
-                    retList.addJudgments(winnowedJugments);
-                } else {
-                    System.err.println("After removing invalid jugments, there were 0 judgments for query: " +
-                                    j.getQuery());
-                    LOG.warn(
-                            "After removing invalid jugments, there were 0 judgments for query: " +
-                                    j.getQuery());
-                }
-            }
-            return retList;
-        } finally {
-            solrServer.shutdown();
+        Set<String> ids = new HashSet<>();
+        for (Judgments j : judgmentList.getJudgmentsList()) {
+            ids.addAll(j.getSortedJudgments().keySet());
         }
+
+        Set<String> valid = new HashSet<>();
+        for (String id : ids) {
+            QueryRequest q = new QueryRequest(
+                    judgmentList.getIdField() + ":\"" + id + "\"",
+                    null, judgmentList.getIdField());
+            ResultSet resultSet;
+            try {
+                resultSet = solrServer.search(q);
+            } catch (SearchServerException | IOException e) {
+                throw new RuntimeException(e);
+            }
+            long numFound = resultSet.getTotalHits();
+            if (numFound == 0L) {
+                LOG.warn("Couldn't find expected document: " + id);
+            } else if (numFound > 1L) {
+                LOG.warn("Found non-unique key: " + id);
+            } else {
+                valid.add(id);
+            }
+        }
+
+        JudgmentList retList = new JudgmentList(judgmentList.getIdField());
+        for (Judgments j : judgmentList.getJudgmentsList()) {
+            Judgments winnowedJugments = new Judgments(new QueryInfo(j.getQuerySet(), j.getQuery(), j.getQueryCount()));
+            for (Map.Entry<String, Double> e : j.getSortedJudgments().entrySet()) {
+                if (valid.contains(e.getKey())) {
+                    winnowedJugments.addJugment(e.getKey(), e.getValue());
+                }
+            }
+            if (winnowedJugments.getSortedJudgments().size() > 0) {
+                retList.addJudgments(winnowedJugments);
+            } else {
+                System.err.println("After removing invalid jugments, there were 0 judgments for query: " +
+                        j.getQuery());
+                LOG.warn(
+                        "After removing invalid jugments, there were 0 judgments for query: " +
+                                j.getQuery());
+            }
+        }
+        return retList;
+
     }
 
     private static class QueryRunner implements Callable<Integer> {
@@ -257,7 +256,7 @@ public class RunExperiments {
         private final Experiment experiment;
         private final ExperimentDB experimentDB;
         private final List<ScoreCollector> scoreCollectors;
-        private final SolrServer solrServer;
+        private final SearchServer solrServer;
 
         public QueryRunner(String idField, int maxRows, ArrayBlockingQueue<Judgments> judgments,
                            Experiment experiment, ExperimentDB experimentDB,
@@ -267,7 +266,7 @@ public class RunExperiments {
             this.queue = judgments;
             this.experiment = experiment;
             this.experimentDB = experimentDB;
-            this.solrServer = new HttpSolrServer(experiment.getSolrUrl());
+            this.solrServer = new SolrServer_4x(experiment.getSolrUrl());
             this.scoreCollectors = scoreCollectors;
         }
 
@@ -278,7 +277,6 @@ public class RunExperiments {
                 Judgments judgments = queue.poll();
                 if (judgments.equals(POISON)) {
                     LOG.info(threadNum + ": Hit poison stopping");
-                    solrServer.shutdown();
                     return 1;
                 }
                 executeTest(judgments, scoreCollectors);
@@ -290,44 +288,29 @@ public class RunExperiments {
         }
 
         private void scoreEach(Judgments judgments, List<ScoreCollector> scoreCollectors) {
-            SolrQuery sq = new SolrQuery();
+            QueryRequest queryRequest = new QueryRequest(judgments.getQuery(), experiment.getCustomHandler(), idField);
 
             for (Map.Entry<String, String[]> e : experiment.getParams().entrySet()) {
-                sq.setParam(e.getKey(), e.getValue());
-            }
-            if (StringUtils.isBlank(experiment.getCustomHandler())) {
-                sq.setQuery(judgments.getQuery());
-            } else {
-                sq.setRequestHandler(experiment.getCustomHandler());
-                sq.set("qq", judgments.getQuery());
+                for (String val : e.getValue()) {
+                    queryRequest.addParameter(e.getKey(), val);
+                }
             }
             List<String> results = new ArrayList<>();
-            sq.setRows(maxRows);
-            sq.setFields(idField);
+            queryRequest.setNumResults(maxRows);
             for (String filterQuery : experiment.getFilterQueries()) {
-                sq.addFilterQuery(filterQuery);
+                //solr specific -- clean up
+                queryRequest.addParameter("fq", filterQuery);
             }
-            long numFound = -1l;
-            long elapsedTime = -1l;
-            long queryTime = -1l;
+            ResultSet resultSet = null;
             try {
-                QueryResponse queryResponse = solrServer.query(sq);
-                SolrDocumentList solrDocuments = queryResponse.getResults();
-                numFound = queryResponse.getResults().getNumFound();
-                elapsedTime = queryResponse.getElapsedTime();
-                queryTime = queryResponse.getQTime();
-                for (int i = 0; i < solrDocuments.size(); i++) {
-                    SolrDocument sd = solrDocuments.get(i);
-                    String id = (String)sd.getFieldValue(idField);
-                    results.add(id);
-                }
-            } catch (SolrServerException e) {
+                resultSet = solrServer.search(queryRequest);
+            } catch (SearchServerException | IOException e) {
                 e.printStackTrace();
             }
             for (ScoreCollector scoreCollector : scoreCollectors) {
-                scoreCollector.add(judgments,
-                        new ResultSet(numFound, queryTime, elapsedTime, results));
+                scoreCollector.add(judgments, resultSet);
             }
         }
     }
+
 }

@@ -50,4 +50,14 @@ public class ResultSet {
     public String get(int i) {
         return ids.get(i);
     }
+
+    @Override
+    public String toString() {
+        return "ResultSet{" +
+                "totalHits=" + totalHits +
+                ", queryTime=" + queryTime +
+                ", elapsedTime=" + elapsedTime +
+                ", ids=" + ids +
+                '}';
+    }
 }

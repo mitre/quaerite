@@ -33,13 +33,12 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.response.FacetField;
-import org.apache.solr.client.solrj.response.QueryResponse;
+import org.mitre.quaerite.FacetResult;
 import org.mitre.quaerite.JudgmentList;
 import org.mitre.quaerite.Judgments;
+import org.mitre.quaerite.connectors.QueryRequest;
+import org.mitre.quaerite.connectors.SearchServer;
+import org.mitre.quaerite.connectors.solr.SolrServer_4x;
 import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.stats.ContrastResult;
 import org.mitre.quaerite.stats.YatesChi;
@@ -71,7 +70,7 @@ public class FindFeatures {
         String solrUrl = commandLine.getOptionValue("s");
         Path dbDir = Paths.get(commandLine.getOptionValue("db"));
         ExperimentDB db = ExperimentDB.open(dbDir);
-        SolrServer solrServer = new HttpSolrServer(solrUrl);
+        SearchServer solrServer = new SolrServer_4x(solrUrl);
         String[] fields = commandLine.getOptionValue("f").split(",");
         String filterQuery = null;
         if (commandLine.hasOption("fq")) {
@@ -81,7 +80,7 @@ public class FindFeatures {
         findFeatures.execute(db, solrServer, fields, filterQuery);
     }
 
-    private void execute(ExperimentDB db, SolrServer solrServer, String[] fields,
+    private void execute(ExperimentDB db, SearchServer solrServer, String[] fields,
                          String filterQuery) throws Exception {
         JudgmentList judgmentList = db.getJudgments();
         String idField = judgmentList.getIdField();
@@ -93,8 +92,8 @@ public class FindFeatures {
         }
         for (String f : fields) {
             FacetResult truthCounts = getFacets(f, idField, ids, solrServer);
-            SolrQuery sq = new SolrQuery("*:*");
-            sq.addFilterQuery(filterQuery);
+            QueryRequest sq = new QueryRequest("*:*");
+            sq.addParameter("fq", filterQuery);
             FacetResult backgroundCounts = getFacets(f, sq, solrServer);
             List<ContrastResult> chis = getChis(truthCounts, backgroundCounts);
             reportResult(f, chis);
@@ -102,7 +101,7 @@ public class FindFeatures {
     }
 
     private FacetResult getFacets(String f, String idField, Set<String> ids,
-                                  SolrServer solrServer) throws Exception {
+                                  SearchServer solrServer) throws Exception {
         Map<String, Long> ret = new HashMap<>();
         List<String> cache = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
@@ -114,13 +113,13 @@ public class FindFeatures {
             }
             sb.append(idField).append(":").append(id);
             if (sb.length() > 1000) {
-                addAll(getFacets(f, new SolrQuery(sb.toString()), solrServer).getFacetCounts(), ret);
+                addAll(getFacets(f, new QueryRequest(sb.toString()), solrServer).getFacetCounts(), ret);
                 sb.setLength(0);
                 cnt = 0;
             }
         }
         if (sb.length() > 0) {
-            addAll(getFacets(f, new SolrQuery(sb.toString()), solrServer).getFacetCounts(), ret);
+            addAll(getFacets(f, new QueryRequest(sb.toString()), solrServer).getFacetCounts(), ret);
         }
         return new FacetResult(ids.size(), ret);
     }
@@ -176,41 +175,12 @@ public class FindFeatures {
         return ret;
     }
 
-    private FacetResult getFacets(String facetFieldName, SolrQuery solrQuery,
-                                           SolrServer solrServer) throws Exception {
+    private FacetResult getFacets(String facetFieldName, QueryRequest solrQuery,
+                                  SearchServer solrServer) throws Exception {
         solrQuery.addFacetField(facetFieldName);
-        solrQuery.setFacetMissing(true);
-        solrQuery.setFacet(true);
         solrQuery.setFacetLimit(10000);
-        solrQuery.setRows(0);
-        //System.out.println(solrQuery);
-
-        QueryResponse queryResponse = solrServer.query(solrQuery);
-        long totalDocs = queryResponse.getResults().getNumFound();
-        FacetField facetField = queryResponse.getFacetField(facetFieldName);
-        Map<String, Long> cnts = new HashMap<>();
-        for (FacetField.Count cnt : facetField.getValues()) {
-            cnts.put(cnt.getName(), cnt.getCount());
-        }
-        return new FacetResult(totalDocs, cnts);
+        solrQuery.setNumResults(0);
+        return solrServer.facet(solrQuery);
     }
 
-
-    private static class FacetResult {
-        private final long totalDocs;
-        private final Map<String, Long> facetCounts;
-
-        public FacetResult(long totalDocs, Map<String, Long> facetCounts) {
-            this.totalDocs = totalDocs;
-            this.facetCounts = facetCounts;
-        }
-
-        public long getTotalDocs() {
-            return totalDocs;
-        }
-
-        public Map<String, Long> getFacetCounts() {
-            return facetCounts;
-        }
-    }
 }

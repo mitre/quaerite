@@ -35,7 +35,7 @@ public class QuaeriteCLI {
         } else if (tool.equals("DumpExperiments")) {
             DumpExperiments.main(newArgs);
         } else if (tool.equals("RunExperiments")) {
-            RunExperiments.main(newArgs);
+            //RunExperiments.main(newArgs);
         }else {
             System.err.println("I'm sorry, but I don't recognize \""+tool + "\" as a tool");
         }
