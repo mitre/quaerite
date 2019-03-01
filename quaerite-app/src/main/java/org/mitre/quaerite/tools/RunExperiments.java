@@ -312,7 +312,6 @@ public class RunExperiments {
             long queryTime = -1l;
             try {
                 QueryResponse queryResponse = solrServer.query(sq);
-    //            System.out.println(queryResponse.getElapsedTime() + " : "+queryResponse.getResults().size() + " : "+queryResponse.getResults().getNumFound());
                 SolrDocumentList solrDocuments = queryResponse.getResults();
                 numFound = queryResponse.getResults().getNumFound();
                 elapsedTime = queryResponse.getElapsedTime();
@@ -321,10 +320,6 @@ public class RunExperiments {
                     SolrDocument sd = solrDocuments.get(i);
                     String id = (String)sd.getFieldValue(idField);
                     results.add(id);
-                    if (judgments.containsJudgment(id)) {
-//                        System.out.println("HIT (thread "+threadNum+"): "+judgments.getQuery()+
-  //                              " :: "+id+ " at "+(i+1));
-                    }
                 }
             } catch (SolrServerException e) {
                 e.printStackTrace();

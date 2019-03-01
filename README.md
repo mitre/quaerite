@@ -16,6 +16,15 @@ The author encourages collaboration among these projects.
 
 NOTE: This project is under construction and is quite dynamic.
 
+While the name of this project may change in the future, we selected
+_quaerite_ -- Latin imperative "seek", root of English "query" -- to
+allude not only to the challenges of creating queries, but also
+to the challenges of tuning search engines.  One may spend
+a not insignificant amount of time tuning countless parameters.
+In the end, we hope that _invenietis_ with slightly less effort
+than without this project. For the pronunciation, 
+[this link](https://forvo.com/word/quaerite_et_invenietis/).
+
 License (see also LICENSE.txt)
 ------------------------------
 
