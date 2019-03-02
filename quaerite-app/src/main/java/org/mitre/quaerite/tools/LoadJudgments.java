@@ -28,8 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.csv.CSVFormat;
@@ -44,17 +45,41 @@ import org.mitre.quaerite.db.ExperimentDB;
 public class LoadJudgments {
     static Options OPTIONS = new Options();
     static {
-        OPTIONS.addOption("db", "db", true, "database folder");
-        OPTIONS.addOption("id", "id", true, "id field for ground truth");
-        OPTIONS.addOption("f", "file", true, "csv file with truth data");
-        OPTIONS.addOption("freshStart", "freshStart", false,
-                "delete all existing judgments");
+
+        OPTIONS.addOption(
+                Option.builder("db")
+                .hasArg()
+                .required()
+                .desc("database folder").build()
+        );
+
+        OPTIONS.addOption(
+                Option.builder("id")
+                        .hasArg()
+                        .required(false)
+                        .desc("field name for id field for ground truth (default: 'id')").build()
+        );
+
+        OPTIONS.addOption(
+                Option.builder("f")
+                        .longOpt("file")
+                        .hasArg()
+                        .required()
+                        .desc("csv file with truth data").build()
+        );
+
+        OPTIONS.addOption(
+                Option.builder("freshStart")
+                        .required(false)
+                        .hasArg(false)
+                        .desc("delete all existing judgments").build()
+        );
     }
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
 
         try {
-            commandLine = new GnuParser().parse(OPTIONS, args);
+            commandLine = new DefaultParser().parse(OPTIONS, args);
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp("java -jar org.mitre.eval.LoadJudgments", OPTIONS);
@@ -88,7 +113,7 @@ public class LoadJudgments {
                         String id = record.get("id");
                         int count = (hasCount) ? Integer.parseInt(record.get("count")) : 1;
                         double relevanceScore =
-                                Double.parseDouble(record.get("quaerite"));
+                                Double.parseDouble(record.get("relevance"));
                         Map<String, Judgments> querySetMap = queries.get(querySet);
                         if (querySetMap == null) {
                             querySetMap = new HashMap<>();

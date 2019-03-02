@@ -31,28 +31,51 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.mitre.quaerite.db.ExperimentDB;
 
 public class ComparePerQuery {
+
     static Options OPTIONS = new Options();
     private static final String DEFAULT_SCORER = "ndcg_10";
 
     static {
-        OPTIONS.addOption("db", "db", true, "database folder");
-        OPTIONS.addOption("d", "resultDir", true, "result directory");
-        OPTIONS.addOption("s", "scorer", true, "scorer for comparison");
-        OPTIONS.addOption("e", "experiments", true, "experiments to compare");
+        OPTIONS.addOption(
+                Option.builder("db")
+                        .hasArg()
+                        .required()
+                        .desc("database folder").build()
+        );
+        OPTIONS.addOption(Option.builder("d")
+                .longOpt("resultDir")
+                .hasArg()
+                .required()
+                .desc("result directory").build()
+        );
+        OPTIONS.addOption(
+                Option.builder("s").longOpt("scorer")
+                        .hasArg()
+                        .required(false)
+                        .desc("scorer for comparison").build()
+        );
+        OPTIONS.addOption(
+                Option.builder("e")
+                        .longOpt("experiments")
+                        .hasArg()
+                        .required(false)
+                        .desc("experiments to compare").build()
+        );
     }
 
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
 
         try {
-            commandLine = new GnuParser().parse(OPTIONS, args);
+            commandLine = new DefaultParser().parse(OPTIONS, args);
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp(
@@ -75,7 +98,7 @@ public class ComparePerQuery {
     }
 
     private static void dump(Path resultsDir, Path dbDir, String scorer, List<String> experiments) throws IOException, SQLException {
-        if (! Files.isDirectory(resultsDir)) {
+        if (!Files.isDirectory(resultsDir)) {
             Files.createDirectories(resultsDir);
         }
         try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {

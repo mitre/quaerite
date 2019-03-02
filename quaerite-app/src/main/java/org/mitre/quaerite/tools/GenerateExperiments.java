@@ -24,7 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -38,19 +38,21 @@ import org.mitre.quaerite.scorecollectors.ScoreCollector;
 public class GenerateExperiments {
 
     static Options OPTIONS = new Options();
+
     static {
         OPTIONS.addOption(
                 Option.builder("i")
-                .longOpt("input_features")
-                .hasArg()
-                .desc("experiment features json file")
-                .required().build());
+                        .longOpt("input_features")
+                        .hasArg()
+                        .desc("experiment features json file")
+                        .required().build()
+        );
         OPTIONS.addOption(
                 Option.builder("o")
-                .longOpt("output_experiments")
-                .hasArg()
-                .desc("experiments file")
-                .required().build()
+                        .longOpt("output_experiments")
+                        .hasArg()
+                        .desc("experiments file")
+                        .required().build()
         );
     }
     private int experimentCount = 0;
@@ -58,7 +60,7 @@ public class GenerateExperiments {
         CommandLine commandLine = null;
 
         try {
-            commandLine = new GnuParser().parse(OPTIONS, args);
+            commandLine = new DefaultParser().parse(OPTIONS, args);
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp(
@@ -83,7 +85,7 @@ public class GenerateExperiments {
         for (ScoreCollector scoreCollector : experimentFeatures.getScoreCollectors()) {
             experimentSet.addScoreCollector(scoreCollector);
         }
-        for (String solrUrl : experimentFeatures.getSolrUrls()) {
+        for (String solrUrl : experimentFeatures.getSearchServerUrls()) {
             for (String customHandler : experimentFeatures.getCustomHandlers()) {
                 addExperiments(solrUrl, customHandler, experimentFeatures, experimentSet);
             }

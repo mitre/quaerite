@@ -31,8 +31,9 @@ import org.mitre.quaerite.scorecollectors.ScoreCollectorListSerializer;
 public class ExperimentFeatures {
 
     List<ScoreCollector> scoreCollectors;
-    List<String> solrUrls;
+    List<String> searchServerUrls;
     List<String> customHandlers;
+    //TODO: make these more general
     QF qf;
     PF pf;
     PF2 pf2;
@@ -47,8 +48,8 @@ public class ExperimentFeatures {
         return scoreCollectors;
     }
 
-    public List<String> getSolrUrls() {
-        return solrUrls;
+    public List<String> getSearchServerUrls() {
+        return searchServerUrls;
     }
 
     public List<String> getCustomHandlers() {
@@ -63,7 +64,7 @@ public class ExperimentFeatures {
     public String toString() {
         return "ExperimentFeatures{" +
                 "scoreCollectors=" + scoreCollectors +
-                ", solrUrls=" + solrUrls +
+                ", searchServerUrls=" + searchServerUrls +
                 ", customHandlers=" + customHandlers +
                 ", qf=" + qf +
                 '}';

@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.mitre.quaerite.connectors;
 
 import java.io.ByteArrayOutputStream;
@@ -18,15 +34,14 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.mitre.quaerite.FacetResult;
 import org.mitre.quaerite.ResultSet;
-import org.mitre.quaerite.tools.FindFeatures;
 
-public abstract class SearchServer {
+public abstract class SearchClient {
 
-    public abstract ResultSet search(QueryRequest query) throws SearchServerException, IOException;
-    public abstract FacetResult facet(QueryRequest query) throws SearchServerException, IOException;
+    public abstract ResultSet search(QueryRequest query) throws SearchClientException, IOException;
+    public abstract FacetResult facet(QueryRequest query) throws SearchClientException, IOException;
 
 
-    protected byte[] get(String url) throws SearchServerException {
+    protected byte[] get(String url) throws SearchClientException {
         //overly simplistic...need to add proxy, etc., but good enough for now
         URI uri = null;
         try {
@@ -40,7 +55,7 @@ public abstract class SearchServer {
         try {
             String get = uri.getPath();
             if (!StringUtils.isBlank(uri.getQuery())) {
-                get += "?"+uri.getQuery();
+                get += "?"+uri.getRawQuery();
             }
             httpGet = new HttpGet(get);
         } catch (Exception e) {
@@ -50,16 +65,16 @@ public abstract class SearchServer {
         try {
             httpResponse = httpClient.execute(target, httpGet);
         } catch (IOException e) {
-            throw new SearchServerException(e);
+            throw new SearchClientException(e);
         }
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         if (httpResponse.getStatusLine().getStatusCode() != 200) {
-            throw new SearchServerException("Bad status code: "+httpResponse.getStatusLine().getStatusCode());
+            throw new SearchClientException("Bad status code: "+httpResponse.getStatusLine().getStatusCode());
         }
         try {
             IOUtils.copy(httpResponse.getEntity().getContent(), bos);
         } catch (IOException e) {
-            throw new SearchServerException(e);
+            throw new SearchClientException(e);
         }
         return bos.toByteArray();
     }

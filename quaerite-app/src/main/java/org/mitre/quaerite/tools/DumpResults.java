@@ -34,8 +34,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
@@ -47,18 +48,42 @@ public class DumpResults {
 
     static Options OPTIONS = new Options();
     private static final String DEFAULT_SCORER = "ndcg_10";
+
     static {
-        OPTIONS.addOption("db", "db", true, "database folder");
-        OPTIONS.addOption("d", "resultDir", true, "result directory");
-        OPTIONS.addOption("q", "querySets", true, "querySets to dump in rollups (comma-delimited)");
-        OPTIONS.addOption("s", "scorers", true, "scorers to dump in statistical significance matrices (comma-delimited)");
+        OPTIONS.addOption(
+                Option.builder("db")
+                        .hasArg().required().desc("database folder").build()
+        );
+
+        OPTIONS.addOption(
+                Option.builder("d")
+                        .longOpt("resultsDir")
+                        .hasArg()
+                        .required()
+                        .desc("result file directory").build()
+        );
+        OPTIONS.addOption(
+                Option.builder("q")
+                        .longOpt("querySets")
+                        .hasArg()
+                        .required()
+                        .desc("querySets to dump in rollups (comma-delimited)").build()
+        );
+        OPTIONS.addOption(
+                Option.builder("s")
+                        .longOpt("scorers")
+                        .hasArg()
+                        .required(false)
+                        .desc("scorers to dump in statistical " +
+                                "significance matrices (comma-delimited)").build()
+        );
     }
 
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
 
         try {
-            commandLine = new GnuParser().parse(OPTIONS, args);
+            commandLine = new DefaultParser().parse(OPTIONS, args);
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp(
@@ -131,9 +156,9 @@ public class DumpResults {
         scorerSet.addAll(scorers);
         TTest tTest = new TTest();
         for (String scorer : targetScorers) {
-            if (! scorerSet.contains(scorer)) {
-                System.err.println("I regret I couldn't find this scorer ('"+scorer +
-                        "') among the scorers: "+
+            if (!scorerSet.contains(scorer)) {
+                System.err.println("I regret I couldn't find this scorer ('" + scorer +
+                        "') among the scorers: " +
                         scorerSet);
             }
             Map<String, Double> aggregatedScores = experimentDB.getMeanExperimentScores(scorer);
@@ -147,8 +172,8 @@ public class DumpResults {
     private static void writeMatrix(TTest tTest, String scorer, String querySet,
                                     List<String> experiments, ExperimentDB experimentDB, Path outputDir) throws Exception {
 
-        String fileName = "sig_diffs_"+scorer+(
-                (StringUtils.isBlank(querySet)) ? ".csv" : "_"+querySet+".csv");
+        String fileName = "sig_diffs_" + scorer + (
+                (StringUtils.isBlank(querySet)) ? ".csv" : "_" + querySet + ".csv");
 
         try (BufferedWriter writer = Files.newBufferedWriter(outputDir.resolve(fileName))) {
 
@@ -164,7 +189,7 @@ public class DumpResults {
                 for (int k = 0; k <= i; k++) {
                     writer.write(",");
                 }
-                writer.write(String.format("%.3G", 1.0d)+",");//p-value of itself
+                writer.write(String.format("%.3G", 1.0d) + ",");//p-value of itself
                 //map of query -> score for experiment A given this particular scorer
                 Map<String, Double> scoresA = experimentDB.getScores(querySet, experimentA, scorer);
                 for (int j = i + 1; j < experiments.size(); j++) {
@@ -185,8 +210,8 @@ public class DumpResults {
         Map<String, Double> scoresB = experimentDB.getScores(querySet, experimentB, scorer);
         if (scoresA.size() != scoresB.size()) {
             //log
-            System.err.println("Different number of scores for "+experimentA+"("+scoresA.size()+
-                    ") vs. "+experimentB+"("+scoresB.size()+")");
+            System.err.println("Different number of scores for " + experimentA + "(" + scoresA.size() +
+                    ") vs. " + experimentB + "(" + scoresB.size() + ")");
         }
         double[] arrA = new double[scoresA.size()];
         double[] arrB = new double[scoresB.size()];
@@ -206,12 +231,12 @@ public class DumpResults {
             i++;
         }
 //        WilcoxonSignedRankTest w = new WilcoxonSignedRankTest();
-  //      w.wilcoxonSignedRankTest()
+        //      w.wilcoxonSignedRankTest()
         return tTest.tTest(arrA, arrB);
 
     }
 
-    private static void writeHeaders(ResultSetMetaData metaData, BufferedWriter writer)throws Exception {
+    private static void writeHeaders(ResultSetMetaData metaData, BufferedWriter writer) throws Exception {
         for (int i = 1; i <= metaData.getColumnCount(); i++) {
             writer.write(clean(metaData.getColumnName(i)));
             writer.write(",");
@@ -234,7 +259,7 @@ public class DumpResults {
         string = string.replaceAll("[\r\n]", " ");
         if (string.contains(",")) {
             string.replaceAll("\"", "\"\"");
-            string = "\""+string+"\"";
+            string = "\"" + string + "\"";
         }
         return string;
     }

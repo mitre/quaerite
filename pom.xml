@@ -35,7 +35,6 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <solr.version>4.10.4</solr.version>
     </properties>
 
     <modules>

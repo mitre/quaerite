@@ -73,7 +73,7 @@ public class TestExperimentDB {
         }
 
         assertEquals("test1", revivified.getName());
-        assertEquals("http://solr", revivified.getSolrUrl());
+        assertEquals("http://solr", revivified.getSearchServerUrl());
         assertEquals(3, revivified.getParams("bq").size());
         assertEquals(2, revivified.getFilterQueries().size());
         db.close();

@@ -24,29 +24,36 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.mitre.quaerite.ExperimentSet;
 import org.mitre.quaerite.db.ExperimentDB;
 
 public class DumpExperiments {
-    static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     static Options OPTIONS = new Options();
     static {
-        OPTIONS.addOption("db", "db", true, "database folder");
-        OPTIONS.addOption("f", "file", true, "json file with experiment(s)");
+        OPTIONS.addOption(
+                Option.builder("db")
+                .required()
+                .hasArg()
+                .desc("database folder").build());
+        OPTIONS.addOption(
+                Option.builder("f")
+                        .longOpt("file")
+                .hasArg()
+                .required()
+                .desc("json file with experiment(s)").build());
     }
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
 
         try {
-            commandLine = new GnuParser().parse(OPTIONS, args);
+            commandLine = new DefaultParser().parse(OPTIONS, args);
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp(

@@ -18,6 +18,9 @@ package org.mitre.quaerite.features;
 
 import java.util.List;
 
+/**
+ * TODO -- these need to be more general...not necessarily tied to Solr
+ */
 public interface FeatureSet {
     /**
      * This is the literal Solr parameter name.

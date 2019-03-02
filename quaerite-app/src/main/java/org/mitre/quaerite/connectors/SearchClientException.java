@@ -14,26 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite;
+package org.mitre.quaerite.connectors;
 
-import org.junit.jupiter.api.Test;
-import org.mitre.quaerite.stats.YatesChi;
+public class SearchClientException extends Exception {
 
-public class YatesChiTest {
+    public SearchClientException(String msg) {
+        super(msg);
+    }
 
-    @Test
-    public void testBasic() {
-        YatesChi chi = new YatesChi();
-        double fC = 1;
-        double fT = 1138;
-        double bC = 91;
-        double bT = 124456;
-        double a = 0;
-        double b = fT-fC;
-        double c = bC;
-        double d = bT-bC;
-        System.out.println(chi.calculateValue(a, b, c, d));
-        //32 .15
-        //91 .12
+    public SearchClientException(Exception e) {
+        super(e);
     }
 }

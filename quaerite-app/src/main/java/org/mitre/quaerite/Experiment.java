@@ -29,18 +29,18 @@ public class Experiment {
 
     private static Gson GSON = new Gson();
     private final String name;
-    private final String solrUrl;
+    private final String searchServerUrl;
     private final String customHandler;
     Map<String, Set<String>> params = new HashMap<>();
     Set<String> filterQueries = new HashSet<>();
 
-    public Experiment(String name, String solrUrl) {
-        this(name, solrUrl, null);
+    public Experiment(String name, String searchServerUrl) {
+        this(name, searchServerUrl, null);
     }
-    public Experiment(String name, String solrUrl, String customHandler) {
+    public Experiment(String name, String searchServerUrl, String customHandler) {
         this.customHandler = customHandler;
         this.name = name;
-        this.solrUrl = solrUrl;
+        this.searchServerUrl = searchServerUrl;
     }
 
     public void addParam(String key, String value) {
@@ -96,8 +96,8 @@ public class Experiment {
         return name;
     }
 
-    public String getSolrUrl() {
-        return solrUrl;
+    public String getSearchServerUrl() {
+        return searchServerUrl;
     }
 
     public Set getParams(String key) {
@@ -108,7 +108,7 @@ public class Experiment {
     public String toString() {
         return "Experiment{" +
                 "name='" + name + '\'' +
-                ", solrUrl='" + solrUrl + '\'' +
+                ", searchServerUrl='" + searchServerUrl + '\'' +
                 ", customHandler='" + customHandler + '\'' +
                 ", params=" + params +
                 ", filterQueries=" + filterQueries +

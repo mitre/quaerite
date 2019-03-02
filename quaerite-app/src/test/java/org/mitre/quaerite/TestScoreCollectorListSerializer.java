@@ -37,17 +37,4 @@ public class TestScoreCollectorListSerializer {
                 ((AbstractScoreCollector)revivified).getK());
     }
 
-/*    @Test
-    public void testList() {
-        List<RankScorer> scorers = new ArrayList<>();
-        scorers.add(new PrecisionAtK(2));
-        scorers.add(new HighestRank(4));
-        String json = ScorerSerializer.toJson(scorers);
-
-        List<RankScorer> revivified = ScorerSerializer.fromJsonList(json);
-        for (RankScorer r : revivified) {
-            System.out.println(r);
-        }
-
-    }*/
 }

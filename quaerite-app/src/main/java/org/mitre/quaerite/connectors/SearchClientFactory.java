@@ -16,5 +16,11 @@
  */
 package org.mitre.quaerite.connectors;
 
-public class StoredDocument {
+import org.mitre.quaerite.connectors.solr.SolrClient;
+
+public class SearchClientFactory {
+
+    public static SearchClient getClient(String url) {
+        return new SolrClient(url);
+    }
 }

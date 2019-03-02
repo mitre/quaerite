@@ -18,4 +18,12 @@ public class FacetResult {
         public Map<String, Long> getFacetCounts() {
             return facetCounts;
         }
+
+    @Override
+    public String toString() {
+        return "FacetResult{" +
+                "totalDocs=" + totalDocs +
+                ", facetCounts=" + facetCounts +
+                '}';
+    }
 }

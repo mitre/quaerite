@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.mitre.quaerite.connectors.solr;
 
 import java.io.BufferedReader;
@@ -21,10 +37,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.mitre.quaerite.FacetResult;
 import org.mitre.quaerite.ResultSet;
 import org.mitre.quaerite.connectors.QueryRequest;
-import org.mitre.quaerite.connectors.SearchServer;
-import org.mitre.quaerite.connectors.SearchServerException;
+import org.mitre.quaerite.connectors.SearchClient;
+import org.mitre.quaerite.connectors.SearchClientException;
 
-public class SolrServer_4x extends SearchServer {
+public class SolrClient extends SearchClient {
     private static final String DEFAULT_HANDLER = "select";
     private static final String JSON_RESPONSE = "&wt=json";
 
@@ -34,12 +50,12 @@ public class SolrServer_4x extends SearchServer {
      *
      * @param url url to Solr including /collection
      */
-    public SolrServer_4x(String url) {
+    public SolrClient(String url) {
         this.url = url;
     }
 
     @Override
-    public ResultSet search(QueryRequest query) throws SearchServerException, IOException {
+    public ResultSet search(QueryRequest query) throws SearchClientException, IOException {
         String url = generateRequestURL(query);
         long start = System.currentTimeMillis();
         byte[] response = get(url);
@@ -126,27 +142,36 @@ public class SolrServer_4x extends SearchServer {
     }
 
     @Override
-    public FacetResult facet(QueryRequest query) throws SearchServerException, IOException {
+    public FacetResult facet(QueryRequest query) throws SearchClientException, IOException {
         String url = generateRequestURL(query);
         byte[] bytes = get(url);
         JsonParser parser = new JsonParser();
         JsonElement root = null;
-        String jsonString = new String(bytes);
         try (Reader reader = new BufferedReader(
                 new InputStreamReader(
                         new ByteArrayInputStream(bytes), StandardCharsets.UTF_8))) {
             root = parser.parse(reader);
         }
+        JsonObject response = (JsonObject)((JsonObject)root).get("response");
+        long totalDocs = response.get("numFound").getAsLong();
         JsonObject facetCounts = (JsonObject)((JsonObject)root).get("facet_counts");
         JsonObject facetFields = (JsonObject)facetCounts.get("facet_fields");
         //TODO: hardcoded to expect only 1
         String facetField = query.getFacetFields().get(0);
         JsonArray arr = (JsonArray) facetFields.get(facetField);
-        for (JsonElement el : arr) {
 
-        }
-        long totalDocs = 0;
         Map<String, Long> counts = new HashMap<>();
+        for (int i = 0; i < arr.size()-1; i += 2) {
+            JsonElement valueElement = arr.get(i);
+            String value = null;
+            if (valueElement.isJsonNull()) {
+                value = "null";
+            } else {
+                value = valueElement.getAsString();
+            }
+            long count = arr.get(i+1).getAsLong();
+            counts.put(value, count);
+        }
         return new FacetResult(totalDocs, counts);
 
     }

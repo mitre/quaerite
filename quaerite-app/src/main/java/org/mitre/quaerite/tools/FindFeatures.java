@@ -29,16 +29,17 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.mitre.quaerite.FacetResult;
 import org.mitre.quaerite.JudgmentList;
 import org.mitre.quaerite.Judgments;
 import org.mitre.quaerite.connectors.QueryRequest;
-import org.mitre.quaerite.connectors.SearchServer;
-import org.mitre.quaerite.connectors.solr.SolrServer_4x;
+import org.mitre.quaerite.connectors.SearchClient;
+import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.stats.ContrastResult;
 import org.mitre.quaerite.stats.YatesChi;
@@ -49,17 +50,37 @@ public class FindFeatures {
     private static NumberFormat NUMBER_FORMAT = new DecimalFormat("#.##");
 
     static {
-        OPTIONS.addOption("db", "db", true, "database folder");
-        OPTIONS.addOption("s", "solr", true, "solr url");
-        OPTIONS.addOption("f", "fields", true, "comma-delimited list of fields");
-        OPTIONS.addOption("fq", "filterQuery", true, "filter query to run to subset data");
+        OPTIONS.addOption(
+                Option.builder("db")
+                .hasArg()
+                .required().desc("database folder").build()
+        );
+        OPTIONS.addOption(
+                Option.builder("s")
+                        .longOpt("searchServerUrl")
+                .hasArg()
+                .required()
+                .desc("search server's url").build()
+        );
+        OPTIONS.addOption(
+                Option.builder("f").longOpt("fields")
+                .hasArg()
+                .desc("comma-delimited list of fields").build()
+        );
+        OPTIONS.addOption(
+                Option.builder("fq")
+                        .longOpt("filterQuery")
+                .hasArg()
+                        .required(false)
+                .desc("filter query to run to subset data").build()
+        );
     }
     private YatesChi yatesChi = new YatesChi();
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
 
         try {
-            commandLine = new GnuParser().parse(OPTIONS, args);
+            commandLine = new DefaultParser().parse(OPTIONS, args);
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp(
@@ -67,20 +88,20 @@ public class FindFeatures {
                     OPTIONS);
             return;
         }
-        String solrUrl = commandLine.getOptionValue("s");
+        String searchServerUrl = commandLine.getOptionValue("s");
         Path dbDir = Paths.get(commandLine.getOptionValue("db"));
         ExperimentDB db = ExperimentDB.open(dbDir);
-        SearchServer solrServer = new SolrServer_4x(solrUrl);
+        SearchClient searchClient = SearchClientFactory.getClient(searchServerUrl);
         String[] fields = commandLine.getOptionValue("f").split(",");
         String filterQuery = null;
         if (commandLine.hasOption("fq")) {
             filterQuery = commandLine.getOptionValue("fq");
         }
         FindFeatures findFeatures = new FindFeatures();
-        findFeatures.execute(db, solrServer, fields, filterQuery);
+        findFeatures.execute(db, searchClient, fields, filterQuery);
     }
 
-    private void execute(ExperimentDB db, SearchServer solrServer, String[] fields,
+    private void execute(ExperimentDB db, SearchClient searchClient, String[] fields,
                          String filterQuery) throws Exception {
         JudgmentList judgmentList = db.getJudgments();
         String idField = judgmentList.getIdField();
@@ -91,17 +112,17 @@ public class FindFeatures {
             ids.addAll(localIds);
         }
         for (String f : fields) {
-            FacetResult truthCounts = getFacets(f, idField, ids, solrServer);
+            FacetResult truthCounts = getFacets(f, idField, ids, searchClient);
             QueryRequest sq = new QueryRequest("*:*");
             sq.addParameter("fq", filterQuery);
-            FacetResult backgroundCounts = getFacets(f, sq, solrServer);
+            FacetResult backgroundCounts = getFacets(f, sq, searchClient);
             List<ContrastResult> chis = getChis(truthCounts, backgroundCounts);
             reportResult(f, chis);
         }
     }
 
     private FacetResult getFacets(String f, String idField, Set<String> ids,
-                                  SearchServer solrServer) throws Exception {
+                                  SearchClient searchClient) throws Exception {
         Map<String, Long> ret = new HashMap<>();
         List<String> cache = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
@@ -113,13 +134,13 @@ public class FindFeatures {
             }
             sb.append(idField).append(":").append(id);
             if (sb.length() > 1000) {
-                addAll(getFacets(f, new QueryRequest(sb.toString()), solrServer).getFacetCounts(), ret);
+                addAll(getFacets(f, new QueryRequest(sb.toString()), searchClient).getFacetCounts(), ret);
                 sb.setLength(0);
                 cnt = 0;
             }
         }
         if (sb.length() > 0) {
-            addAll(getFacets(f, new QueryRequest(sb.toString()), solrServer).getFacetCounts(), ret);
+            addAll(getFacets(f, new QueryRequest(sb.toString()), searchClient).getFacetCounts(), ret);
         }
         return new FacetResult(ids.size(), ret);
     }
@@ -175,12 +196,12 @@ public class FindFeatures {
         return ret;
     }
 
-    private FacetResult getFacets(String facetFieldName, QueryRequest solrQuery,
-                                  SearchServer solrServer) throws Exception {
-        solrQuery.addFacetField(facetFieldName);
-        solrQuery.setFacetLimit(10000);
-        solrQuery.setNumResults(0);
-        return solrServer.facet(solrQuery);
+    private FacetResult getFacets(String facetFieldName, QueryRequest queryRequest,
+                                  SearchClient searchClient) throws Exception {
+        queryRequest.addFacetField(facetFieldName);
+        queryRequest.setFacetLimit(10000);
+        queryRequest.setNumResults(0);
+        return searchClient.facet(queryRequest);
     }
 
 }

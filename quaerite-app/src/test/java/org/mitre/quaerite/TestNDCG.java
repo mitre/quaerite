@@ -29,42 +29,42 @@ import org.mitre.quaerite.scorers.NormalizedDiscountedCumulativeGain;
 
 
 public class TestNDCG {
-    static Judgments judgments = new Judgments(new QueryInfo("", "query", 1));
-    static ResultSet results;
+    static Judgments JUDGMENTS = new Judgments(new QueryInfo("", "query", 1));
+    static ResultSet RESULT_SET;
     @BeforeAll
     public static void setUp() {
 
-        judgments.addJugment("1", 3);
-        judgments.addJugment("2", 2);
-        judgments.addJugment("3", 3);
-        judgments.addJugment("5", 1);
-        judgments.addJugment("6", 2);
-        judgments.addJugment("7", 3);
-        judgments.addJugment("8", 2);
+        JUDGMENTS.addJugment("1", 3);
+        JUDGMENTS.addJugment("2", 2);
+        JUDGMENTS.addJugment("3", 3);
+        JUDGMENTS.addJugment("5", 1);
+        JUDGMENTS.addJugment("6", 2);
+        JUDGMENTS.addJugment("7", 3);
+        JUDGMENTS.addJugment("8", 2);
         List<String> ids = new ArrayList<>();
         for (int i = 1; i <= 6; i++) {
             ids.add(Integer.toString(i));
         }
-        results = new ResultSet(1000, 10, 100, ids);
+        RESULT_SET = new ResultSet(1000, 10, 100, ids);
     }
 
 
     @Test
     public void testCG() {
         CumulativeGain cumulativeGain = new CumulativeGain(10);
-        assertEquals(11.0f, cumulativeGain.score(judgments, results), 0.001);
+        assertEquals(11.0f, cumulativeGain.score(JUDGMENTS, RESULT_SET), 0.001);
     }
 
     @Test
     public void testDCG2002() {
         DiscountedCumulativeGain2002 dcg2002 = new DiscountedCumulativeGain2002(10);
-        assertEquals(6.861, dcg2002.score(judgments, results), 0.001);
+        assertEquals(6.861, dcg2002.score(JUDGMENTS, RESULT_SET), 0.001);
     }
 
     @Test
     public void testNDCG() {
         NormalizedDiscountedCumulativeGain ndcg =
                 new NormalizedDiscountedCumulativeGain(10);
-        assertEquals(0.785, ndcg.score(judgments, results), 0.001);
+        assertEquals(0.785, ndcg.score(JUDGMENTS, RESULT_SET), 0.001);
     }
 }

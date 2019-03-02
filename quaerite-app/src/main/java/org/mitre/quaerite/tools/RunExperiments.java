@@ -35,8 +35,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
@@ -48,15 +49,15 @@ import org.mitre.quaerite.Judgments;
 import org.mitre.quaerite.QueryInfo;
 import org.mitre.quaerite.ResultSet;
 import org.mitre.quaerite.connectors.QueryRequest;
-import org.mitre.quaerite.connectors.SearchServer;
-import org.mitre.quaerite.connectors.SearchServerException;
-import org.mitre.quaerite.connectors.solr.SolrServer_4x;
+import org.mitre.quaerite.connectors.SearchClient;
+import org.mitre.quaerite.connectors.SearchClientException;
+import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.scorecollectors.ScoreCollector;
 
 public class RunExperiments {
 
-    static final int NUM_THREADS = 8;
+    static final int DEFAULT_NUM_THREADS = 8;
     static final Judgments POISON = new Judgments(new QueryInfo("", "", -1));
 
     static Logger LOG = Logger.getLogger(RunExperiments.class);
@@ -64,20 +65,59 @@ public class RunExperiments {
     static Options OPTIONS = new Options();
 
     static {
-        OPTIONS.addOption("db", "db", true, "database folder");
-        OPTIONS.addOption("freshStart", "freshStart", false, "delete all results");
-        OPTIONS.addOption("e", "experiment", true, "which experiment to run");
-        OPTIONS.addOption("l", "latest", false, "rerun just the most recently added experiment");
+        OPTIONS.addOption(
+                Option.builder("db")
+                        .hasArg()
+                        .required()
+                        .desc("database folder").build()
+        );
+
+        OPTIONS.addOption(
+                Option.builder("freshStart")
+                        .required(false)
+                        .hasArg(false)
+                        .desc("delete all existing judgments").build()
+        );
+
+        OPTIONS.addOption(
+                Option.builder("e")
+                        .longOpt("experiment")
+                        .required(false)
+                        .hasArg()
+                        .desc("which experiment to run (optional)").build()
+        );
+
+        OPTIONS.addOption(
+                Option.builder("l")
+                        .longOpt("latest")
+                        .hasArg(false)
+                        .required(false)
+                        .desc("rerun just the most recently added experiment").build()
+        );
+
+        OPTIONS.addOption(
+                Option.builder("n")
+                        .longOpt("numThreads")
+                        .hasArg(true)
+                        .required(false)
+                        .desc("number of threads to use in running experiments").build()
+        );
     }
 
-    Map<String, JudgmentList> solrUrlValidatedMap = new HashMap<>();
+    //this caches a judgment list of valid judgments
+    //per search server url
+    Map<String, JudgmentList> searchServerValidatedMap = new HashMap<>();
     long batchStart = -1l;
+    private final int numThreads;
 
+    public RunExperiments(int numThreads) {
+        this.numThreads = numThreads;
+    }
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
 
         try {
-            commandLine = new GnuParser().parse(OPTIONS, args);
+            commandLine = new DefaultParser().parse(OPTIONS, args);
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp("java -jar org.mitre.eval.RunExperiments", OPTIONS);
@@ -88,10 +128,12 @@ public class RunExperiments {
         String experimentName = (commandLine.hasOption("experiment")) ? commandLine.getOptionValue("experiment") : "";
         boolean freshStart = (commandLine.hasOption("freshStart")) ? true : false;
         boolean latest = (commandLine.hasOption("latest")) ? true : false;
-
-        RunExperiments runExperiments = new RunExperiments();
+        int numThreads = (commandLine.hasOption("n")) ?
+                Integer.parseInt(commandLine.getOptionValue("n")) : DEFAULT_NUM_THREADS;
+        RunExperiments runExperiments = new RunExperiments(numThreads);
         runExperiments.run(dbDir, experimentName, freshStart, latest);
     }
+
 
     private void run(Path dbDir, String experimentName, boolean freshStart, boolean latest) throws SQLException, IOException {
         try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
@@ -140,29 +182,30 @@ public class RunExperiments {
         List<ScoreCollector> scoreCollectors = experimentSet.getScoreCollectors();
         experimentDB.initScoreTable(scoreCollectors);
         JudgmentList judgmentList = experimentDB.getJudgments();
-        JudgmentList validated = solrUrlValidatedMap.get(ex.getSolrUrl());
+        SearchClient searchClient = SearchClientFactory.getClient(ex.getSearchServerUrl());
+        JudgmentList validated = searchServerValidatedMap.get(ex.getSearchServerUrl());
         if (validated == null) {
-            validated = validate(ex.getSolrUrl(), judgmentList);
-            solrUrlValidatedMap.put(ex.getSolrUrl(), validated);
+            validated = validate(searchClient, judgmentList);
+            searchServerValidatedMap.put(ex.getSearchServerUrl(), validated);
         }
-        ExecutorService executorService = Executors.newFixedThreadPool(NUM_THREADS);
+        ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
         ExecutorCompletionService<Integer> executorCompletionService = new ExecutorCompletionService<>(executorService);
         ArrayBlockingQueue<Judgments> queue = new ArrayBlockingQueue<>(
-                validated.getJudgmentsList().size() + NUM_THREADS);
+                validated.getJudgmentsList().size() + numThreads);
 
         queue.addAll(validated.getJudgmentsList());
-        for (int i = 0; i < NUM_THREADS; i++) {
+        for (int i = 0; i < numThreads; i++) {
             queue.add(POISON);
         }
 
-        for (int i = 0; i < NUM_THREADS; i++) {
+        for (int i = 0; i < numThreads; i++) {
             executorCompletionService.submit(
                     new QueryRunner(validated.getIdField(), experimentDB.getExperiments().getMaxRows(),
                             queue, ex, experimentDB, scoreCollectors));
         }
 
         int completed = 0;
-        while (completed < NUM_THREADS) {
+        while (completed < numThreads) {
             try {
                 Future<Integer> future = executorCompletionService.take();
                 future.get();
@@ -196,8 +239,19 @@ public class RunExperiments {
 
     }
 
-    private static JudgmentList validate(String solrUrl, JudgmentList judgmentList) {
-        SearchServer solrServer = new SolrServer_4x(solrUrl);
+    //TODO -- make this multi threaded
+
+    /**
+     * This reads through the judgment list and makes sure that the
+     * a document with a given judgment's id is actually available in the
+     * index.  This removes those ids that are not in the index and returns
+     * a winnowed/validated {@link JudgmentList}.
+     *
+     * @param searchClient
+     * @param judgmentList
+     * @return
+     */
+    private static JudgmentList validate(SearchClient searchClient, JudgmentList judgmentList) {
 
         Set<String> ids = new HashSet<>();
         for (Judgments j : judgmentList.getJudgmentsList()) {
@@ -211,8 +265,8 @@ public class RunExperiments {
                     null, judgmentList.getIdField());
             ResultSet resultSet;
             try {
-                resultSet = solrServer.search(q);
-            } catch (SearchServerException | IOException e) {
+                resultSet = searchClient.search(q);
+            } catch (SearchClientException | IOException e) {
                 throw new RuntimeException(e);
             }
             long numFound = resultSet.getTotalHits();
@@ -254,9 +308,8 @@ public class RunExperiments {
         private final int maxRows;
         private final ArrayBlockingQueue<Judgments> queue;
         private final Experiment experiment;
-        private final ExperimentDB experimentDB;
         private final List<ScoreCollector> scoreCollectors;
-        private final SearchServer solrServer;
+        private final SearchClient searchClient;
 
         public QueryRunner(String idField, int maxRows, ArrayBlockingQueue<Judgments> judgments,
                            Experiment experiment, ExperimentDB experimentDB,
@@ -265,8 +318,7 @@ public class RunExperiments {
             this.maxRows = maxRows;
             this.queue = judgments;
             this.experiment = experiment;
-            this.experimentDB = experimentDB;
-            this.solrServer = new SolrServer_4x(experiment.getSolrUrl());
+            this.searchClient = SearchClientFactory.getClient(experiment.getSearchServerUrl());
             this.scoreCollectors = scoreCollectors;
         }
 
@@ -303,8 +355,9 @@ public class RunExperiments {
             }
             ResultSet resultSet = null;
             try {
-                resultSet = solrServer.search(queryRequest);
-            } catch (SearchServerException | IOException e) {
+                resultSet = searchClient.search(queryRequest);
+            } catch (SearchClientException | IOException e) {
+                //TODO add exception to resultSet and log
                 e.printStackTrace();
             }
             for (ScoreCollector scoreCollector : scoreCollectors) {
