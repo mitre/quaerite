@@ -52,30 +52,32 @@ public class FindFeatures {
     static {
         OPTIONS.addOption(
                 Option.builder("db")
-                .hasArg()
-                .required().desc("database folder").build()
+                        .hasArg()
+                        .required().desc("database folder").build()
         );
         OPTIONS.addOption(
                 Option.builder("s")
                         .longOpt("searchServerUrl")
-                .hasArg()
-                .required()
-                .desc("search server's url").build()
+                        .hasArg()
+                        .required()
+                        .desc("search server's url").build()
         );
         OPTIONS.addOption(
                 Option.builder("f").longOpt("fields")
-                .hasArg()
-                .desc("comma-delimited list of fields").build()
+                        .hasArg()
+                        .desc("comma-delimited list of fields").build()
         );
         OPTIONS.addOption(
                 Option.builder("fq")
                         .longOpt("filterQuery")
-                .hasArg()
+                        .hasArg()
                         .required(false)
-                .desc("filter query to run to subset data").build()
+                        .desc("filter query to run to subset data").build()
         );
     }
+
     private YatesChi yatesChi = new YatesChi();
+
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
 
@@ -155,13 +157,13 @@ public class FindFeatures {
     }
 
     private void reportResult(String field, List<ContrastResult> chis) {
-        System.out.println(field +":");
+        System.out.println(field + ":");
         int reported = 0;
         for (ContrastResult chi : chis) {
             if (++reported >= 100) {
                 break;
             }
-            System.out.println("\t"+chi);
+            System.out.println("\t" + chi);
         }
     }
 
@@ -183,10 +185,10 @@ public class FindFeatures {
             long a = e.getValue();
             Long b = tmpB.get(e.getKey());
             b = (b == null) ? 0 : b;
-            double c = foreground.getTotalDocs()-a;
-            double d = totalDocs-b;
-            double chi = (a == 0) ? 0.0 : yatesChi.calculateValue(a, (double)b, c, d);
-            if ( a == 0L && b == 0L) {
+            double c = foreground.getTotalDocs() - a;
+            double d = totalDocs - b;
+            double chi = (a == 0) ? 0.0 : yatesChi.calculateValue(a, (double) b, c, d);
+            if (a == 0L && b == 0L) {
                 //skip
             } else {
                 ret.add(new ContrastResult(e.getKey(), a, foreground.getTotalDocs(), b, totalDocs, chi));
