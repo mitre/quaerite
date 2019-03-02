@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  */
-package org.mitre.quaerite.tools;
+package org.mitre.quaerite.cli;
 
 import java.io.BufferedWriter;
 import java.nio.charset.StandardCharsets;
@@ -87,7 +87,7 @@ public class DumpResults {
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp(
-                    "java -jar org.mitre.quaerite.tools.AddExperiments",
+                    "java -jar org.mitre.quaerite.cli.AddExperiments",
                     OPTIONS);
             return;
         }

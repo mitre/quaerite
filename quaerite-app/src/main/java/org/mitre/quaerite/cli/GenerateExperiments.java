@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.tools;
+package org.mitre.quaerite.cli;
 
 import java.io.Reader;
 import java.io.Writer;
@@ -64,7 +64,7 @@ public class GenerateExperiments {
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp(
-                    "java -jar org.mitre.quaerite.tools.GenerateExperiments",
+                    "java -jar org.mitre.quaerite.cli.GenerateExperiments",
                     OPTIONS);
             return;
         }

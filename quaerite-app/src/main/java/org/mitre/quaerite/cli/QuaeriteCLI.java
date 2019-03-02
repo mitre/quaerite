@@ -17,11 +17,6 @@
 package org.mitre.quaerite.cli;
 
 
-import org.mitre.quaerite.tools.AddExperiments;
-import org.mitre.quaerite.tools.DumpExperiments;
-import org.mitre.quaerite.tools.LoadJudgments;
-import org.mitre.quaerite.tools.RunExperiments;
-
 public class QuaeriteCLI {
 
     public static void main(String[] args) throws Exception {
@@ -35,8 +30,14 @@ public class QuaeriteCLI {
         } else if (tool.equals("DumpExperiments")) {
             DumpExperiments.main(newArgs);
         } else if (tool.equals("RunExperiments")) {
-            //RunExperiments.main(newArgs);
-        }else {
+            RunExperiments.main(newArgs);
+        } else if (tool.equals("FindFeatures")) {
+            FindFeatures.main(newArgs);
+        } else if (tool.equals("GenerateExperiments")) {
+            GenerateExperiments.main(newArgs);
+        } else if (tool.equals("DumpResults")) {
+            DumpResults.main(newArgs);
+        } else {
             System.err.println("I'm sorry, but I don't recognize \""+tool + "\" as a tool");
         }
     }

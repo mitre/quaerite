@@ -16,7 +16,7 @@
  *
  */
 
-package org.mitre.quaerite.tools;
+package org.mitre.quaerite.cli;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -79,7 +79,7 @@ public class ComparePerQuery {
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp(
-                    "java -jar org.mitre.quaerite.tools.AddExperiments",
+                    "java -jar org.mitre.quaerite.cli.AddExperiments",
                     OPTIONS);
             return;
         }

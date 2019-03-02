@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.tools;
+package org.mitre.quaerite.cli;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -84,7 +84,7 @@ public class FindFeatures {
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp(
-                    "java -jar org.mitre.quaerite.tools.FindFeatures",
+                    "java -jar org.mitre.quaerite.cli.FindFeatures",
                     OPTIONS);
             return;
         }
