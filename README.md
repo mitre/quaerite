@@ -5,16 +5,18 @@ Background and Goals
 --------------------
 
 This project includes tools to help evaluate relevance
-ranking.  The current codebase is tightly coupled with Solr 4.x, 
-but we plan to make this more easily extensible for more modern
-versions of Solr as well as Elasticsearch.
+ranking.  This code was initially developed for Solr 4.x.
+We plan to add a connector for Elasticsearch and confirm
+that the Solr connector works with more modern versions of Solr. 
 
 This project is not intended to compete with existing relevance
-evaluation tools; see for example: [1] and [2]. Rather, this was developed for use cases 
-not currently covered by other open source software packages.
-The author encourages collaboration among these projects.
+evaluation tools; see for example: [1] and [2]. Rather, this was 
+developed for use cases not currently covered by other open source 
+software packages. The author encourages collaboration 
+among these projects.
 
-NOTE: This project is under construction and is quite dynamic.  There will be breaking changes before the first major release.
+**NOTE: This project is under construction and is quite dynamic.  There will be breaking changes before 
+the first major release.**
 
 While the name of this project may change in the future, we selected
 _quaerite_ -- Latin imperative "seek", root of English "query" -- to
@@ -22,7 +24,7 @@ allude not only to the challenges of creating queries, but also
 to the challenges of tuning search engines.  One may spend
 a not insignificant amount of time tuning countless parameters.
 In the end, we hope that _invenietis_ with slightly less effort
-than without this project. For the pronunciation, 
+than without this project. For the pronunciation, see
 [this link](https://forvo.com/word/quaerite_et_invenietis/).
 
 License (see also LICENSE.txt)
