@@ -37,6 +37,9 @@ Licensed to the Apache Software Foundation (ASF) under one or more contributor l
 
 <http://www.apache.org/licenses/LICENSE-2.0>
 
+Getting Started
+---------------
+See the ```quaerite-demos``` module and its [README](https://github.com/mitre/quaerite/blob/master/quaerite-demos/README.md).
 
 References
 ----------
