@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -189,13 +190,13 @@ public class DumpResults {
                 for (int k = 0; k <= i; k++) {
                     writer.write(",");
                 }
-                writer.write(String.format("%.3G", 1.0d) + ",");//p-value of itself
+                writer.write(String.format(Locale.US, "%.3G", 1.0d) + ",");//p-value of itself
                 //map of query -> score for experiment A given this particular scorer
                 Map<String, Double> scoresA = experimentDB.getScores(querySet, experimentA, scorer);
                 for (int j = i + 1; j < experiments.size(); j++) {
                     String experimentB = experiments.get(j);
                     double significance = calcSignificance(tTest, querySet, scoresA, experimentA, experimentB, scorer, experimentDB);
-                    writer.write(String.format("%.3G", significance));
+                    writer.write(String.format(Locale.US, "%.3G", significance));
                     writer.write(",");
                 }
                 writer.write("\n");

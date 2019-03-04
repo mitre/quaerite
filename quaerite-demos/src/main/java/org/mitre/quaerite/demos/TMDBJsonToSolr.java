@@ -28,6 +28,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
@@ -54,13 +55,13 @@ public class TMDBJsonToSolr {
             while (jsonReader.hasNext()) {
                 Movie movie = nextMovie(jsonReader);
                 movies.add(movie);
+                cnt++;
                 if (movies.size() >= 1000) {
                     searchClient.addDocuments(buildDocuments(movies));
                     movies.clear();
                     System.out.println("indexed "+cnt + " in "+
                             (System.currentTimeMillis()-start) + " ms");
                 }
-                cnt++;
             }
             jsonReader.endObject();
         }
@@ -112,7 +113,7 @@ public class TMDBJsonToSolr {
         if (value < 0) {
             return StringUtils.EMPTY;
         }
-        return String.format("%.2f", value);
+        return String.format(Locale.US, "%.2f", value);
     }
 
     private static Movie nextMovie(JsonReader jsonReader) throws IOException {
@@ -229,8 +230,8 @@ public class TMDBJsonToSolr {
     }
 
     private static class Movie {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        DateFormat UTCFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        DateFormat UTCFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
 
         String id;
         boolean adult;

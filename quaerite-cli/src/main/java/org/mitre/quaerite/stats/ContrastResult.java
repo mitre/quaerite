@@ -17,6 +17,8 @@
 package org.mitre.quaerite.stats;
 
 
+import java.util.Locale;
+
 public class ContrastResult implements Comparable<ContrastResult> {
 	String term = "";
 	long targCount = 0;
@@ -58,9 +60,10 @@ public class ContrastResult implements Comparable<ContrastResult> {
 	@Override
 	public String toString() {
 		String targPercent = (targTotal == 0L) ? "" :
-				String.format("%.4f%%", ((double)targCount/(double)targTotal));
+
+				String.format(Locale.US, "%.4f%%", ((double)targCount/(double)targTotal));
 		String otherPercent = (otherTotal == 0L) ? "" :
-				String.format("%.4f%%", ((double)otherCount/(double)otherTotal));
+				String.format(Locale.US, "%.4f%%", ((double)otherCount/(double)otherTotal), Locale.US);
 
 
 		return "ContrastResult{" +

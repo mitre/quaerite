@@ -71,7 +71,7 @@ public class SolrClient extends SearchClient {
     private ResultSet translateResponse(long totalTime, byte[] bytes) throws IOException {
         JsonParser parser = new JsonParser();
         JsonElement root = null;
-        String jsonString = new String(bytes);
+        String jsonString = new String(bytes, StandardCharsets.UTF_8);
         try (Reader reader = new BufferedReader(
                 new InputStreamReader(
                         new ByteArrayInputStream(bytes), StandardCharsets.UTF_8))) {

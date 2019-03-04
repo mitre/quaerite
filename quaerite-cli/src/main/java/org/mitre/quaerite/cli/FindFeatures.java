@@ -19,12 +19,14 @@ package org.mitre.quaerite.cli;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,7 +49,8 @@ import org.mitre.quaerite.stats.YatesChi;
 public class FindFeatures {
 
     static Options OPTIONS = new Options();
-    private static NumberFormat NUMBER_FORMAT = new DecimalFormat("#.##");
+    private static NumberFormat NUMBER_FORMAT = new DecimalFormat("#.##",
+            DecimalFormatSymbols.getInstance(Locale.US));
 
     static {
         OPTIONS.addOption(

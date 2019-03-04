@@ -18,14 +18,16 @@ Prerequisites
 
 2. Download and unpack Solr 7.7.1 from [here](http://www.apache.org/dyn/closer.lua/lucene/solr/7.7.1/solr-7.7.1.zip)   
 
-3. Start Solr:  ```$xslt ./bin/solr start -f -s /path/to/solr/home ```
+3. Copy the directory ```demo_files/solr-7.x/tmbd``` to your Solr core directory
 
-4. Download _tmdb.json_ from
+4. Start Solr:  ```./bin/solr start -f -s /path/to/solr/tmdb```
+
+5. Download _tmdb.json_ from
    [AWS](https://s3.amazonaws.com/es-learn-to-rank.labs.o19s.com/tmdb.json) or [OpenSourceConnections](http://es-learn-to-rank.labs.o19s.com/tmdb.json)
 
-5. Ingest the _tmdb_ data ...
+6. Ingest the _tmdb_ data ```java -jar quaerite-demos.jar tmdb.json http://localhost:8983/solr/tmdb```
 
-6. Navigate to [here](http://localhost:8983/solr) to confirm that _tmdb_ was loaded into Solr.
+7. Navigate to [here](http://localhost:8983/solr) to confirm that _tmdb_ was loaded into Solr.
 
 The stage is now set to start searching -- not for documents, but for relevance features.
 
