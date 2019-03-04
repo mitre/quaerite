@@ -39,7 +39,7 @@
 
     <modules>
         <module>quaerite-parent</module>
-        <module>quaerite-app</module>
+        <module>quaerite-cli</module>
         <module>quaerite-demos</module>
     </modules>
 
