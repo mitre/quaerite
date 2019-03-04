@@ -1,0 +1,4 @@
+The movie_judgments.csv file is a reformatting of:
+https://github.com/o19s/solr-tmdb/blob/master/ltr/judgment-lists.html
+
+Many thanks to OpensourceConnections for making this relevance data available!
