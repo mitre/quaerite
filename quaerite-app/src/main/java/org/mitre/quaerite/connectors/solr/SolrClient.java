@@ -29,20 +29,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.methods.HttpPost;
 import org.mitre.quaerite.FacetResult;
 import org.mitre.quaerite.ResultSet;
 import org.mitre.quaerite.connectors.QueryRequest;
 import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientException;
+import org.mitre.quaerite.connectors.StoredDocument;
 
 public class SolrClient extends SearchClient {
     private static final String DEFAULT_HANDLER = "select";
     private static final String JSON_RESPONSE = "&wt=json";
+    private static final Gson GSON = new Gson();
 
     private final String url;
 
@@ -173,6 +178,21 @@ public class SolrClient extends SearchClient {
             counts.put(value, count);
         }
         return new FacetResult(totalDocs, counts);
+    }
 
+    @Override
+    public void addDocument(StoredDocument buildDocument) throws IOException {
+        String json = GSON.toJson(buildDocument.getFields());
+        postJson(url+"/update/json/docs?commitWithin=1000", json);
+    }
+
+    @Override
+    public void addDocuments(List<StoredDocument> buildDocuments) throws IOException {
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (StoredDocument d : buildDocuments) {
+            data.add(d.getFields());
+        }
+        String json = GSON.toJson(data);
+        postJson(url+"/update/json/docs?commitWithin=1000", json);
     }
 }

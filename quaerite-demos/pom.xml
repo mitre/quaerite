@@ -29,8 +29,25 @@
         <relativePath>../quaerite-parent/pom.xml</relativePath>
     </parent>
     
-    <artifactId>quaerite-examples</artifactId>
+    <artifactId>quaerite-demos</artifactId>
     <packaging>pom</packaging>
     <version>1.0.0-SNAPSHOT</version>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.mitre.quaerite</groupId>
+            <artifactId>quaerite-app</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang3.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
+        </dependency>
+    </dependencies>
 </project>

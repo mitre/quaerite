@@ -16,5 +16,45 @@
  */
 package org.mitre.quaerite.connectors;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+
 public class StoredDocument {
+    Map<String, Object> fields = new LinkedHashMap<>();
+
+    public void addNonBlankField(String field, List<String> values) {
+        if (values == null) {
+            return;
+        }
+        for (String v : values) {
+            addNonBlankField(field, v);
+        }
+    }
+
+    public void addNonBlankField(String field, String value) {
+        if (StringUtils.isBlank(value)) {
+            return;
+        }
+        Object values;
+        if (fields.containsKey(field)) {
+            values = fields.get(field);
+            if (values instanceof String) {
+                List<String> tmp = new ArrayList<>();
+                tmp.add((String)values);
+                fields.put(field, tmp);
+            } else {
+                ((List)values).add(value);
+            }
+        } else {
+            fields.put(field, value);
+        }
+    }
+
+    public Map<String, Object> getFields() {
+        return fields;
+    }
 }

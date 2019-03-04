@@ -17,28 +17,38 @@
 package org.mitre.quaerite.connectors;
 
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.BindException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.util.EntityUtils;
 import org.mitre.quaerite.FacetResult;
 import org.mitre.quaerite.ResultSet;
 
-public abstract class SearchClient {
+public abstract class SearchClient implements Closeable {
 
     public abstract ResultSet search(QueryRequest query) throws SearchClientException, IOException;
     public abstract FacetResult facet(QueryRequest query) throws SearchClientException, IOException;
+
 
 
     protected byte[] get(String url) throws SearchClientException {
@@ -49,7 +59,6 @@ public abstract class SearchClient {
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
         }
-        CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpHost target = new HttpHost(uri.getHost(), uri.getPort());
         HttpGet httpGet = null;
         try {
@@ -62,7 +71,7 @@ public abstract class SearchClient {
             throw new IllegalArgumentException(e);
         }
         HttpResponse httpResponse = null;
-        try {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             httpResponse = httpClient.execute(target, httpGet);
         } catch (IOException e) {
             throw new SearchClientException(e);
@@ -79,6 +88,27 @@ public abstract class SearchClient {
         return bos.toByteArray();
     }
 
+    protected int postJson(String url, String json) throws IOException {
+        HttpPost httpPost = new HttpPost(url);
+        ByteArrayEntity entity = new ByteArrayEntity(json.getBytes(StandardCharsets.UTF_8));
+
+        httpPost.setEntity(entity);
+
+        httpPost.setHeader("Accept", "application/json");
+        httpPost.setHeader("Content-type", "application/json; charset=utf-8");
+        //this was required because of connection already bound exceptions
+        httpPost.setHeader("Connection", "close");
+
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+                EntityUtils.consume(response.getEntity());
+                return response.getStatusLine().getStatusCode();
+            }
+        } finally {
+            httpPost.releaseConnection();
+        }
+    }
+
     protected static String encode(String s) throws IllegalArgumentException {
         try {
             return URLEncoder.encode(s, StandardCharsets.UTF_8.name());
@@ -86,4 +116,12 @@ public abstract class SearchClient {
             throw new IllegalArgumentException(e);
         }
     }
+
+    public abstract void addDocument(StoredDocument buildDocument) throws IOException;
+
+    public void close() throws IOException {
+        //no-op
+    }
+
+    public abstract void addDocuments(List<StoredDocument> buildDocuments) throws IOException;
 }
