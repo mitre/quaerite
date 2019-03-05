@@ -25,7 +25,7 @@ Prerequisites
 5. Download _tmdb.json_ from
    [AWS](https://s3.amazonaws.com/es-learn-to-rank.labs.o19s.com/tmdb.json) or [OpenSourceConnections](http://es-learn-to-rank.labs.o19s.com/tmdb.json)
 
-6. Ingest the _tmdb_ data ```java -jar quaerite-demos.jar tmdb.json http://localhost:8983/solr/tmdb```
+6. Ingest the _tmdb_ data ```java -jar quaerite-examples.jar tmdb.json http://localhost:8983/solr/tmdb```
 
 7. Navigate to [here](http://localhost:8983/solr) to confirm that _tmdb_ was loaded into Solr.
 
