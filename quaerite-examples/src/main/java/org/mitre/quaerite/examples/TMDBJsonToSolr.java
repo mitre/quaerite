@@ -41,7 +41,7 @@ public class TMDBJsonToSolr {
 
     public static void main(String[] args) throws Exception {
         if (args.length != 2) {
-            System.err.println("java -jar o.m.q.demos.TMDBToSolr tmdb.json http://localhost:8983/solr/tmdb");
+            System.err.println("java -jar o.m.q.examples.TMDBToSolr tmdb.json http://localhost:8983/solr/tmdb");
             System.exit(0);
         }
         Path p = Paths.get(args[0]);

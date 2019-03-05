@@ -1,11 +1,11 @@
-Quaerite Demos
+Quaerite Examples
 ===========================
 This module offers examples to get your hands wet on example data
 with example tasks.
-This set of demos is built around the "TheMovieDB" (_tmdb_).
+This set of examples is built around the "TheMovieDB" (_tmdb_).
 The inspiration for the use of this dataset comes from Doug Turnbull and John Berryman's book, [Relevant Search](https://www.manning.com/books/relevant-search)
 and the "Think Like a Relevance Engineer" training offered by Doug and colleagues at [OpenSourceConnections (o19s)](https://opensourceconnections.com).
-As you'll see, these demos rely on data and a Solr config kindly made available by Doug and _o19s_.
+As you'll see, these examples rely on data and a Solr config kindly made available by Doug and _o19s_.
 
 **Note: this module is under construction.  We still need to add the ```ground_truth.csv``` and ```experiments.json``` 
 files... among other things.**
