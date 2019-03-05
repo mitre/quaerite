@@ -18,36 +18,50 @@ package org.mitre.quaerite.features;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-public class TIE implements FeatureSet {
+public class TIE extends WeightableFeatureSet {
     private static final String TIE = "tie";
 
-    public static TIE EMPTY = new TIE(Collections.singletonList(-1.0f));
+    public static List<String> FIELD =
+            Collections.singletonList("tie");
 
-    List<Float> ties = new ArrayList<>();
+    public TIE(List<String> fields, List<Float> ties) {
+        super(FIELD, ties);
+        if (fields == null) {
+            //great, expected, do nothing
+        } else if (fields.size() > 0) {
+            throw new IllegalArgumentException("can't have a field for 'tie'");
+        }
+    }
+    @Override
+    public Set<Feature> random() {
+        float f = defaultWeights.get(random.nextInt(defaultWeights.size()));
+        return Collections.singleton(new FloatFeature(f));
+    }
 
-    public TIE(List<Float> ties) {
-        this.ties = ties;
+    @Override
+    public List<Set<Feature>> permute(int maxSize) {
+        List<Set<Feature>> ret = new ArrayList<>();
+        for (Feature f : getEachDefaultFeature()) {
+            ret.add(Collections.singleton(f));
+        }
+        return ret;
+    }
+
+    @Override
+    public Set<Feature> getEachDefaultFeature() {
+        Set<Feature> ret = new HashSet<>();
+        for (float f : defaultWeights) {
+            ret.add(new FloatFeature(f));
+        }
+        return ret;
     }
 
     @Override
     public String getParameter() {
         return TIE;
     }
-
-    @Override
-    public List<String> getFeatures() {
-        List<String> ret = new ArrayList<>();
-        for (Float f : ties) {
-            if (f >= 0.0) {
-                ret.add(Float.toString(f));
-            }
-        }
-        if (ret.size() == 0) {
-            ret.add("");
-        }
-        return ret;
-    }
-
 }

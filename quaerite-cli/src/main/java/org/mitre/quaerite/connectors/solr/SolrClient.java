@@ -110,6 +110,7 @@ public class SolrClient extends SearchClient {
                 sb.append("q=");
             }
             sb.append(URLEncoder.encode(query.getQuery(), StandardCharsets.UTF_8.name()));
+            sb.append("&defType=edismax");
             sb.append("&fl=")
                     .append(query.getIdField());
             sb.append("&start=0&rows="+query.getNumResults());

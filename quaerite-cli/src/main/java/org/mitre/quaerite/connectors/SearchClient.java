@@ -70,22 +70,17 @@ public abstract class SearchClient implements Closeable {
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
-        HttpResponse httpResponse = null;
+
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            httpResponse = httpClient.execute(target, httpGet);
+            try(CloseableHttpResponse httpResponse = httpClient.execute(target, httpGet)) {
+                if (httpResponse.getStatusLine().getStatusCode() != 200) {
+                    throw new SearchClientException("Bad status code: "+httpResponse.getStatusLine().getStatusCode());
+                }
+                return EntityUtils.toByteArray(httpResponse.getEntity());
+            }
         } catch (IOException e) {
             throw new SearchClientException(e);
         }
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        if (httpResponse.getStatusLine().getStatusCode() != 200) {
-            throw new SearchClientException("Bad status code: "+httpResponse.getStatusLine().getStatusCode());
-        }
-        try {
-            IOUtils.copy(httpResponse.getEntity().getContent(), bos);
-        } catch (IOException e) {
-            throw new SearchClientException(e);
-        }
-        return bos.toByteArray();
     }
 
     protected int postJson(String url, String json) throws IOException {

@@ -16,30 +16,5 @@
  */
 package org.mitre.quaerite.features;
 
-import java.util.List;
-
-public class QF extends WeightableFeatureSet {
-
-    private static final String QF = "qf";
-
-    public QF(List<String> fields, List<Float> defaultWeights) {
-        super(fields, defaultWeights);
-    }
-
-    @Override
-    public String getParameter() {
-        return QF;
-    }
-
-    @Override
-    public String toString() {
-
-        return "QF{" +
-                "features=" + features +
-                ", defaultWeights=" + defaultWeights +
-                ", fields=" + fields +
-                ", min=" + min +
-                ", max=" + max +
-                '}';
-    }
+public interface Feature {
 }

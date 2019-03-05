@@ -16,30 +16,30 @@
  */
 package org.mitre.quaerite.features;
 
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-public class QF extends WeightableFeatureSet {
+public class FeatureSets {
 
-    private static final String QF = "qf";
 
-    public QF(List<String> fields, List<Float> defaultWeights) {
-        super(fields, defaultWeights);
+    Map<String, FeatureSet> featureSets;
+
+    public FeatureSets(Map<String, FeatureSet> featureSetMap) {
+        this.featureSets = featureSetMap;
     }
 
-    @Override
-    public String getParameter() {
-        return QF;
+    public FeatureSet get(String fName) {
+        return featureSets.get(fName);
     }
 
     @Override
     public String toString() {
-
-        return "QF{" +
-                "features=" + features +
-                ", defaultWeights=" + defaultWeights +
-                ", fields=" + fields +
-                ", min=" + min +
-                ", max=" + max +
+        return "FeatureSets{" +
+                "featureSets=" + featureSets +
                 '}';
+    }
+
+    public Set<String> keySet() {
+        return featureSets.keySet();
     }
 }

@@ -22,10 +22,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.mitre.quaerite.features.FeatureSets;
+import org.mitre.quaerite.features.FeatureSetsSerializer;
 import org.mitre.quaerite.scorecollectors.ScoreCollector;
 import org.mitre.quaerite.scorecollectors.ScoreCollectorListSerializer;
 
 public class ExperimentSet {
+
+    private static Gson GSON = new GsonBuilder().setPrettyPrinting()
+            .registerTypeHierarchyAdapter(ScoreCollector.class, new ScoreCollectorListSerializer.ScoreCollectorSerializer())
+            .registerTypeAdapter(FeatureSets.class, new FeatureSetsSerializer<>())
+            .create();
 
     private transient int maxRows = -1;
     private List<ScoreCollector> scoreCollectors = new ArrayList<>();

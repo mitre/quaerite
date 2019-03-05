@@ -16,30 +16,23 @@
  */
 package org.mitre.quaerite.features;
 
-import java.util.List;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
-public class QF extends WeightableFeatureSet {
+public class FloatFeature implements Feature {
+    DecimalFormat df = new DecimalFormat("#.#",
+            DecimalFormatSymbols.getInstance(Locale.US));
 
-    private static final String QF = "qf";
-
-    public QF(List<String> fields, List<Float> defaultWeights) {
-        super(fields, defaultWeights);
-    }
-
-    @Override
-    public String getParameter() {
-        return QF;
+    private final float v;
+    public FloatFeature(float value) {
+        this.v = value;
     }
 
     @Override
     public String toString() {
-
-        return "QF{" +
-                "features=" + features +
-                ", defaultWeights=" + defaultWeights +
-                ", fields=" + fields +
-                ", min=" + min +
-                ", max=" + max +
-                '}';
+        return df.format(v);
     }
+
+
 }

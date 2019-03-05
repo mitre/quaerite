@@ -17,10 +17,8 @@
 package org.mitre.quaerite.features;
 
 import java.util.List;
+import java.util.Set;
 
-/**
- * TODO -- these need to be more general...not necessarily tied to Solr
- */
 public interface FeatureSet {
     /**
      * This is the literal Solr parameter name.
@@ -33,9 +31,11 @@ public interface FeatureSet {
      * for a given Solr parameter
      * @return
      */
-    List<String> getFeatures();
+    Set<Feature> getEachDefaultFeature();
 
-    List<String> permute(int permuteDepth);
+    List<Set<Feature>> permute(int maxSize);
 
-    List<String> random();
+    Set<Feature> random();
+
+    //Set<WeightableFeature> mutate(Set<FeatureSet> features, double probability, double amplitude);
 }

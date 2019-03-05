@@ -1,0 +1,38 @@
+{
+  "scoreCollectors": [
+    {
+      "class": "NDCGCollector",
+      "params": {
+        "atK": 10
+      }
+    }
+  ],
+  "featureSets" : {
+    "tie": {
+      "defaultWeights": [
+        0.0, 0.1, 0.2
+      ]
+    },
+    "urls" : [
+      "http://localhost:8983/solr/tmdb",
+      "http://localhost:8983/solr/tmdb2"
+    ],
+    "customHandlers" : [
+      "custom1",
+      "custom2"
+    ],
+    "qf": {
+      "fields": [
+        "title",
+        "overview",
+        "people",
+        "content"
+      ],
+      "defaultWeights": [
+        "0.0",
+        "1.0",
+        "7.0"
+      ]
+    }
+  }
+}

@@ -67,7 +67,6 @@ public class DumpResults {
                 Option.builder("q")
                         .longOpt("querySets")
                         .hasArg()
-                        .required()
                         .desc("querySets to dump in rollups (comma-delimited)").build()
         );
         OPTIONS.addOption(
@@ -88,7 +87,7 @@ public class DumpResults {
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp(
-                    "java -jar org.mitre.quaerite.cli.AddExperiments",
+                    "java -jar org.mitre.quaerite.cli.DumpResults",
                     OPTIONS);
             return;
         }

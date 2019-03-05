@@ -22,6 +22,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -33,6 +38,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.mitre.quaerite.Experiment;
 import org.mitre.quaerite.ExperimentFeatures;
 import org.mitre.quaerite.ExperimentSet;
+import org.mitre.quaerite.features.Feature;
+import org.mitre.quaerite.features.FeatureSet;
+import org.mitre.quaerite.features.FeatureSets;
+import org.mitre.quaerite.features.URLS;
 import org.mitre.quaerite.scorecollectors.ScoreCollector;
 
 public class GenerateExperiments {
@@ -85,77 +94,73 @@ public class GenerateExperiments {
         for (ScoreCollector scoreCollector : experimentFeatures.getScoreCollectors()) {
             experimentSet.addScoreCollector(scoreCollector);
         }
-        for (String solrUrl : experimentFeatures.getSearchServerUrls()) {
-            for (String customHandler : experimentFeatures.getCustomHandlers()) {
-                addExperiments(solrUrl, customHandler, experimentFeatures, experimentSet);
-            }
-        }
+        FeatureSets featureSets = experimentFeatures.getFeatureSets();
+
+        Set<String> featureKeySet = featureSets.keySet();
+        List<String> featureKeys = new ArrayList<>(featureKeySet);
+        Map<String, Set<Feature>> instanceFeatures = new HashMap<>();
+        recurse(0, featureKeys, featureSets, instanceFeatures, experimentSet);
+
         try (Writer writer = Files.newBufferedWriter(output, StandardCharsets.UTF_8)) {
             writer.write(experimentSet.toJson());
             writer.flush();
         }
     }
 
-    private void addExperiments(String solrUrl,
-                                String customHandler,
-                                ExperimentFeatures experimentFeatures,
-                                ExperimentSet experimentSet) {
-        //fix this mess
-        for (String qfs : experimentFeatures.getQf().getFeatures()) {
-            for (String pfs : experimentFeatures.getPF().getFeatures()) {
-                for (String pf2s : experimentFeatures.getPF2().getFeatures()) {
-                    for (String pf3s : experimentFeatures.getPF3().getFeatures()) {
-                        if (!qfs.contains(",")) {
-                            addExperiments(solrUrl, customHandler,
-                                    qfs, pfs, pf2s, pf3s, "0.0", experimentFeatures, experimentSet);
-                        } else {
-                            for (String tie : experimentFeatures.getTie().getFeatures()) {
-                                addExperiments(solrUrl, customHandler,
-                                        qfs, pfs, pf2s, pf3s, tie, experimentFeatures, experimentSet);
+    private void recurse(int i, List<String> featureKeys, FeatureSets featureSets, Map<String, Set<Feature>> instanceFeatures, ExperimentSet experimentSet) {
+        if (i >= featureKeys.size()) {
+            addExperiments(instanceFeatures, experimentSet);
+            return;
+        }
+        String featureName = featureKeys.get(i);
+        FeatureSet featureSet = featureSets.get(featureName);
+        boolean hadContents = false;
+        for (Set<Feature> set : featureSet.permute(1000)) {
+            instanceFeatures.put(featureName, set);
+            recurse(i+1, featureKeys, featureSets, instanceFeatures, experimentSet);
+            hadContents = true;
+        }
+        if (! hadContents) {
+            recurse(i+1, featureKeys, featureSets, instanceFeatures, experimentSet);
+        }
+    }
 
-                            }
-                        }
-                    }
+    private void addExperiments(Map<String, Set<Feature>> features,
+                                ExperimentSet experimentSet) {
+        String experimentName = "experiment_"+experimentCount++;
+        String searchServerUrl = getOnlyString(features.get("urls"));
+        String customHandler = getOnlyString(features.get("customHandlers"));
+
+        Experiment experiment = (customHandler == null) ?
+                new Experiment(experimentName, searchServerUrl) :
+                new Experiment(experimentName, searchServerUrl, customHandler);
+        for (Map.Entry<String, Set<Feature>> e : features.entrySet()) {
+            if (!e.getKey().equals("urls") && !e.getKey().equals("customHandlers")) {
+                for (Feature f : e.getValue()) {
+                    experiment.addParam(e.getKey(), f.toString());
                 }
             }
         }
-    }
-
-    private void addExperiments(String solrUrl, String customHandler,
-                                String qfs, String pfs, String pf2s,
-                                String pf3s, String tie,
-                                ExperimentFeatures experimentFeatures,
-                                ExperimentSet experimentSet) {
-        String experimentName = "experiment_"+experimentCount++;
-        Experiment experiment = (StringUtils.isBlank(customHandler)) ?
-                new Experiment(experimentName, solrUrl) :
-                new Experiment(experimentName, solrUrl, customHandler);
-        for (String qf : qfs.split(",")) {
-            experiment.addParam("qf", qf);
-        }
-
-        if (! StringUtils.isBlank(pfs)) {
-            for (String pf : pfs.split(",")) {
-                experiment.addParam("pf", pf);
-            }
-        }
-
-        if (! StringUtils.isBlank(pf2s)) {
-            for (String pf2 : pf2s.split(",")) {
-                experiment.addParam("pf2", pf2);
-            }
-        }
-
-        if (! StringUtils.isBlank(pf3s)) {
-            for (String pf3 : pf3s.split(",")) {
-                experiment.addParam("pf", pf3);
-            }
-        }
-        if (! StringUtils.isBlank(tie)) {
-            experiment.addParam("tie", tie);
-        }
         experimentSet.addExperiment(experimentName, experiment);
-
     }
+
+    private String getOnlyString(Set<Feature> features) {
+        if (features == null) {
+            return null;
+        }
+        if (features.size() != 1) {
+            throw new IllegalArgumentException("features must have only one value: "+ features.size());
+        }
+        for (Feature f : features) {
+            return f.toString();
+        }
+        return "";
+    }
+
+    private class NamedFeatureSet {
+        String name;
+        FeatureSet featureSet;
+    }
+
 
 }

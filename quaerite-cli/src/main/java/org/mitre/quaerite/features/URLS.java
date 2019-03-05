@@ -16,30 +16,17 @@
  */
 package org.mitre.quaerite.features;
 
+
 import java.util.List;
 
-public class QF extends WeightableFeatureSet {
+public class URLS extends SimpleFeatureSet {
 
-    private static final String QF = "qf";
 
-    public QF(List<String> fields, List<Float> defaultWeights) {
-        super(fields, defaultWeights);
+    public URLS(List<SimpleFeature> features) {
+        super(features);
     }
-
     @Override
     public String getParameter() {
-        return QF;
-    }
-
-    @Override
-    public String toString() {
-
-        return "QF{" +
-                "features=" + features +
-                ", defaultWeights=" + defaultWeights +
-                ", fields=" + fields +
-                ", min=" + min +
-                ", max=" + max +
-                '}';
+        return "searchServerUrls";
     }
 }
