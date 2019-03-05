@@ -66,7 +66,7 @@ public class TMDBJsonToSolr {
             jsonReader.endObject();
         }
         searchClient.addDocuments(buildDocuments(movies));
-        System.out.println("added "+cnt + " in "+
+        System.out.println("finished indexing "+cnt + " in "+
                 (System.currentTimeMillis()-start) + " ms");
     }
 

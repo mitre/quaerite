@@ -1,0 +1,19 @@
+<fields>
+  <field name="original_language"  type="text_general" stored="true"/>
+  <field name="original_title"  type="text_general" stored="true"/>
+  <field name="title"  type="text_general" stored="true"/>
+  <field name="overview"  type="text_general" stored="true"/>
+  <field name="genres"  type="text_general" stored="true" multiValued="true"/>
+  <field name="production_companies"  type="text_general" stored="true" multiValued="true"/>
+  <field name="cast"  type="text_general" stored="true" multiValued="true"/>
+  <field name="directors"  type="text_general" stored="true" multiValued="true"/>
+
+  <field name="budget"  type="tdouble" stored="true"/>
+  <field name="revenue"  type="tdouble" stored="true"/>
+  <field name="popularity"  type="tdouble" stored="true"/>
+  <field name="vote_average"  type="tdouble" stored="true"/>
+  <field name="vote_count"  type="tint" stored="true"/>
+
+  <field name="release_date"  type="tdate" stored="true"/>
+
+</fields>
