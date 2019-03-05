@@ -34,4 +34,8 @@ public interface FeatureSet {
      * @return
      */
     List<String> getFeatures();
+
+    List<String> permute(int permuteDepth);
+
+    List<String> random();
 }
