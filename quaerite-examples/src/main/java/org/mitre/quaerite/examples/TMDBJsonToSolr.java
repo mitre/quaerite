@@ -270,7 +270,10 @@ public class TMDBJsonToSolr {
         @Override
         public String toString() {
             return "Movie{" +
-                    "adult=" + adult +
+                    "dateFormat=" + dateFormat +
+                    ", UTCFormat=" + UTCFormat +
+                    ", id='" + id + '\'' +
+                    ", adult=" + adult +
                     ", originalLanguage='" + originalLanguage + '\'' +
                     ", originalTitle='" + originalTitle + '\'' +
                     ", title='" + title + '\'' +
@@ -278,9 +281,13 @@ public class TMDBJsonToSolr {
                     ", popularity=" + popularity +
                     ", voteCount=" + voteCount +
                     ", voteAverage=" + voteAverage +
+                    ", releaseDate=" + releaseDate +
+                    ", budget=" + budget +
+                    ", revenue=" + revenue +
                     ", genres=" + genres +
                     ", cast=" + cast +
                     ", directors=" + directors +
+                    ", productionCompanies=" + productionCompanies +
                     '}';
         }
 
