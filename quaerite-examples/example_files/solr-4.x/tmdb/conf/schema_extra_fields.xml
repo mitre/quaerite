@@ -1,0 +1,75 @@
+<fields>
+
+  <field name="original_language" type="text_en" stored="true"/>
+  <field name="original_title" type="text_en" stored="true"/>
+  <field name="title" type="text_en" stored="true"/>
+  <field name="overview" type="text_en" stored="true"/>
+  <field name="genres" type="text_en" stored="true" multiValued="true"/>
+  <field name="production_companies" type="text_en" stored="true" multiValued="true"/>
+  <field name="cast" type="text_en" stored="true" multiValued="true"/>
+  <field name="directors" type="text_en" stored="true" multiValued="true"/>
+  <field name="people" type="text_en" stored="true" multiValued="true"/>
+
+  <field name="budget" type="tdouble" stored="true"/>
+  <field name="revenue" type="tdouble" stored="true"/>
+  <field name="popularity" type="tdouble" stored="true"/>
+  <field name="vote_average" type="tdouble" stored="true"/>
+  <field name="vote_count" type="tint" stored="true"/>
+
+  <field name="release_date" type="tdate" stored="true"/>
+
+  <dynamicField name="tb_*" type="text_basic"  indexed="true" stored="true"/>
+  <dynamicField name="tbs_*" type="text_basic"  indexed="true" 
+    stored="true" multiValued="true"/>
+  <dynamicField name="tbt_*" type="text_basic"  indexed="true" 
+    stored="false" multiValued="true"/>
+ 
+  <dynamicField name="tss_*" type="text_simple_stem"  indexed="true" stored="true"/>
+  <dynamicField name="tsss_*" type="text_simple_stem"  indexed="true" 
+    stored="true" multiValued="true"/>
+  <dynamicField name="tsst_*" type="text_simple_stem"  indexed="true" 
+    stored="false" multiValued="true"/>
+
+  <!-- model "people" as their own field -->
+  <copyField source="cast" dest="people"/>
+  <copyField source="directors" dest="people"/> 
+
+  <!-- dump everything into text --> 
+  <copyField source="title" dest="text"/>
+  <copyField source="overview" dest="text"/>
+  <copyField source="original_title" dest="text"/>
+  <copyField source="cast" dest="text"/>
+  <copyField source="directors" dest="text"/>
+
+
+  <!-- add "text basic" analyzer chains -->
+  <copyField source="title" dest="tb_title"/>
+  <copyField source="overview" dest="tb_overview"/>
+  <copyField source="original_title" dest="tb_original_title"/>
+  <copyField source="cast" dest="tbs_cast"/>
+  <copyField source="directors" dest="tbs_directors"/>
+  <copyField source="cast" dest="tbs_people"/>
+  <copyField source="directors" dest="tbs_people"/>
+  <!-- dump everything into text -->
+  <copyField source="title" dest="tbt_text"/>
+  <copyField source="overview" dest="tbt_text"/>
+  <copyField source="original_title" dest="tbt_text"/>
+  <copyField source="cast" dest="tbt_text"/>
+  <copyField source="directors" dest="tbt_text"/>
+
+  <!-- now copy all those "text basic" to "text simple stem"-->
+  <copyField source="title" dest="tss_title"/>
+  <copyField source="overview" dest="tss_overview"/>
+  <copyField source="original_title" dest="tss_original_title"/>
+  <copyField source="cast" dest="tsss_cast"/>
+  <copyField source="directors" dest="tsss_directors"/>
+  <copyField source="cast" dest="tsss_people"/>
+  <copyField source="directors" dest="tsss_people"/>
+  <!-- dump everything into text --> 
+  <copyField source="title" dest="tsst_text"/>
+  <copyField source="overview" dest="tsst_text"/>
+  <copyField source="original_title" dest="tsst_text"/>
+  <copyField source="cast" dest="tsst_text"/>
+  <copyField source="directors" dest="tsst_text"/>
+
+</fields>

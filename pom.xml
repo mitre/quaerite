@@ -40,7 +40,7 @@
     <modules>
         <module>quaerite-parent</module>
         <module>quaerite-cli</module>
-        <module>quaerite-demos</module>
+        <module>quaerite-examples</module>
     </modules>
 
 </project>
