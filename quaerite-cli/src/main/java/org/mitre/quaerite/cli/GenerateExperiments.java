@@ -34,7 +34,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.StringUtils;
 import org.mitre.quaerite.Experiment;
 import org.mitre.quaerite.ExperimentFeatures;
 import org.mitre.quaerite.ExperimentSet;
@@ -45,6 +44,13 @@ import org.mitre.quaerite.features.URLS;
 import org.mitre.quaerite.scorecollectors.ScoreCollector;
 
 public class GenerateExperiments {
+
+    enum MODE {
+        PERMUTE,
+        RANDOM
+    }
+
+    private static final int DEFAULT_MAX = 1000;
 
     static Options OPTIONS = new Options();
 
@@ -63,6 +69,27 @@ public class GenerateExperiments {
                         .desc("experiments file")
                         .required().build()
         );
+        OPTIONS.addOption(
+                Option.builder("p")
+                        .longOpt("permutate")
+                        .hasArg(false)
+                        .desc("all permutations (default)")
+                        .required(false).build()
+        );
+        OPTIONS.addOption(
+                Option.builder("r")
+                        .longOpt("random")
+                        .hasArg(true)
+                        .desc("generate x random experiments based on features")
+                        .required(false).build()
+        );
+        OPTIONS.addOption(
+                Option.builder("m")
+                        .longOpt("max")
+                        .hasArg(true)
+                        .desc("maximum number of experiments to generate (default is 1000)")
+                        .required(false).build()
+        );
     }
     private int experimentCount = 0;
     public static void main(String[] args) throws Exception {
@@ -77,14 +104,23 @@ public class GenerateExperiments {
                     OPTIONS);
             return;
         }
-
+        int max = DEFAULT_MAX;
+        if (commandLine.hasOption("m")) {
+            max = Integer.parseInt(commandLine.getOptionValue("m"));
+        } else if (commandLine.hasOption("r")) {
+            max = Integer.parseInt(commandLine.getOptionValue("r"));
+        }
+        MODE mode = MODE.PERMUTE;
+        if (commandLine.hasOption("r")) {
+            mode = MODE.RANDOM;
+        }
         Path input = Paths.get(commandLine.getOptionValue('i'));
         Path output = Paths.get(commandLine.getOptionValue("o"));
         GenerateExperiments generateExperiments = new GenerateExperiments();
-        generateExperiments.execute(input, output);
+        generateExperiments.execute(input, output, new GenerateConfig(mode, max));
     }
 
-    private void execute(Path input, Path output) throws Exception {
+    private void execute(Path input, Path output, GenerateConfig generateConfig) throws Exception {
         ExperimentFeatures experimentFeatures = null;
 
         try (Reader reader = Files.newBufferedReader(input, StandardCharsets.UTF_8)) {
@@ -94,12 +130,16 @@ public class GenerateExperiments {
         for (ScoreCollector scoreCollector : experimentFeatures.getScoreCollectors()) {
             experimentSet.addScoreCollector(scoreCollector);
         }
-        FeatureSets featureSets = experimentFeatures.getFeatureSets();
-
-        Set<String> featureKeySet = featureSets.keySet();
-        List<String> featureKeys = new ArrayList<>(featureKeySet);
-        Map<String, Set<Feature>> instanceFeatures = new HashMap<>();
-        recurse(0, featureKeys, featureSets, instanceFeatures, experimentSet);
+        if (generateConfig.mode == MODE.PERMUTE) {
+            FeatureSets featureSets = experimentFeatures.getFeatureSets();
+            Set<String> featureKeySet = featureSets.keySet();
+            List<String> featureKeys = new ArrayList<>(featureKeySet);
+            Map<String, Set<Feature>> instanceFeatures = new HashMap<>();
+            recurse(0, featureKeys, featureSets, instanceFeatures, experimentSet, generateConfig.max);
+        } else {
+            generateRandom(experimentFeatures.getFeatureSets(),
+                    experimentSet, generateConfig.max);
+        }
 
         try (Writer writer = Files.newBufferedWriter(output, StandardCharsets.UTF_8)) {
             writer.write(experimentSet.toJson());
@@ -107,9 +147,28 @@ public class GenerateExperiments {
         }
     }
 
-    private void recurse(int i, List<String> featureKeys, FeatureSets featureSets, Map<String, Set<Feature>> instanceFeatures, ExperimentSet experimentSet) {
+    private void generateRandom(FeatureSets featureSets, ExperimentSet experimentSet, int max) {
+
+        for (int i = 0; i < max; i++) {
+            Map<String, Set<Feature>> instanceFeatures = new HashMap<>();
+            for (String featureKey : featureSets.keySet()) {
+                FeatureSet featureSet = featureSets.get(featureKey);
+                instanceFeatures.put(featureKey, featureSet.random());
+            }
+            addExperiments(instanceFeatures, experimentSet);
+        }
+
+    }
+
+    private void recurse(int i, List<String> featureKeys,
+                         FeatureSets featureSets,
+                         Map<String, Set<Feature>> instanceFeatures,
+                         ExperimentSet experimentSet, int max) {
         if (i >= featureKeys.size()) {
             addExperiments(instanceFeatures, experimentSet);
+            return;
+        }
+        if (experimentSet.getExperiments().size() >= max) {
             return;
         }
         String featureName = featureKeys.get(i);
@@ -117,11 +176,11 @@ public class GenerateExperiments {
         boolean hadContents = false;
         for (Set<Feature> set : featureSet.permute(1000)) {
             instanceFeatures.put(featureName, set);
-            recurse(i+1, featureKeys, featureSets, instanceFeatures, experimentSet);
+            recurse(i+1, featureKeys, featureSets, instanceFeatures, experimentSet, max);
             hadContents = true;
         }
         if (! hadContents) {
-            recurse(i+1, featureKeys, featureSets, instanceFeatures, experimentSet);
+            recurse(i+1, featureKeys, featureSets, instanceFeatures, experimentSet, max);
         }
     }
 
@@ -157,9 +216,14 @@ public class GenerateExperiments {
         return "";
     }
 
-    private class NamedFeatureSet {
-        String name;
-        FeatureSet featureSet;
+    private static class GenerateConfig {
+        final MODE mode;
+        final int max;
+
+        public GenerateConfig(MODE mode, int max) {
+            this.mode = mode;
+            this.max = max;
+        }
     }
 
 
