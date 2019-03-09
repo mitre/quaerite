@@ -56,45 +56,31 @@ abstract public class FloatFeatureSet implements FeatureSet<FloatFeature> {
     }
 
     @Override
-    public Set<Feature> random() {
+    public Feature random() {
         float f = floats.get(random.nextInt(floats.size()));
-        return Collections.singleton(new FloatFeature(f));
+        return new FloatFeature(f);
     }
 
     @Override
-    public List<Set<Feature>> permute(int maxSize) {
-        List<Set<Feature>> ret = new ArrayList<>();
-        for (Feature f : getEachDefaultFeature()) {
-            ret.add(Collections.singleton(f));
-        }
-        return ret;
-    }
-
-
-    @Override
-    public Set<Feature> getEachDefaultFeature() {
-        Set<Feature> ret = new HashSet<>();
+    public List<Feature> permute(int maxSize) {
+        List<Feature> ret = new ArrayList<>();
         for (float f : floats) {
             ret.add(new FloatFeature(f));
         }
         return ret;
     }
 
+
     public List<Float> getFloats() {
         return floats;
     }
 
     @Override
-    public Set<FloatFeature> mutate(Set<FloatFeature> features, double probability, double amplitude) {
-        if (floats.size() == 0 || features.size() == 0) {
-            return Collections.emptySet();
-        }
+    public FloatFeature mutate(FloatFeature floatFeature, double probability, double amplitude) {
         if (MathUtil.RANDOM.nextDouble() <= probability) {
-            return
-                    Collections.singleton(
-                            new FloatFeature(MathUtil.calcMutatedWeight(min, max, amplitude)));
+            return new FloatFeature(MathUtil.calcMutatedWeight(min, max, amplitude));
         } else {
-            return features;
+            return floatFeature;
         }
     }
 }

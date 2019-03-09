@@ -16,87 +16,48 @@
  */
 package org.mitre.quaerite.features;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.mitre.quaerite.features.sets.WeightableFeatureSet;
 import org.mitre.quaerite.util.MathUtil;
 
-public class WeightableFeature implements Feature<WeightableFeature> {
+public class WeightableListFeature implements Feature<WeightableListFeature> {
 
-    public static Float UNSPECIFIED_WEIGHT = null;
+    private List<WeightableField> weightableFields;
 
-    public static float DEFAULT_WEIGHT = 0;
-    private static final Pattern WEIGHT_PATTERN =
-            Pattern.compile("(.*?)\\^((?:\\d+)(?:\\.\\d+)?)");
-
-    private final String feature;
-    private final Float weight;
-    private final transient DecimalFormat df = new DecimalFormat("#.#",
-            DecimalFormatSymbols.getInstance(Locale.US));
-
-    public WeightableFeature(String s) {
-        Matcher m = WEIGHT_PATTERN.matcher(s);
-        if (m.matches()) {
-            feature = m.group(1);
-            weight = Float.parseFloat(m.group(2));
-        } else {
-            feature = s;
-            weight = UNSPECIFIED_WEIGHT;
-        }
-    }
-
-    public WeightableFeature(String feature, float weight) {
-        this.feature = feature;
-        this.weight = weight;
-    }
-
-
-
-    @Override
-    public String toString() {
-        if (weight != null) {
-            return feature+"^"+df.format(weight);
-        }
-        return feature;
-    }
-
-    public boolean hasWeight() {
-        return weight != null;
-    }
-
-    public String getFeature() {
-        return feature;
-    }
-
-    public Float getWeight() {
-        return weight;
+    public WeightableListFeature() {
+        weightableFields = new ArrayList<>();
     }
 
     @Override
-    public Pair<Set<WeightableFeature>, Set<WeightableFeature>> crossover(Set<WeightableFeature> parentA, Set<WeightableFeature> parentB) {
-        Map<String, WeightableFeature> parentAWeights = new HashMap<>();
-        Map<String, WeightableFeature> parentBWeights = new HashMap<>();
+    public Pair<WeightableListFeature, WeightableListFeature> crossover(WeightableListFeature parentB) {
+        Map<String, WeightableField> parentAWeights = new HashMap<>();
+        Map<String, WeightableField> parentBWeights = new HashMap<>();
+        for (WeightableField f : weightableFields) {
+            parentAWeights.put(f.getFeature(), f);
+        }
+
+        for (WeightableField f : parentB.getWeightableFields()) {
+            parentBWeights.put(f.getFeature(), f);
+        }
+
         Set<String> fieldSet = new HashSet<>();
         fieldSet.addAll(parentAWeights.keySet());
         fieldSet.addAll(parentBWeights.keySet());
         List<String> fields = new ArrayList<>(fieldSet);
         int crossoverPoint =
                 (fields.size() > 1) ?
-                    MathUtil.RANDOM.nextInt(1, fields.size()-1) :
+                        MathUtil.RANDOM.nextInt(1, fields.size() - 1) :
                         0;
-        Set<WeightableFeature> childA = new HashSet<>();
-        Set<WeightableFeature> childB = new HashSet<>();
+        WeightableListFeature childA = new WeightableListFeature();
+        WeightableListFeature childB = new WeightableListFeature();
         for (int i = 0; i < crossoverPoint; i++) {
             String fieldName = fields.get(i);
             if (parentAWeights.containsKey(fieldName)) {
@@ -116,5 +77,25 @@ public class WeightableFeature implements Feature<WeightableFeature> {
             }
         }
         return Pair.of(childA, childB);
+    }
+
+    public void add(WeightableField weightableField) {
+        weightableFields.add(weightableField);
+    }
+
+    public void addAll(Collection all) {
+        weightableFields.addAll(all);
+    }
+
+    public List<WeightableField> getWeightableFields() {
+        return weightableFields;
+    }
+
+    public int size() {
+        return weightableFields.size();
+    }
+
+    public WeightableField get(int i) {
+        return weightableFields.get(i);
     }
 }

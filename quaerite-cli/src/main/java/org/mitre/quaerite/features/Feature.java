@@ -21,5 +21,5 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
 public interface Feature<T> {
-    Pair<Set<T>, Set<T>> crossover(Set<T> parentA, Set<T> parentB);
+    Pair<T, T> crossover(T parentB);
 }

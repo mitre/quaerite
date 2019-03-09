@@ -17,22 +17,19 @@
 package org.mitre.quaerite.features.sets;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
 
 import org.mitre.quaerite.features.Feature;
-import org.mitre.quaerite.features.WeightableFeature;
+import org.mitre.quaerite.features.WeightableField;
+import org.mitre.quaerite.features.WeightableListFeature;
 import org.mitre.quaerite.util.MathUtil;
 
-public abstract class WeightableFeatureSet<T> implements FeatureSet<WeightableFeature> {
+public abstract class WeightableFeatureSet<T> implements FeatureSet<WeightableListFeature> {
     private static final float DEFAULT_MIN = 0.0f;
     private static final float DEFAULT_MAX = 1.0f;
 
 
-    transient List<WeightableFeature> features;
+    transient WeightableListFeature features;
     transient float min;
     transient float max;
 
@@ -61,15 +58,15 @@ public abstract class WeightableFeatureSet<T> implements FeatureSet<WeightableFe
             max = tmpMax;
         }
     }
-    private static List<WeightableFeature> convert(List<String> fields) {
-        List<WeightableFeature> ret = new ArrayList<>();
+    private static WeightableListFeature convert(List<String> fields) {
+        WeightableListFeature ret = new WeightableListFeature();
         for (String f : fields) {
-            ret.add(new WeightableFeature(f));
+            ret.add(new WeightableField(f));
         }
         return ret;
     }
 
-    public List<WeightableFeature> getFeatures() {
+    public WeightableListFeature getFeatures() {
         return features;
     }
 
@@ -78,13 +75,13 @@ public abstract class WeightableFeatureSet<T> implements FeatureSet<WeightableFe
     }
 
     @Override
-    public Set<Feature> random() {
-        Set<Feature> ret = new HashSet<>();
-        for (Feature feature : features) {
-            if (((WeightableFeature)feature).hasWeight()) {
-                ret.add(feature);
+    public Feature random() {
+        WeightableListFeature ret = new WeightableListFeature();
+        for (WeightableField field : features.getWeightableFields()) {
+            if (field.hasWeight()) {
+                ret.add(field);
             } else {
-                ret.add(new WeightableFeature(((WeightableFeature)feature).getFeature(),
+                ret.add(new WeightableField(field.getFeature(),
                         MathUtil.getRandomFloat(min, max)));
             }
         }
@@ -92,10 +89,10 @@ public abstract class WeightableFeatureSet<T> implements FeatureSet<WeightableFe
     }
 
     @Override
-    public List<Set<Feature>> permute(int maxSize) {
-        List<Set<Feature>> collector = new ArrayList<>();
-        Set<Feature> currFeatures = new HashSet<>();
-        for (WeightableFeature f : features) {
+    public List<Feature> permute(int maxSize) {
+        List<Feature> collector = new ArrayList<>();
+        WeightableListFeature currFeatures = new WeightableListFeature();
+        for (WeightableField f : features.getWeightableFields()) {
             if (f.hasWeight()) {
                 currFeatures.add(f);
             }
@@ -107,33 +104,26 @@ public abstract class WeightableFeatureSet<T> implements FeatureSet<WeightableFe
         return collector;
     }
 
-    @Override
-    public Set<Feature> getEachDefaultFeature() {
-        Set<Feature> ret = new HashSet<>();
-        ret.addAll(features);
-        return ret;
-    }
-
     private void recurse(int i, int maxSize,
-                         Set<Feature> currFeatures,
-                         List<Set<Feature>> collector) {
+                         WeightableListFeature currFeatures,
+                         List<Feature> collector) {
         if (i >= fields.size()) {
             return;
         }
         if (collector.size() >= maxSize) {
             return;
         }
-        Set base = new HashSet();
-        base.addAll(currFeatures);
+        WeightableListFeature base = new WeightableListFeature();
+        base.addAll(currFeatures.getWeightableFields());
         if (features.get(i).hasWeight()) {
             recurse(i+1, maxSize, base, collector);
         } else {
             for (Float f : defaultWeights) {
                 if (f > 0.0f) {
-                    Set<Feature> tmp = new HashSet<>();
-                    tmp.addAll(base);
+                    WeightableListFeature tmp = new WeightableListFeature();
+                    tmp.addAll(base.getWeightableFields());
                     tmp.add(
-                            new WeightableFeature(features.get(i).getFeature(), f));
+                            new WeightableField(features.get(i).getFeature(), f));
                     collector.add(tmp);
                     recurse(i + 1, maxSize, tmp, collector);
                 } else {
@@ -144,12 +134,12 @@ public abstract class WeightableFeatureSet<T> implements FeatureSet<WeightableFe
     }
 
     @Override
-    public Set<WeightableFeature> mutate(Set<WeightableFeature> features, double probability, double amplitude) {
-        Set<WeightableFeature> mutated = new LinkedHashSet<>();
-        for (WeightableFeature f : features) {
+    public WeightableListFeature mutate(WeightableListFeature weightableListFeature, double probability, double amplitude) {
+        WeightableListFeature mutated = new WeightableListFeature();
+        for (WeightableField f : features.getWeightableFields()) {
             if (MathUtil.RANDOM.nextDouble() <= probability) {
-                WeightableFeature mutatedFeature =
-                        new WeightableFeature(f.getFeature(),
+                WeightableField mutatedFeature =
+                        new WeightableField(f.getFeature(),
                                 MathUtil.calcMutatedWeight(min, max, amplitude));
                 mutated.add(mutatedFeature);
             } else {

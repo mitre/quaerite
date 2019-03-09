@@ -18,20 +18,24 @@ package org.mitre.quaerite.features.serializers;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
 import org.mitre.quaerite.features.StringFeature;
+import org.mitre.quaerite.features.WeightableListFeature;
 import org.mitre.quaerite.features.sets.FeatureSet;
 import org.mitre.quaerite.features.sets.FeatureSets;
 import org.mitre.quaerite.features.sets.FloatFeatureSet;
@@ -111,19 +115,45 @@ public class FeatureSetsSerializer extends AbstractFeatureSerializer
     }
 
     private JsonElement serializeFeatureSet(FeatureSet featureSet) {
-        JsonObject ret = new JsonObject();
+
         if (featureSet instanceof FloatFeatureSet) {
-            ret.add(DEFAULT_WEIGHT_KEY, floatListToJsonArr(((FloatFeatureSet)featureSet).getFloats()));
+            return floatListToJsonArr(((FloatFeatureSet)featureSet).getFloats());
         } else if (featureSet instanceof WeightableFeatureSet) {
-            ret.add(FIELDS_KEY, featureListJsonArr(((WeightableFeatureSet) featureSet).getFeatures()));
+            JsonObject ret = new JsonObject();
+            ret.add(FIELDS_KEY, weightFeatureToJsonArray(
+                    ((WeightableFeatureSet) featureSet).getFeatures()));
             ret.add(DEFAULT_WEIGHT_KEY,
                     floatListToJsonArr(((WeightableFeatureSet) featureSet).getDefaultWeights()));
+            return ret;
         } else if (featureSet instanceof StringFeatureSet) {
-            ret.add(FIELDS_KEY, featureListJsonArr(((WeightableFeatureSet) featureSet).getFeatures()));
+            return stringListToJsonArr(((StringFeatureSet)featureSet).getStrings());
         } else {
             throw new IllegalArgumentException("not yet implemented");
         }
-        return ret;
+    }
+
+    private JsonElement stringListToJsonArr(List<StringFeature> strings) {
+        if (strings.size() == 1) {
+            return new JsonPrimitive(strings.get(0).toString());
+        } else {
+            JsonArray ret = new JsonArray();
+            for (StringFeature f : strings) {
+                ret.add(f.toString());
+            }
+            return ret;
+        }
+    }
+
+    private JsonElement weightFeatureToJsonArray(WeightableListFeature features) {
+        if (features.size() == 1) {
+            return new JsonPrimitive(features.get(0).toString());
+        } else {
+            JsonArray ret = new JsonArray();
+            for (int i = 0; i < features.size(); i++) {
+                ret.add(new JsonPrimitive(features.get(0).toString()));
+            }
+            return ret;
+        }
     }
 
     private FeatureSet buildWeightableFeatureSet(Class clazz,

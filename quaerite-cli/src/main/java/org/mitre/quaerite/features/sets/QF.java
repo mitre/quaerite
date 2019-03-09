@@ -16,14 +16,11 @@
  */
 package org.mitre.quaerite.features.sets;
 
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
-import org.mitre.quaerite.features.Feature;
-import org.mitre.quaerite.features.WeightableFeature;
+import org.mitre.quaerite.features.WeightableField;
 
-public class QF extends WeightableFeatureSet<WeightableFeature> {
+public class QF extends WeightableFeatureSet<WeightableField> {
 
     private static final String QF = "qf";
 

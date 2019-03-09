@@ -54,8 +54,9 @@ public class TestFeatures {
         for (int i = 0; i < 10; i++) {
             boolean foundAuthor = false;
             boolean foundContent = false;
-            for (Feature w : qf.random()) {
-                WeightableFeature wf = (WeightableFeature)w;
+            WeightableListFeature list = (WeightableListFeature)qf.random();
+            for (int j = 0; j < list.size(); j++) {
+                WeightableField wf = list.get(j);
                 if (wf.getFeature().equals("author")) {
                     foundAuthor = true;
                     assertEquals(1.0f, wf.getWeight(), 0.001);
@@ -72,7 +73,7 @@ public class TestFeatures {
             assertTrue(foundContent);
         }
 
-        List<Set<Feature>> permutations = qf.permute(200);
+        List<Feature> permutations = qf.permute(200);
         assertEquals(9, permutations.size());
     }
 

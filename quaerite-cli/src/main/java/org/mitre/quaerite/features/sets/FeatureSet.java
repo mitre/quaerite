@@ -33,11 +33,11 @@ public interface FeatureSet<T> {
      * for a given Solr parameter
      * @return
      */
-    Set<Feature> getEachDefaultFeature();
+    //Set<Feature> getEachDefaultFeature();
 
-    List<Set<Feature>> permute(int maxSize);
+    List<Feature> permute(int maxSize);
 
-    Set<Feature> random();
+    Feature random();
 
-    Set<T> mutate(Set<T> features, double probability, double amplitude);
+    T mutate(T feature, double probability, double amplitude);
 }

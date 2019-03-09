@@ -28,6 +28,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.features.StringFeature;
+import org.mitre.quaerite.features.WeightableField;
+import org.mitre.quaerite.features.WeightableListFeature;
+import org.mitre.quaerite.features.sets.WeightableFeatureSet;
 import org.mitre.quaerite.scorecollectors.HadAtLeastOneHitAtKCollector;
 
 public class TestExperimentDB {
@@ -47,12 +50,12 @@ public class TestExperimentDB {
     public void testBasicDB() throws Exception {
         ExperimentDB db = ExperimentDB.open(DB_DIR);
         Experiment experiment = new Experiment("test1", "http://solr");
-        experiment.addParam("bq", new StringFeature("bq1"));
-        experiment.addParam("bq", new StringFeature("bq2"));
-        experiment.addParam("bq", new StringFeature("bq3"));
-        experiment.addParam("qf", new StringFeature("qf1"));
-        experiment.addParam("qf", new StringFeature("qf2"));
-        experiment.addParam("qf", new StringFeature("qf3"));
+        WeightableListFeature weightableListFeature = new WeightableListFeature();
+        weightableListFeature.add(new WeightableField("f1^2"));
+        weightableListFeature.add(new WeightableField("f2^5"));
+        weightableListFeature.add(new WeightableField("f3^10"));
+
+        experiment.addParam("qf", weightableListFeature);
         experiment.addFilterQuery("fq1");
         experiment.addFilterQuery("fq2");
         db.addExperiment(experiment);
@@ -74,7 +77,7 @@ public class TestExperimentDB {
 
         assertEquals("test1", revivified.getName());
         assertEquals("http://solr", revivified.getSearchServerUrl());
-        assertEquals(3, revivified.getParams("bq").size());
+        assertEquals(3, ((WeightableListFeature)revivified.getParams("qf")).size());
         assertEquals(2, revivified.getFilterQueries().size());
         db.close();
 

@@ -22,6 +22,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.mitre.quaerite.util.MathUtil;
 
 public class FloatFeature implements Feature<FloatFeature> {
     private final transient DecimalFormat df = new DecimalFormat("#.###",
@@ -37,9 +38,13 @@ public class FloatFeature implements Feature<FloatFeature> {
         return df.format(v);
     }
 
-
     @Override
-    public Pair<Set<FloatFeature>, Set<FloatFeature>> crossover(Set<FloatFeature> parentA, Set<FloatFeature> parentB) {
-        return Pair.of(parentA, parentB);
+    public Pair<FloatFeature, FloatFeature> crossover(FloatFeature parentB) {
+        //order shouldn't matter
+        if (MathUtil.RANDOM.nextFloat() > 0.5) {
+            return Pair.of(this, parentB);
+        } else {
+            return Pair.of(parentB, this);
+        }
     }
 }

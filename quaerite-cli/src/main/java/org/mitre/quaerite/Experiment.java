@@ -27,11 +27,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.mitre.quaerite.features.Feature;
 import org.mitre.quaerite.features.ParamsMap;
-import org.mitre.quaerite.features.serializers.FeatureSetsSerializer;
 import org.mitre.quaerite.features.serializers.ParamsSerializer;
-import org.mitre.quaerite.features.sets.FeatureSets;
-import org.mitre.quaerite.scorecollectors.ScoreCollector;
-import org.mitre.quaerite.scorecollectors.ScoreCollectorListSerializer;
 
 public class Experiment {
 
@@ -60,12 +56,7 @@ public class Experiment {
         if (key.equals("fq")) {
             throw new IllegalArgumentException("set fqs specially: setFilterQuery(fq)");
         }
-        Set<Feature> set = params.getParams().get(key);
-        if (set == null) {
-            set = new HashSet<>();
-        }
-        set.add(feature);
-        params.put(key, set);
+        params.put(key, feature);
     }
 
     public void addFilterQuery(String fq) {
@@ -83,13 +74,14 @@ public class Experiment {
     }
 
     public String toJson() {
+        String json = GSON.toJson(this);
         return GSON.toJson(this);
     }
 
-    public Map<String, Set<Feature>> getParams() {
+    public Map<String, Feature> getParams() {
         //defensively copy
-        Map<String, Set<Feature>> ret = new HashMap<>();
-        for (Map.Entry<String, Set<Feature>> e : params.getParams().entrySet()) {
+        Map<String, Feature> ret = new HashMap<>();
+        for (Map.Entry<String, Feature> e : params.getParams().entrySet()) {
             ret.put(e.getKey(), e.getValue());
         }
         return ret;
@@ -111,8 +103,8 @@ public class Experiment {
         return searchServerUrl;
     }
 
-    public Set getParams(String key) {
-        return Collections.unmodifiableSet(params.getParams().get(key));
+    public Feature getParams(String key) {
+        return params.getParams().get(key);
     }
 
     @Override

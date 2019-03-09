@@ -16,22 +16,16 @@
  */
 package org.mitre.quaerite.features.serializers;
 
-import static org.mitre.quaerite.features.serializers.FeatureSetsSerializer.FIELDS_KEY;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
@@ -42,6 +36,8 @@ import org.mitre.quaerite.features.Feature;
 import org.mitre.quaerite.features.FloatFeature;
 import org.mitre.quaerite.features.ParamsMap;
 import org.mitre.quaerite.features.StringFeature;
+import org.mitre.quaerite.features.WeightableField;
+import org.mitre.quaerite.features.WeightableListFeature;
 import org.mitre.quaerite.features.sets.FeatureSet;
 import org.mitre.quaerite.features.sets.FloatFeatureSet;
 import org.mitre.quaerite.features.sets.StringFeatureSet;
@@ -56,77 +52,85 @@ public class ParamsSerializer extends AbstractFeatureSerializer
         JsonObject jsonObject = jsonElement.getAsJsonObject();
         ParamsMap paramsMap = new ParamsMap();
         for (String name : jsonObject.keySet()) {
-            paramsMap.put(name, buildParams(name, jsonObject.get(name)));
+            Feature param = buildParam(name, jsonObject.get(name));
+            if (param != null) {
+                paramsMap.put(name, param);
+            }
         }
         return paramsMap;
     }
 
-    private Set<Feature> buildParams(String parameterName, JsonElement element) {
+    private Feature buildParam(String parameterName, JsonElement element) {
         if (element == null || element.isJsonNull()) {
-            return Collections.EMPTY_SET;
+            return null;
         }
         Class featureSetClass = determineClass(parameterName);
         if (WeightableFeatureSet.class.isAssignableFrom(featureSetClass)) {
-            return buildWeightableFeatures(element);
+            return buildWeightableListFeature(element);
         } else if (StringFeatureSet.class.isAssignableFrom(featureSetClass)) {
-            return buildStringFeatures(element);
+            return buildStringFeature(element);
         } else if (FloatFeatureSet.class.isAssignableFrom(featureSetClass)) {
-            return buildFloatFeatures(element);
+            return buildFloatFeature(element);
         } else {
             throw new IllegalArgumentException("I regret I don't know how to build: "+parameterName);
         }
     }
 
-    private Set<Feature> buildFloatFeatures(JsonElement element) {
-        Set<Feature> features = new LinkedHashSet<>();
-        for (Float f : toFloatList(element)) {
-            features.add(new FloatFeature(f));
+    private Feature buildFloatFeature(JsonElement element) {
+        return new FloatFeature(element.getAsFloat());
+    }
+
+    private Feature buildStringFeature(JsonElement element) {
+        return new StringFeature(element.getAsString());
+    }
+
+    private WeightableListFeature buildWeightableListFeature(JsonElement element) {
+        WeightableListFeature weightableListFeature = new WeightableListFeature();
+        if (element.isJsonPrimitive()) {
+            weightableListFeature.add(new WeightableField(element.getAsString()));
+        } else if (element.isJsonArray()) {
+            for (JsonElement e : (JsonArray)element) {
+                weightableListFeature.add(new WeightableField(e.getAsString()));
+            }
         }
-        return features;
-    }
-
-    private Set<Feature> buildStringFeatures(JsonElement element) {
-        Set<Feature> features = new LinkedHashSet<>();
-        features.addAll(toStringFeatureList(element));
-        return features;
-    }
-
-    private Set<Feature> buildWeightableFeatures(JsonElement element) {
-        Set<Feature> features = new LinkedHashSet<>();
-        features.addAll(toWeightableList(element));
-        return features;
+        return weightableListFeature;
     }
 
 
     @Override
     public JsonElement serialize(ParamsMap paramsMap, Type type, JsonSerializationContext jsonSerializationContext) {
         JsonObject jsonObject = new JsonObject();
-        for (Map.Entry<String, Set<Feature>> e : paramsMap.getParams().entrySet()) {
+        for (Map.Entry<String, Feature> e : paramsMap.getParams().entrySet()) {
             String name = e.getKey();
-            jsonObject.add(name.toLowerCase(Locale.US), serializeFeatureSet(e.getValue()));
+            jsonObject.add(name.toLowerCase(Locale.US), serializeFeature(e.getValue()));
         }
         return jsonObject;
     }
 
-    private JsonElement serializeFeatureSet(Set<Feature> features) {
-        if (features == null || features.size() == 0) {
+    private JsonElement serializeFeature(Feature feature) {
+        if (feature == null) {
             return new JsonArray();
         }
-        Feature feature0 = (Feature)features.toArray()[0];
-        Class clazz = feature0.getClass();
-        if (WeightableFeatureSet.class.isAssignableFrom(clazz)) {
+
+        if (feature instanceof WeightableListFeature) {
             JsonObject ret = new JsonObject();
-            ret.add(FIELDS_KEY, featureListJsonArr(features));
-            return ret;
-        } else if (StringFeature.class.isAssignableFrom(clazz)
-            || FloatFeature.class.isAssignableFrom(clazz)) {
-            if (features.size() == 1) {
-                return new JsonPrimitive(feature0.toString());
+            JsonElement jsonFields;
+            List<WeightableField> fields = ((WeightableListFeature)feature).getWeightableFields();
+            if (fields.size() > 1) {
+                jsonFields = new JsonArray();
+                for (WeightableField f : ((WeightableListFeature) feature).getWeightableFields()) {
+                    ((JsonArray)jsonFields).add(f.toString());
+                }
             } else {
-                return featureListJsonArr(features);
+                jsonFields = new JsonPrimitive(fields.get(0).toString());
             }
+            return jsonFields;
+        } else if (feature instanceof FloatFeature ||
+            feature instanceof StringFeature) {
+                return new JsonPrimitive(feature.toString());
+
         } else {
-            throw new IllegalArgumentException("not yet implemented: "+features);
+            throw new IllegalArgumentException("not yet implemented: "+feature);
         }
     }
 

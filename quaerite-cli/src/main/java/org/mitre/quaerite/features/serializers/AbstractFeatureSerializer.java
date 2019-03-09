@@ -27,7 +27,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import org.mitre.quaerite.features.Feature;
 import org.mitre.quaerite.features.StringFeature;
-import org.mitre.quaerite.features.WeightableFeature;
+import org.mitre.quaerite.features.WeightableField;
 
 public class AbstractFeatureSerializer {
     static String DEFAULT_CLASS_NAME_SPACE = "org.mitre.quaerite.features.sets.";
@@ -45,15 +45,15 @@ public class AbstractFeatureSerializer {
         return clazzName;
     }
 
-    static List<WeightableFeature> toWeightableList(JsonElement weightableArr) {
+    static List<WeightableField> toWeightableList(JsonElement weightableArr) {
         if (weightableArr == null) {
             return Collections.EMPTY_LIST;
         } else if (weightableArr.isJsonPrimitive()) {
-            return Collections.singletonList(new WeightableFeature(weightableArr.getAsString()));
+            return Collections.singletonList(new WeightableField(weightableArr.getAsString()));
         } else if (weightableArr.isJsonArray()) {
-            List<WeightableFeature> ret = new ArrayList<>();
+            List<WeightableField> ret = new ArrayList<>();
             for (JsonElement el : ((JsonArray)weightableArr)) {
-                ret.add(new WeightableFeature(el.getAsJsonPrimitive().getAsString()));
+                ret.add(new WeightableField(el.getAsJsonPrimitive().getAsString()));
             }
             return ret;
         } else {
@@ -113,9 +113,10 @@ public class AbstractFeatureSerializer {
         }
     }
 
-    JsonArray featureListJsonArr(Collection<Feature> features) {
+
+    JsonArray featureListJsonArr(List<Object> features) {
         JsonArray arr = new JsonArray();
-        for (Feature w : features) {
+        for (Object w : features) {
             arr.add(w.toString());
         }
         return arr;

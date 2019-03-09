@@ -54,6 +54,7 @@ import org.mitre.quaerite.connectors.SearchClientException;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.features.Feature;
+import org.mitre.quaerite.features.WeightableListFeature;
 import org.mitre.quaerite.scorecollectors.ScoreCollector;
 
 public class RunExperiments {
@@ -343,9 +344,14 @@ public class RunExperiments {
         private void scoreEach(Judgments judgments, List<ScoreCollector> scoreCollectors) {
             QueryRequest queryRequest = new QueryRequest(judgments.getQuery(), experiment.getCustomHandler(), idField);
 
-            for (Map.Entry<String, Set<Feature>> e : experiment.getParams().entrySet()) {
-                for (Feature val : e.getValue()) {
-                    queryRequest.addParameter(e.getKey(), val.toString());
+            for (Map.Entry<String, Feature> e : experiment.getParams().entrySet()) {
+                if (e.getValue() instanceof WeightableListFeature) {
+                    WeightableListFeature list = (WeightableListFeature)e.getValue();
+                    for (int i = 0; i < list.size(); i++) {
+                        queryRequest.addParameter(e.getKey(), list.get(i).toString());
+                    }
+                } else {
+                    queryRequest.addParameter(e.getKey(), e.getValue().toString());
                 }
             }
             List<String> results = new ArrayList<>();

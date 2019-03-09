@@ -134,7 +134,7 @@ public class GenerateExperiments {
             FeatureSets featureSets = experimentFeatures.getFeatureSets();
             Set<String> featureKeySet = featureSets.keySet();
             List<String> featureKeys = new ArrayList<>(featureKeySet);
-            Map<String, Set<Feature>> instanceFeatures = new HashMap<>();
+            Map<String, Feature> instanceFeatures = new HashMap<>();
             recurse(0, featureKeys, featureSets, instanceFeatures, experimentSet, generateConfig.max);
         } else {
             generateRandom(experimentFeatures.getFeatureSets(),
@@ -150,7 +150,7 @@ public class GenerateExperiments {
     private void generateRandom(FeatureSets featureSets, ExperimentSet experimentSet, int max) {
 
         for (int i = 0; i < max; i++) {
-            Map<String, Set<Feature>> instanceFeatures = new HashMap<>();
+            Map<String, Feature> instanceFeatures = new HashMap<>();
             for (String featureKey : featureSets.keySet()) {
                 FeatureSet featureSet = featureSets.get(featureKey);
                 instanceFeatures.put(featureKey, featureSet.random());
@@ -162,7 +162,7 @@ public class GenerateExperiments {
 
     private void recurse(int i, List<String> featureKeys,
                          FeatureSets featureSets,
-                         Map<String, Set<Feature>> instanceFeatures,
+                         Map<String, Feature> instanceFeatures,
                          ExperimentSet experimentSet, int max) {
         if (i >= featureKeys.size()) {
             addExperiments(instanceFeatures, experimentSet);
@@ -174,9 +174,9 @@ public class GenerateExperiments {
         String featureName = featureKeys.get(i);
         FeatureSet featureSet = featureSets.get(featureName);
         boolean hadContents = false;
-        List<Set<Feature>> permutations = featureSet.permute(1000);
-        for (Set<Feature> set : permutations) {
-            instanceFeatures.put(featureName, set);
+        List<Feature> permutations = featureSet.permute(1000);
+        for (Feature feature : permutations) {
+            instanceFeatures.put(featureName, feature);
             recurse(i+1, featureKeys, featureSets, instanceFeatures, experimentSet, max);
             hadContents = true;
         }
@@ -185,20 +185,18 @@ public class GenerateExperiments {
         }
     }
 
-    private void addExperiments(Map<String, Set<Feature>> features,
+    private void addExperiments(Map<String, Feature> features,
                                 ExperimentSet experimentSet) {
         String experimentName = "experiment_"+experimentCount++;
-        String searchServerUrl = getOnlyString(features.get("urls"));
-        String customHandler = getOnlyString(features.get("customHandlers"));
+        String searchServerUrl = features.get("urls").toString();
+        String customHandler = features.get("customHandlers").toString();
 
         Experiment experiment = (customHandler == null) ?
                 new Experiment(experimentName, searchServerUrl) :
                 new Experiment(experimentName, searchServerUrl, customHandler);
-        for (Map.Entry<String, Set<Feature>> e : features.entrySet()) {
+        for (Map.Entry<String, Feature> e : features.entrySet()) {
             if (!e.getKey().equals("urls") && !e.getKey().equals("customHandlers")) {
-                for (Feature f : e.getValue()) {
-                    experiment.addParam(e.getKey(), f);
-                }
+                experiment.addParam(e.getKey(), e.getValue());
             }
         }
         experimentSet.addExperiment(experimentName, experiment);

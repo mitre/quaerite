@@ -16,9 +16,10 @@
  */
 package org.mitre.quaerite.features;
 
-import java.util.Set;
+
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.mitre.quaerite.util.MathUtil;
 
 public class StringFeature implements Feature<StringFeature> {
 
@@ -33,8 +34,18 @@ public class StringFeature implements Feature<StringFeature> {
         return feature;
     }
 
-    @Override
-    public Pair<Set<StringFeature>, Set<StringFeature>> crossover(Set<StringFeature> parentA, Set<StringFeature> parentB) {
+    public static Pair<StringFeature, StringFeature> crossover(StringFeature parentA,
+                                                               StringFeature parentB) {
         return Pair.of(parentA, parentB);
+    }
+
+    @Override
+    public Pair<StringFeature, StringFeature> crossover(StringFeature parentB) {
+        //order shouldn't matter
+        if (MathUtil.RANDOM.nextFloat() > 0.5) {
+            return Pair.of(this, parentB);
+        } else {
+            return Pair.of(parentB, this);
+        }
     }
 }

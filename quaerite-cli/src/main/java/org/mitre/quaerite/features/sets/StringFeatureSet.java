@@ -17,6 +17,7 @@
 package org.mitre.quaerite.features.sets;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -42,17 +43,10 @@ public abstract class StringFeatureSet implements FeatureSet<StringFeature> {
     }
 
     @Override
-    public Set<Feature> getEachDefaultFeature() {
-        Set<Feature> ret = new TreeSet();
-        ret.addAll(features);
-        return ret;
-    }
-
-    @Override
-    public List<Set<Feature>> permute(int maxSize) {
-        List<Set<Feature>> ret = new ArrayList<>();
+    public List<Feature> permute(int maxSize) {
+        List<Feature> ret = new ArrayList<>();
         for (StringFeature feature : features) {
-            ret.add(Collections.singleton(feature));
+            ret.add(feature);
             if (ret.size() >= maxSize) {
                 return ret;
             }
@@ -61,17 +55,21 @@ public abstract class StringFeatureSet implements FeatureSet<StringFeature> {
     }
 
     @Override
-    public Set<Feature> random() {
+    public Feature random() {
         int i = random.nextInt(features.size());
-        return Collections.singleton(features.get(i));
+        return features.get(i);
     }
 
     @Override
-    public Set<StringFeature> mutate(Set<StringFeature> instanceFeatures, double probability, double amplitude) {
+    public StringFeature mutate(StringFeature instanceFeatures, double probability, double amplitude) {
         if (MathUtil.RANDOM.nextDouble() < probability) {
             int i = random.nextInt(features.size());
-            return Collections.singleton(features.get(i));
+            return features.get(i);
         }
         return instanceFeatures;
+    }
+
+    public List<StringFeature> getStrings() {
+        return features;
     }
 }
