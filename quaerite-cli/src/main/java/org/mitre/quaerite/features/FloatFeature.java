@@ -19,8 +19,11 @@ package org.mitre.quaerite.features;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
+import java.util.Set;
 
-public class FloatFeature implements Feature {
+import org.apache.commons.lang3.tuple.Pair;
+
+public class FloatFeature implements Feature<FloatFeature> {
     private final transient DecimalFormat df = new DecimalFormat("#.###",
             DecimalFormatSymbols.getInstance(Locale.US));
 
@@ -35,4 +38,8 @@ public class FloatFeature implements Feature {
     }
 
 
+    @Override
+    public Pair<Set<FloatFeature>, Set<FloatFeature>> crossover(Set<FloatFeature> parentA, Set<FloatFeature> parentB) {
+        return Pair.of(parentA, parentB);
+    }
 }

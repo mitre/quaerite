@@ -16,7 +16,11 @@
  */
 package org.mitre.quaerite.features;
 
-public class StringFeature implements Feature {
+import java.util.Set;
+
+import org.apache.commons.lang3.tuple.Pair;
+
+public class StringFeature implements Feature<StringFeature> {
 
     private String feature;
 
@@ -27,5 +31,10 @@ public class StringFeature implements Feature {
     @Override
     public String toString() {
         return feature;
+    }
+
+    @Override
+    public Pair<Set<StringFeature>, Set<StringFeature>> crossover(Set<StringFeature> parentA, Set<StringFeature> parentB) {
+        return Pair.of(parentA, parentB);
     }
 }
