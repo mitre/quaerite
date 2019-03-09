@@ -14,18 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.features;
+package org.mitre.quaerite.features.sets;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class CustomHandlers extends SimpleFeatureSet {
 
-    public CustomHandlers(List<SimpleFeature> features) {
-        super(features);
+public class PF3 extends WeightableFeatureSet {
+
+    public static PF3 EMPTY = new PF3(Collections.emptyList(), Collections.emptyList());
+
+    private static final String PF = "pf3";
+
+    List<String> features;
+    List<String> fields = new ArrayList<>();
+    List<Float> weights = new ArrayList<>();
+
+    public PF3(List<String> fields, List<Float> weights) {
+        super(fields, weights);
+    }
+    @Override
+    public String toString() {
+        return "PF3{" +
+                "features=" + getFeatures() +
+                ", fields=" + fields +
+                ", weights=" + weights +
+                '}';
     }
 
     @Override
     public String getParameter() {
-        return "simpleFeatureSet";
+        return PF;
     }
 }

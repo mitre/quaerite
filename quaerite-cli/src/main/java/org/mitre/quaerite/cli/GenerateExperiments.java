@@ -38,9 +38,9 @@ import org.mitre.quaerite.Experiment;
 import org.mitre.quaerite.ExperimentFeatures;
 import org.mitre.quaerite.ExperimentSet;
 import org.mitre.quaerite.features.Feature;
-import org.mitre.quaerite.features.FeatureSet;
-import org.mitre.quaerite.features.FeatureSets;
-import org.mitre.quaerite.features.URLS;
+
+import org.mitre.quaerite.features.sets.FeatureSet;
+import org.mitre.quaerite.features.sets.FeatureSets;
 import org.mitre.quaerite.scorecollectors.ScoreCollector;
 
 public class GenerateExperiments {
@@ -174,7 +174,8 @@ public class GenerateExperiments {
         String featureName = featureKeys.get(i);
         FeatureSet featureSet = featureSets.get(featureName);
         boolean hadContents = false;
-        for (Set<Feature> set : featureSet.permute(1000)) {
+        List<Set<Feature>> permutations = featureSet.permute(1000);
+        for (Set<Feature> set : permutations) {
             instanceFeatures.put(featureName, set);
             recurse(i+1, featureKeys, featureSets, instanceFeatures, experimentSet, max);
             hadContents = true;
@@ -196,7 +197,7 @@ public class GenerateExperiments {
         for (Map.Entry<String, Set<Feature>> e : features.entrySet()) {
             if (!e.getKey().equals("urls") && !e.getKey().equals("customHandlers")) {
                 for (Feature f : e.getValue()) {
-                    experiment.addParam(e.getKey(), f.toString());
+                    experiment.addParam(e.getKey(), f);
                 }
             }
         }

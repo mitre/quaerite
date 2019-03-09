@@ -14,28 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.features;
+package org.mitre.quaerite.features.sets;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
-public interface FeatureSet {
-    /**
-     * This is the literal Solr parameter name.
-     * @return
-     */
-    String getParameter();
+public class PF2 extends WeightableFeatureSet {
 
-    /**
-     * For now, this returns a list of values
-     * for a given Solr parameter
-     * @return
-     */
-    Set<Feature> getEachDefaultFeature();
+    public static PF2 EMPTY = new PF2(Collections.emptyList(), Collections.emptyList());
 
-    List<Set<Feature>> permute(int maxSize);
+    private static final String PF = "pf2";
 
-    Set<Feature> random();
+    List<String> features;
+    List<String> fields = new ArrayList<>();
+    List<Float> weights = new ArrayList<>();
 
-    //Set<WeightableFeature> mutate(Set<FeatureSet> features, double probability, double amplitude);
+    public PF2(List<String> fields, List<Float> weights) {
+        super(fields, weights);
+    }
+    @Override
+    public String toString() {
+        return "PF2{" +
+                "features=" + getFeatures() +
+                ", fields=" + fields +
+                ", weights=" + weights +
+                '}';
+    }
+
+    @Override
+    public String getParameter() {
+        return PF;
+    }
 }

@@ -14,25 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.features;
+package org.mitre.quaerite.features.sets;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public class FloatFeature implements Feature {
-    private final transient DecimalFormat df = new DecimalFormat("#.###",
-            DecimalFormatSymbols.getInstance(Locale.US));
 
-    private float v;
-    public FloatFeature(float value) {
-        this.v = value;
+
+public class PF extends WeightableFeatureSet {
+
+    public static PF EMPTY = new PF(Collections.emptyList(), Collections.emptyList());
+
+    private static final String PF = "pf";
+
+    List<String> fields = new ArrayList<>();
+    List<Float> weights = new ArrayList<>();
+
+    public PF(List<String> fields, List<Float> weights) {
+        super(fields, weights);
+    }
+    @Override
+    public String toString() {
+        return "PF{" +
+                "features=" + getFeatures() +
+                ", fields=" + fields +
+                ", weights=" + weights +
+                '}';
     }
 
     @Override
-    public String toString() {
-        return df.format(v);
+    public String getParameter() {
+        return PF;
     }
-
-
 }

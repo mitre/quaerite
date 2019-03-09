@@ -32,7 +32,7 @@ public class WeightableFeature implements Feature {
 
     private final String feature;
     private final Float weight;
-    DecimalFormat df = new DecimalFormat("#.#",
+    private final transient DecimalFormat df = new DecimalFormat("#.#",
             DecimalFormatSymbols.getInstance(Locale.US));
 
     public WeightableFeature(String s) {

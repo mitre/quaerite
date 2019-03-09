@@ -24,14 +24,24 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.mitre.quaerite.features.Feature;
+import org.mitre.quaerite.features.ParamsMap;
+import org.mitre.quaerite.features.serializers.FeatureSetsSerializer;
+import org.mitre.quaerite.features.serializers.ParamsSerializer;
+import org.mitre.quaerite.features.sets.FeatureSets;
+import org.mitre.quaerite.scorecollectors.ScoreCollector;
+import org.mitre.quaerite.scorecollectors.ScoreCollectorListSerializer;
 
 public class Experiment {
 
-    private static Gson GSON = new Gson();
+    private static Gson GSON = new GsonBuilder().setPrettyPrinting()
+            .registerTypeAdapter(ParamsMap.class, new ParamsSerializer())
+            .create();
     private final String name;
     private final String searchServerUrl;
     private final String customHandler;
-    Map<String, Set<String>> params = new HashMap<>();
+    ParamsMap params = new ParamsMap();
     Set<String> filterQueries = new HashSet<>();
 
     public Experiment(String name, String searchServerUrl) {
@@ -43,18 +53,18 @@ public class Experiment {
         this.searchServerUrl = searchServerUrl;
     }
 
-    public void addParam(String key, String value) {
+    public void addParam(String key, Feature feature) {
         if (key.equals("q")) {
             throw new IllegalArgumentException("query is specified during initialization, not as a standard param!");
         }
         if (key.equals("fq")) {
             throw new IllegalArgumentException("set fqs specially: setFilterQuery(fq)");
         }
-        Set<String> set = params.get(key);
+        Set<Feature> set = params.getParams().get(key);
         if (set == null) {
             set = new HashSet<>();
         }
-        set.add(value);
+        set.add(feature);
         params.put(key, set);
     }
 
@@ -76,10 +86,11 @@ public class Experiment {
         return GSON.toJson(this);
     }
 
-    public Map<String, String[]> getParams() {
-        Map<String, String[]> ret = new HashMap<>();
-        for (Map.Entry<String, Set<String>> e : params.entrySet()) {
-            ret.put(e.getKey(), e.getValue().toArray(new String[e.getValue().size()]));
+    public Map<String, Set<Feature>> getParams() {
+        //defensively copy
+        Map<String, Set<Feature>> ret = new HashMap<>();
+        for (Map.Entry<String, Set<Feature>> e : params.getParams().entrySet()) {
+            ret.put(e.getKey(), e.getValue());
         }
         return ret;
     }
@@ -101,7 +112,7 @@ public class Experiment {
     }
 
     public Set getParams(String key) {
-        return Collections.unmodifiableSet(params.get(key));
+        return Collections.unmodifiableSet(params.getParams().get(key));
     }
 
     @Override

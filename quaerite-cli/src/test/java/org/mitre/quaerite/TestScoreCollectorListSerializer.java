@@ -30,7 +30,6 @@ public class TestScoreCollectorListSerializer {
     public void testBasic() {
         ScoreCollector scoreCollector = new HadAtLeastOneHitAtKCollector(2);
         String json = ScoreCollectorListSerializer.toJson(scoreCollector);
-        System.out.println(json);
         ScoreCollector revivified = ScoreCollectorListSerializer.fromJson(json);
         assertEquals(revivified.getClass().getCanonicalName(), revivified.getClass().getCanonicalName());
         assertEquals(scoreCollector.getK(),

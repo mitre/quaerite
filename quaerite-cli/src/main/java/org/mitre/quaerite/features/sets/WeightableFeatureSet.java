@@ -14,20 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.features;
+package org.mitre.quaerite.features.sets;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-public abstract class WeightableFeatureSet implements FeatureSet {
+import org.mitre.quaerite.features.Feature;
+import org.mitre.quaerite.features.WeightableFeature;
+import org.mitre.quaerite.util.MathUtil;
+
+public abstract class WeightableFeatureSet<T> implements FeatureSet<WeightableFeature> {
     private static final float DEFAULT_MIN = 0.0f;
     private static final float DEFAULT_MAX = 1.0f;
 
-    transient final Random random;
-    transient List<WeightableFeature> features = new ArrayList<>();
+
+    transient List<WeightableFeature> features;
     transient float min;
     transient float max;
 
@@ -35,7 +40,6 @@ public abstract class WeightableFeatureSet implements FeatureSet {
     final List<Float> defaultWeights;
 
     public WeightableFeatureSet(List<String> fields, List<Float> defaultWeights) {
-        this.random = new Random();
         this.fields = fields;
         this.defaultWeights = defaultWeights;
         this.features = convert(fields);
@@ -73,19 +77,15 @@ public abstract class WeightableFeatureSet implements FeatureSet {
         return defaultWeights;
     }
 
-    float getRandomFloat(float min, float max) {
-        //TODO -- fix potential overflow/underflow
-        return min + random.nextFloat() * (max - min);
-    }
-
     @Override
     public Set<Feature> random() {
         Set<Feature> ret = new HashSet<>();
-        for (WeightableFeature feature : features) {
-            if (feature.hasWeight()) {
+        for (Feature feature : features) {
+            if (((WeightableFeature)feature).hasWeight()) {
                 ret.add(feature);
             } else {
-                ret.add(new WeightableFeature(feature.getFeature(), getRandomFloat(min, max)));
+                ret.add(new WeightableFeature(((WeightableFeature)feature).getFeature(),
+                        MathUtil.getRandomFloat(min, max)));
             }
         }
         return ret;
@@ -141,6 +141,21 @@ public abstract class WeightableFeatureSet implements FeatureSet {
                 }
             }
         }
+    }
 
+    @Override
+    public Set<WeightableFeature> mutate(Set<WeightableFeature> features, double probability, double amplitude) {
+        Set<WeightableFeature> mutated = new LinkedHashSet<>();
+        for (WeightableFeature f : features) {
+            if (MathUtil.RANDOM.nextDouble() <= probability) {
+                WeightableFeature mutatedFeature =
+                        new WeightableFeature(f.getFeature(),
+                                MathUtil.calcMutatedWeight(min, max, amplitude));
+                mutated.add(mutatedFeature);
+            } else {
+                mutated.add(f);
+            }
+        }
+        return mutated;
     }
 }

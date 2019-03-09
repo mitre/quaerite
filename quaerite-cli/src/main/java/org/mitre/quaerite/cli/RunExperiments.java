@@ -53,6 +53,7 @@ import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientException;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.db.ExperimentDB;
+import org.mitre.quaerite.features.Feature;
 import org.mitre.quaerite.scorecollectors.ScoreCollector;
 
 public class RunExperiments {
@@ -342,9 +343,9 @@ public class RunExperiments {
         private void scoreEach(Judgments judgments, List<ScoreCollector> scoreCollectors) {
             QueryRequest queryRequest = new QueryRequest(judgments.getQuery(), experiment.getCustomHandler(), idField);
 
-            for (Map.Entry<String, String[]> e : experiment.getParams().entrySet()) {
-                for (String val : e.getValue()) {
-                    queryRequest.addParameter(e.getKey(), val);
+            for (Map.Entry<String, Set<Feature>> e : experiment.getParams().entrySet()) {
+                for (Feature val : e.getValue()) {
+                    queryRequest.addParameter(e.getKey(), val.toString());
                 }
             }
             List<String> results = new ArrayList<>();

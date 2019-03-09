@@ -31,6 +31,8 @@ import java.util.Set;
 import com.google.gson.Gson;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.ExperimentFeatures;
+import org.mitre.quaerite.features.sets.QF;
+import org.mitre.quaerite.features.sets.TIE;
 
 public class TestFeatures {
     Gson gson = new Gson();
@@ -77,8 +79,10 @@ public class TestFeatures {
     @Test
     public void testQFDeserialization() throws Exception {
         ExperimentFeatures experimentFeatures = ExperimentFeatures.fromJson(newReader("/test-documents/qf.json"));
-
-        System.out.println(experimentFeatures);
+        TIE tie = (TIE)experimentFeatures.getFeatureSets().get("tie");
+        assertEquals(0.0, tie.getFloats().get(0), 0.001);
+        assertEquals(0.1, tie.getFloats().get(1), 0.001);
+        assertEquals(0.2, tie.getFloats().get(2), 0.001);
 
     }
 

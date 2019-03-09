@@ -21,9 +21,9 @@ import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.mitre.quaerite.features.FeatureSets;
-import org.mitre.quaerite.features.FeatureSetsSerializer;
+import org.mitre.quaerite.features.serializers.FeatureSetsSerializer;
 
+import org.mitre.quaerite.features.sets.FeatureSets;
 import org.mitre.quaerite.scorecollectors.ScoreCollector;
 import org.mitre.quaerite.scorecollectors.ScoreCollectorListSerializer;
 
@@ -36,7 +36,7 @@ public class ExperimentFeatures {
     public static ExperimentFeatures fromJson(Reader reader) {
         Gson gson = new GsonBuilder().setPrettyPrinting()
                 .registerTypeHierarchyAdapter(ScoreCollector.class, new ScoreCollectorListSerializer.ScoreCollectorSerializer())
-                .registerTypeAdapter(FeatureSets.class, new FeatureSetsSerializer<>())
+                .registerTypeAdapter(FeatureSets.class, new FeatureSetsSerializer())
                 .create();
         return gson.fromJson(reader, ExperimentFeatures.class);
     }

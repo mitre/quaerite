@@ -14,19 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.features;
-
+package org.mitre.quaerite.features.sets;
 
 import java.util.List;
 
-public class URLS extends SimpleFeatureSet {
+import org.mitre.quaerite.features.StringFeature;
 
 
-    public URLS(List<SimpleFeature> features) {
+public class CustomHandlers extends StringFeatureSet {
+
+    public CustomHandlers(List<StringFeature> features) {
         super(features);
     }
+
     @Override
     public String getParameter() {
-        return "searchServerUrls";
+        return "simpleFeatureSet";
     }
 }

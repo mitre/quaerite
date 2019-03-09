@@ -14,25 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.features;
+package org.mitre.quaerite.features.sets;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
 
-public class FloatFeature implements Feature {
-    private final transient DecimalFormat df = new DecimalFormat("#.###",
-            DecimalFormatSymbols.getInstance(Locale.US));
+import java.util.List;
 
-    private float v;
-    public FloatFeature(float value) {
-        this.v = value;
+import org.mitre.quaerite.features.StringFeature;
+
+public class BQ extends StringFeatureSet {
+
+
+    public BQ(List<StringFeature> features) {
+        super(features);
     }
 
     @Override
-    public String toString() {
-        return df.format(v);
+    public String getParameter() {
+        return "searchServerUrls";
     }
-
-
 }

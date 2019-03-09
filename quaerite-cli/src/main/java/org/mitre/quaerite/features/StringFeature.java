@@ -16,11 +16,11 @@
  */
 package org.mitre.quaerite.features;
 
-public class SimpleFeature implements Feature {
+public class StringFeature implements Feature {
 
-    private final String feature;
+    private String feature;
 
-    public SimpleFeature(String feature) {
+    public StringFeature(String feature) {
         this.feature = feature;
     }
 

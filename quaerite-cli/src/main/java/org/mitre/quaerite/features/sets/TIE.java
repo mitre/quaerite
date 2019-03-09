@@ -14,25 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.features;
+package org.mitre.quaerite.features.sets;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.Locale;
 
-public class FloatFeature implements Feature {
-    private final transient DecimalFormat df = new DecimalFormat("#.###",
-            DecimalFormatSymbols.getInstance(Locale.US));
+import java.util.List;
 
-    private float v;
-    public FloatFeature(float value) {
-        this.v = value;
+public class TIE extends FloatFeatureSet {
+    private static final String TIE = "tie";
+
+    public TIE(List<Float> floats) {
+        super(floats);
     }
 
     @Override
-    public String toString() {
-        return df.format(v);
+    public String getParameter() {
+        return TIE;
     }
-
-
 }

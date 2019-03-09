@@ -14,36 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.features;
+package org.mitre.quaerite.features.sets;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
-public class PF extends WeightableFeatureSet {
+import org.mitre.quaerite.features.Feature;
+import org.mitre.quaerite.features.WeightableFeature;
 
-    public static PF EMPTY = new PF(Collections.emptyList(), Collections.emptyList());
+public class QF extends WeightableFeatureSet<WeightableFeature> {
 
-    private static final String PF = "pf";
+    private static final String QF = "qf";
 
-    List<String> features;
-    List<String> fields = new ArrayList<>();
-    List<Float> weights = new ArrayList<>();
-
-    public PF(List<String> fields, List<Float> weights) {
-        super(fields, weights);
-    }
-    @Override
-    public String toString() {
-        return "PF{" +
-                "features=" + getFeatures() +
-                ", fields=" + fields +
-                ", weights=" + weights +
-                '}';
+    public QF(List<String> fields, List<Float> defaultWeights) {
+        super(fields, defaultWeights);
     }
 
     @Override
     public String getParameter() {
-        return PF;
+        return QF;
+    }
+
+    @Override
+    public String toString() {
+
+        return "QF{" +
+                "features=" + features +
+                ", defaultWeights=" + defaultWeights +
+                ", fields=" + fields +
+                ", min=" + min +
+                ", max=" + max +
+                '}';
     }
 }

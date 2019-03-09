@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.features;
+package org.mitre.quaerite.features.sets;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,16 +23,21 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.mitre.quaerite.features.Feature;
+import org.mitre.quaerite.features.FloatFeature;
+import org.mitre.quaerite.features.StringFeature;
+import org.mitre.quaerite.util.MathUtil;
+
 /**
  * This implements a basic set of options, where only one
  * option is expected at a time, e.g. server url.
  * Note that permute returns just the list
  */
-public abstract class SimpleFeatureSet implements FeatureSet {
+public abstract class StringFeatureSet implements FeatureSet<StringFeature> {
     Random random = new Random();
-    final List<SimpleFeature> features;
+    final List<StringFeature> features;
 
-    protected SimpleFeatureSet(List<SimpleFeature> features) {
+    protected StringFeatureSet(List<StringFeature> features) {
         this.features = features;
     }
 
@@ -46,7 +51,7 @@ public abstract class SimpleFeatureSet implements FeatureSet {
     @Override
     public List<Set<Feature>> permute(int maxSize) {
         List<Set<Feature>> ret = new ArrayList<>();
-        for (SimpleFeature feature : features) {
+        for (StringFeature feature : features) {
             ret.add(Collections.singleton(feature));
             if (ret.size() >= maxSize) {
                 return ret;
@@ -59,5 +64,14 @@ public abstract class SimpleFeatureSet implements FeatureSet {
     public Set<Feature> random() {
         int i = random.nextInt(features.size());
         return Collections.singleton(features.get(i));
+    }
+
+    @Override
+    public Set<StringFeature> mutate(Set<StringFeature> instanceFeatures, double probability, double amplitude) {
+        if (MathUtil.RANDOM.nextDouble() < probability) {
+            int i = random.nextInt(features.size());
+            return Collections.singleton(features.get(i));
+        }
+        return instanceFeatures;
     }
 }

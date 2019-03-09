@@ -16,30 +16,19 @@
  */
 package org.mitre.quaerite.features;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class FeatureSets {
+public class ParamsMap {
 
+    Map<String, Set<Feature>> map = new HashMap<>();
 
-    Map<String, FeatureSet> featureSets;
-
-    public FeatureSets(Map<String, FeatureSet> featureSetMap) {
-        this.featureSets = featureSetMap;
+    public void put(String name, Set<Feature> features) {
+        map.put(name, features);
     }
 
-    public FeatureSet get(String fName) {
-        return featureSets.get(fName);
-    }
-
-    @Override
-    public String toString() {
-        return "FeatureSets{" +
-                "featureSets=" + featureSets +
-                '}';
-    }
-
-    public Set<String> keySet() {
-        return featureSets.keySet();
+    public Map<String, Set<Feature>> getParams() {
+        return map;
     }
 }

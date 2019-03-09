@@ -24,8 +24,8 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.mitre.quaerite.features.FeatureSets;
-import org.mitre.quaerite.features.FeatureSetsSerializer;
+import org.mitre.quaerite.features.serializers.FeatureSetsSerializer;
+import org.mitre.quaerite.features.sets.FeatureSets;
 import org.mitre.quaerite.scorecollectors.ScoreCollector;
 import org.mitre.quaerite.scorecollectors.ScoreCollectorListSerializer;
 
@@ -33,7 +33,7 @@ public class ExperimentSet {
 
     private static Gson GSON = new GsonBuilder().setPrettyPrinting()
             .registerTypeHierarchyAdapter(ScoreCollector.class, new ScoreCollectorListSerializer.ScoreCollectorSerializer())
-            .registerTypeAdapter(FeatureSets.class, new FeatureSetsSerializer<>())
+            .registerTypeHierarchyAdapter(FeatureSets.class, new FeatureSetsSerializer())
             .create();
 
     private transient int maxRows = -1;
@@ -57,11 +57,11 @@ public class ExperimentSet {
     }
 
     public String toJson() {
-        return ScoreCollectorListSerializer.GSON.toJson(this);
+        return GSON.toJson(this);
     }
 
     public static ExperimentSet fromJson(Reader reader) {
-        return ScoreCollectorListSerializer.GSON.fromJson(reader, ExperimentSet.class);
+        return GSON.fromJson(reader, ExperimentSet.class);
     }
 
     public Experiment getExperiment(String experimentName) {

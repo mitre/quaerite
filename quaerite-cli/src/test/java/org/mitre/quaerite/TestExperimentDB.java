@@ -27,6 +27,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.db.ExperimentDB;
+import org.mitre.quaerite.features.StringFeature;
 import org.mitre.quaerite.scorecollectors.HadAtLeastOneHitAtKCollector;
 
 public class TestExperimentDB {
@@ -46,12 +47,12 @@ public class TestExperimentDB {
     public void testBasicDB() throws Exception {
         ExperimentDB db = ExperimentDB.open(DB_DIR);
         Experiment experiment = new Experiment("test1", "http://solr");
-        experiment.addParam("bq", "bq1");
-        experiment.addParam("bq", "bq2");
-        experiment.addParam("bq", "bq3");
-        experiment.addParam("qf", "fq1");
-        experiment.addParam("qf", "fq2");
-        experiment.addParam("qf", "fq3");
+        experiment.addParam("bq", new StringFeature("bq1"));
+        experiment.addParam("bq", new StringFeature("bq2"));
+        experiment.addParam("bq", new StringFeature("bq3"));
+        experiment.addParam("qf", new StringFeature("qf1"));
+        experiment.addParam("qf", new StringFeature("qf2"));
+        experiment.addParam("qf", new StringFeature("qf3"));
         experiment.addFilterQuery("fq1");
         experiment.addFilterQuery("fq2");
         db.addExperiment(experiment);
@@ -59,7 +60,6 @@ public class TestExperimentDB {
         db.addScoreCollector(new HadAtLeastOneHitAtKCollector(3));
         db.addScoreCollector(new HadAtLeastOneHitAtKCollector(5));
         db.addScoreCollector(new HadAtLeastOneHitAtKCollector(10));
-        System.out.println(experiment);
         db.close();
 
         db = ExperimentDB.open(DB_DIR);
