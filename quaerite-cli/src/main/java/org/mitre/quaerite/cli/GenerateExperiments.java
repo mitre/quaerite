@@ -71,7 +71,7 @@ public class GenerateExperiments {
         );
         OPTIONS.addOption(
                 Option.builder("p")
-                        .longOpt("permutate")
+                        .longOpt("permute")
                         .hasArg(false)
                         .desc("all permutations (default)")
                         .required(false).build()
@@ -148,7 +148,6 @@ public class GenerateExperiments {
     }
 
     private void generateRandom(FeatureSets featureSets, ExperimentSet experimentSet, int max) {
-
         for (int i = 0; i < max; i++) {
             Map<String, Feature> instanceFeatures = new HashMap<>();
             for (String featureKey : featureSets.keySet()) {
@@ -157,7 +156,6 @@ public class GenerateExperiments {
             }
             addExperiments(instanceFeatures, experimentSet);
         }
-
     }
 
     private void recurse(int i, List<String> featureKeys,

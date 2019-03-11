@@ -30,6 +30,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -73,6 +74,7 @@ public class ExperimentDB implements Closeable {
 
     private PreparedStatement insertScores;
     private PreparedStatement insertScoresAggregated;
+    private PreparedStatement selectNBestExperiments;
 
     private PreparedStatement selectScores;
     //cache of upserting scores keyed by scorer name
@@ -93,6 +95,8 @@ public class ExperimentDB implements Closeable {
         this.connection = connection;
         initTables();
         selectExperiments = connection.prepareStatement("select name, last_edited, json from experiments");
+
+
         insertExperiments = connection.prepareStatement(
                 "insert into experiments (name, last_edited, json) values (?,?,?)"
         );
@@ -420,6 +424,8 @@ public class ExperimentDB implements Closeable {
                 "ALTER TABLE SCORES_AGGREGATED ADD PRIMARY KEY (QUERY_SET, EXPERIMENT)");
 
         initInsertScores(scoreCollectors);
+        selectNBestExperiments = connection.prepareStatement("select name, json from scores_aggregated where experiment ilike ? order by ? desc");
+
     }
 
     private void initInsertScores(List<ScoreCollector> scoreCollectors) throws SQLException {
@@ -672,5 +678,33 @@ public class ExperimentDB implements Closeable {
             );
         }
         return selectQueryComparisons.executeQuery();
+    }
+
+    public void addScoreCollectors(Collection<ScoreCollector> scoreCollectors) throws SQLException {
+        for (ScoreCollector scoreCollector : scoreCollectors) {
+            addScoreCollector(scoreCollector);
+        }
+    }
+
+    public List<Experiment> getNBestExperiments(String experimentNamePrefix, int num, String scorerName) throws SQLException {
+        selectNBestExperiments.clearParameters();
+        if (experimentNamePrefix.endsWith("*")) {
+            experimentNamePrefix = experimentNamePrefix.substring(0, experimentNamePrefix.length()-1);
+        }
+        experimentNamePrefix = experimentNamePrefix+"%";
+        selectNBestExperiments.setString(1, experimentNamePrefix);
+        selectNBestExperiments.setString(2, scorerName);
+        selectNBestExperiments.setMaxRows(num);
+        List<Experiment> experiments = new ArrayList<>();
+        try (ResultSet resultSet = selectExperiments.executeQuery()) {
+            while (resultSet.next()) {
+                String name = resultSet.getString(1);
+                String json = resultSet.getString(2);
+                Experiment ex = Experiment.fromJson(json);
+                experiments.add(ex);
+            }
+        }
+
+        return experiments;
     }
 }

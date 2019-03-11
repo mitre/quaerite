@@ -21,7 +21,7 @@ import java.util.Set;
 
 import org.mitre.quaerite.features.Feature;
 
-public interface FeatureSet<T> {
+public interface FeatureSet<T extends Feature> {
     /**
      * This is the literal Solr parameter name.
      * @return

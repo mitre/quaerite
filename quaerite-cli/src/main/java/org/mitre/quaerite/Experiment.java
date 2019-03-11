@@ -49,6 +49,23 @@ public class Experiment {
         this.searchServerUrl = searchServerUrl;
     }
 
+
+    public Experiment(String name, ParamsMap features) {
+        this(name, features.getParams());
+    }
+
+    public Experiment(String name, Map<String, Feature> features) {
+        this.name = name;
+        this.searchServerUrl = features.get("urls").toString();
+        this.customHandler = features.get("customHandlers").toString();
+
+        for (Map.Entry<String, Feature> e : features.entrySet()) {
+            if (!e.getKey().equals("urls") && !e.getKey().equals("customHandlers")) {
+                addParam(e.getKey(), e.getValue());
+            }
+        }
+    }
+
     public void addParam(String key, Feature feature) {
         if (key.equals("q")) {
             throw new IllegalArgumentException("query is specified during initialization, not as a standard param!");
@@ -85,6 +102,10 @@ public class Experiment {
             ret.put(e.getKey(), e.getValue());
         }
         return ret;
+    }
+
+    public ParamsMap getParamsMap() {
+        return params;
     }
 
     public String getCustomHandler() {

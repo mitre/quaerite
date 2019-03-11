@@ -36,7 +36,7 @@ import org.mitre.quaerite.ExperimentSet;
 import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.scorecollectors.ScoreCollector;
 
-public class AddExperiments {
+public class AddExperiments extends AbstractCLI {
 
     static Options OPTIONS = new Options();
 
@@ -81,34 +81,11 @@ public class AddExperiments {
                     OPTIONS);
             return;
         }
-        Path file = Paths.get(commandLine.getOptionValue("f"));
-        Path dbDir = Paths.get(commandLine.getOptionValue("db"));
-        boolean freshStart = (commandLine.hasOption("freshStart")) ? true : false;
-        boolean merge = (commandLine.hasOption("m")) ? true : false;
-        add(file, dbDir, merge, freshStart);
+        Path file = getPath(commandLine, "f", true);
+        Path dbDir = getPath(commandLine, "db", false);
+        boolean freshStart = getBoolean(commandLine, "freshStart");
+        boolean merge = getBoolean(commandLine, "m");
+        addExperiments(file, dbDir, merge, freshStart);
     }
-
-    private static void add(Path file, Path dbDir, boolean merge, boolean freshStart) throws SQLException, IOException {
-        try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
-            if (freshStart) {
-                experimentDB.clearExperiments();
-                experimentDB.clearScorers();
-            }
-            ExperimentSet experiments = null;
-            try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-                experiments = ExperimentSet.fromJson(reader);
-            }
-            for (Experiment experiment : experiments.getExperiments().values()) {
-                experimentDB.addExperiment(experiment, merge);
-            }
-            List<ScoreCollector> scoreCollectors = experiments.getScoreCollectors();
-            if (scoreCollectors != null) {
-                for (ScoreCollector scoreCollector : scoreCollectors) {
-                    experimentDB.addScoreCollector(scoreCollector);
-                }
-            }
-        }
-    }
-
 
 }

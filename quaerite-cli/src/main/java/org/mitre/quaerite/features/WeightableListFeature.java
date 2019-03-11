@@ -53,9 +53,7 @@ public class WeightableListFeature implements Feature<WeightableListFeature> {
         fieldSet.addAll(parentBWeights.keySet());
         List<String> fields = new ArrayList<>(fieldSet);
         int crossoverPoint =
-                (fields.size() > 1) ?
-                        MathUtil.RANDOM.nextInt(1, fields.size() - 1) :
-                        0;
+                        MathUtil.RANDOM.nextInt(fields.size());
         WeightableListFeature childA = new WeightableListFeature();
         WeightableListFeature childB = new WeightableListFeature();
         for (int i = 0; i < crossoverPoint; i++) {
