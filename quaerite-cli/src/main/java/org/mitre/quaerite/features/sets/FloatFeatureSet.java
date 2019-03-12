@@ -78,7 +78,7 @@ abstract public class FloatFeatureSet implements FeatureSet<FloatFeature> {
     @Override
     public FloatFeature mutate(FloatFeature floatFeature, double probability, double amplitude) {
         if (MathUtil.RANDOM.nextDouble() <= probability) {
-            return new FloatFeature(MathUtil.calcMutatedWeight(min, max, amplitude));
+            return new FloatFeature(MathUtil.calcMutatedWeight(floatFeature.getValue(), min, max, amplitude));
         } else {
             return floatFeature;
         }

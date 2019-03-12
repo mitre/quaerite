@@ -26,6 +26,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
@@ -102,7 +103,10 @@ public class ParamsSerializer extends AbstractFeatureSerializer
         JsonObject jsonObject = new JsonObject();
         for (Map.Entry<String, Feature> e : paramsMap.getParams().entrySet()) {
             String name = e.getKey();
-            jsonObject.add(name.toLowerCase(Locale.US), serializeFeature(e.getValue()));
+            JsonElement jsonFeature = serializeFeature(e.getValue());
+            if (jsonFeature != JsonNull.INSTANCE) {
+                jsonObject.add(name.toLowerCase(Locale.US), jsonFeature);
+            }
         }
         return jsonObject;
     }
@@ -121,8 +125,10 @@ public class ParamsSerializer extends AbstractFeatureSerializer
                 for (WeightableField f : ((WeightableListFeature) feature).getWeightableFields()) {
                     ((JsonArray)jsonFields).add(f.toString());
                 }
-            } else {
+            } else if (fields.size() == 1){
                 jsonFields = new JsonPrimitive(fields.get(0).toString());
+            } else {
+                jsonFields = JsonNull.INSTANCE;
             }
             return jsonFields;
         } else if (feature instanceof FloatFeature ||

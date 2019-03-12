@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.mitre.quaerite.features.sets.WeightableFeatureSet;
 import org.mitre.quaerite.util.MathUtil;
 
 public class WeightableListFeature implements Feature<WeightableListFeature> {
@@ -102,8 +101,19 @@ public class WeightableListFeature implements Feature<WeightableListFeature> {
         //deep copy
         WeightableListFeature clone = new WeightableListFeature();
         for (WeightableField field : weightableFields) {
-            clone.add(new WeightableField(field.getFeature(), field.getWeight()));
+            if (field.hasWeight()) {
+                clone.add(new WeightableField(field.getFeature(), field.getWeight()));
+            } else {
+                clone.add(new WeightableField(field.getFeature()));
+            }
         }
         return clone;
+    }
+
+    @Override
+    public String toString() {
+        return "WeightableListFeature{" +
+                "weightableFields=" + weightableFields +
+                '}';
     }
 }

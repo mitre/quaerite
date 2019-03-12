@@ -45,6 +45,9 @@ import org.mitre.quaerite.features.Feature;
 import org.mitre.quaerite.features.ParamsMap;
 import org.mitre.quaerite.features.sets.FeatureSet;
 import org.mitre.quaerite.features.sets.FeatureSets;
+import org.mitre.quaerite.scorecollectors.DistributionalScoreCollector;
+import org.mitre.quaerite.scorecollectors.ScoreCollector;
+import org.mitre.quaerite.scorecollectors.SummingScoreCollector;
 
 public class RunGA extends AbstractExperimentRunner {
 
@@ -106,7 +109,7 @@ public class RunGA extends AbstractExperimentRunner {
                         .longOpt("mutation_amplitude")
                         .hasArg()
                         .required(false)
-                        .desc("amplitude of mutation; must be >=0.0 and <= 1.0 (default = 0.1)").build()
+                        .desc("amplitude of mutation; must be >=0.0 and <= 1.0 (default = 1.0)").build()
         );
 
         OPTIONS.addOption(
@@ -114,7 +117,7 @@ public class RunGA extends AbstractExperimentRunner {
                         .longOpt("generations")
                         .hasArg(true)
                         .required(false)
-                        .desc("how many generations to run").build()
+                        .desc("how many generations to run (default=10)").build()
         );
         OPTIONS.addOption(
                 Option.builder("n")
@@ -157,7 +160,7 @@ public class RunGA extends AbstractExperimentRunner {
         GAConfig gaConfig = new GAConfig();
         gaConfig.generations = getInt(commandLine, "g", 10);
         gaConfig.mutationProbability = getFloat(commandLine, "mp", 0.1f);
-        gaConfig.mutationAmplitude = getFloat(commandLine, "ma", 0.1f);
+        gaConfig.mutationAmplitude = getFloat(commandLine, "ma", 1.0f);
         gaConfig.dbPath = getPath(commandLine, "db", false);
         gaConfig.features = getPath(commandLine, "i", true);
         gaConfig.seedExperiments = getPath(commandLine, "s", false);
@@ -172,6 +175,13 @@ public class RunGA extends AbstractExperimentRunner {
 
 
     private void execute(GAConfig gaConfig) throws IOException, SQLException {
+
+        if (! Files.isDirectory(gaConfig.outputDir)) {
+            Files.createDirectories(gaConfig.outputDir);
+        }
+
+        ExperimentDB experimentDB = ExperimentDB.openAndDrop(gaConfig.dbPath);
+
         loadJudgments(gaConfig.judgmentsFile, "id", gaConfig.dbPath, true);
 
         ExperimentFeatures experimentFeatures = null;
@@ -183,76 +193,132 @@ public class RunGA extends AbstractExperimentRunner {
         if (gaConfig.seedExperiments != null) {
             addExperiments(gaConfig.seedExperiments, gaConfig.dbPath, false, true);
         }
-        ExperimentDB experimentDB = ExperimentDB.open(gaConfig.dbPath);
+        experimentDB = ExperimentDB.open(gaConfig.dbPath);
+
         if (gaConfig.seedExperiments == null) {
             experimentDB.addScoreCollectors(experimentFeatures.getScoreCollectors());
             generateRandom(experimentFeatures.getFeatureSets(), experimentDB, gaConfig.population);
             //write out the seed generation
         }
-        scoreSeed(experimentDB);
+        if (gaConfig.scorerName == null) {
+            List<ScoreCollector> scoreCollectors = experimentFeatures.getScoreCollectors();
+            if (scoreCollectors.size() > 1) {
+                throw new IllegalArgumentException("Must specify target scorer on the commandline if there are more than one scorers available;" +
+                        "e.g. -sc ndcg_10");
+            }
+            ScoreCollector scoreCollector = experimentFeatures.getScoreCollectors().get(0);
+            if (scoreCollector instanceof DistributionalScoreCollector) {
+                gaConfig.scorerName = scoreCollector.getName()+"_mean";
+            } else if (scoreCollector instanceof SummingScoreCollector) {
+                gaConfig.scorerName = scoreCollector.getName()+"_sum";
+            } else {
+                throw new IllegalArgumentException("Not yet supported: "+scoreCollector.getClass());
+            }
+
+        }
+        scoreSeed(experimentDB, gaConfig);
 
         for (int i = 0 ; i < gaConfig.generations; i++) {
             runGeneration(i, experimentDB, experimentFeatures.getFeatureSets(), gaConfig);
         }
     }
 
-    private void scoreSeed(ExperimentDB experimentDB) throws SQLException {
+    private void scoreSeed(ExperimentDB experimentDB, GAConfig gaConfig) throws SQLException, IOException {
         ExperimentSet experimentSet = experimentDB.getExperiments();
         for (String experimentName : experimentSet.getExperiments().keySet()) {
             runExperiment(experimentName, experimentDB);
         }
-    }
-
-    private void runGeneration(int generation, ExperimentDB experimentDB,
-                               FeatureSets featureSets, GAConfig gaConfig) throws SQLException {
-        List<String> experimentNames = generateNewExperiments(generation, experimentDB, featureSets, gaConfig);
-        System.out.println("starting generation "+generation);
-        for (String experimentName : experimentNames) {
-            System.out.println("running: "+experimentName);
-            runExperiment(experimentName, experimentDB);
-        }
         List<ExperimentScorePair> scores = experimentDB.getNBestResults(
-                GEN_PREFIX+generation+"_*", 3, gaConfig.scorerName);
+                "*", 10, gaConfig.scorerName);
 
         for (ExperimentScorePair esp : scores) {
             System.out.println(esp);
         }
         System.out.println("");
+        System.out.println("");
+
+        String json = experimentSet.toJson();
+
+        Files.write(gaConfig.outputDir.resolve("seed_experiments.json"),
+                json.getBytes(StandardCharsets.UTF_8));
+
+    }
+
+    private void runGeneration(int generation, ExperimentDB experimentDB,
+                               FeatureSets featureSets, GAConfig gaConfig) throws SQLException, IOException {
+        List<String> experimentNames = generateNewExperiments(generation, experimentDB, featureSets, gaConfig);
+        LOG.info("starting generation "+generation);
+        for (String experimentName : experimentNames) {
+            LOG.info("experiment "+experimentName);
+            runExperiment(experimentName, experimentDB);
+        }
+        List<ExperimentScorePair> scores = experimentDB.getNBestResults(
+                GEN_PREFIX+generation+"_*", 10, gaConfig.scorerName);
+
+        for (ExperimentScorePair esp : scores) {
+            System.out.println(esp);
+        }
+        System.out.println("");
+        ExperimentSet experimentSet = experimentDB.getExperiments();
+        String json = experimentSet.toJson(experimentNames);
+
+        Files.write(gaConfig.outputDir.resolve("gen_"+generation+"_experiments.json"),
+                json.getBytes(StandardCharsets.UTF_8));
     }
 
     private List<String> generateNewExperiments(int generation,
                                                 ExperimentDB experimentDB,
                                                 FeatureSets featureSets,
                                                 GAConfig gaConfig) throws SQLException{
-        String genPat = (generation == 0) ? "*" : GEN_PREFIX+(generation-1)+"_*";
 
         int listLength = calcListLength(gaConfig.population);
+        //this prioritizes the more fit in affecting crossover
+        listLength = (int)((double)listLength/1.25f);
+        listLength = (listLength < 2) ? 2 : listLength;
         //create new experiments
-        List<Experiment> experiments = experimentDB.getNBestExperiments(genPat, listLength, gaConfig.scorerName);
+        //this call includes all previous generations -- intergenerational swapping
+        //        String previousGenerationsNamePattern = (generation == 0) ? "*" : GEN_PREFIX+(generation-1)+"_*";
+        //To limit to the previous generation add the above. to the call to getNBest
+        //TODO: parameterize this?
+        List<Experiment> experiments = experimentDB.getNBestExperiments(listLength, gaConfig.scorerName);
         int expCount = 0;
         List<String> nextGenExpNames = new ArrayList<>();
-        for (int i = 0; i < experiments.size()-1; i++) {
-            for (int j = i+1; j < experiments.size(); j++) {
-                Pair<ParamsMap, ParamsMap> pair =  experiments.get(i).getAllFeatures()
-                        .crossover(experiments.get(j).getAllFeatures());
+        while (nextGenExpNames.size() < gaConfig.population) {
+            for (int i = 0; i < experiments.size() - 1; i++) {
+                for (int j = i + 1; j < experiments.size(); j++) {
+                    Pair<ParamsMap, ParamsMap> pair = experiments.get(i).getAllFeatures()
+                            .crossover(experiments.get(j).getAllFeatures());
 
-                String nameA = getExperimentName(generation, expCount++);
-                Experiment childA = new Experiment(nameA,
-                        pair.getLeft().mutate(featureSets, gaConfig.mutationProbability, gaConfig.mutationAmplitude));
+                    String nameA = getExperimentName(generation, expCount++);
+                    ParamsMap paramsMapA = pair.getLeft();
+                    LOG.debug(experiments.get(i) +
+                            "\n+\n" + experiments.get(j) + "\n->\n"+paramsMapA);
+                    paramsMapA = paramsMapA.mutate(featureSets, gaConfig.mutationProbability, gaConfig.mutationAmplitude);
+                    LOG.debug("mutated: "+paramsMapA);
+                    Experiment childA = new Experiment(nameA, paramsMapA);
 
-                experimentDB.addExperiment(
-                        childA);
-                nextGenExpNames.add(nameA);
+                    experimentDB.addExperiment(childA);
+                    nextGenExpNames.add(nameA);
 
-                String nameB = getExperimentName(generation, expCount++);
-                Experiment childB = new Experiment(nameA,
-                        pair.getRight().mutate(featureSets, gaConfig.mutationProbability, gaConfig.mutationAmplitude));
+                    if (expCount >= gaConfig.population) {
+                        return nextGenExpNames;
+                    }
 
-                nextGenExpNames.add(nameB);
-                experimentDB.addExperiment(
-                        childB);
-                if (expCount > gaConfig.population) {
-                    return nextGenExpNames;
+                    String nameB = getExperimentName(generation, expCount++);
+                    ParamsMap paramsMapB = pair.getRight();
+                    LOG.debug(experiments.get(i) +
+                            "\n+\n" + experiments.get(j) + "\n->\n"+paramsMapB);
+                    paramsMapB = paramsMapB.mutate(featureSets, gaConfig.mutationProbability, gaConfig.mutationAmplitude);
+                    Experiment childB = new Experiment(nameB, paramsMapB);
+
+                    LOG.debug("mutated: "+paramsMapB);
+
+                    nextGenExpNames.add(nameB);
+                    experimentDB.addExperiment(
+                            childB);
+                    if (expCount >= gaConfig.population) {
+                        return nextGenExpNames;
+                    }
                 }
             }
         }

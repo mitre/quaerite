@@ -55,7 +55,7 @@ public class ParamsMap {
     }
 
     public Pair<ParamsMap, ParamsMap> crossover(ParamsMap parentB) {
-        //TODO: pick up here.
+
         ParamsMap childA = new ParamsMap();
         ParamsMap childB = new ParamsMap();
         Set<String> paramsSet = new HashSet<>();
@@ -75,10 +75,10 @@ public class ParamsMap {
                 childB.put(param, children.getRight());
             } else {
                 if (map.containsKey(param)) {
-                    childA.put(param, map.get(param));
+                    childA.put(param, (Feature)map.get(param).clone());
                 }
                 if (parentB.map.containsKey(param)) {
-                    childB.put(param, parentB.map.get(param));
+                    childB.put(param, (Feature)parentB.map.get(param).clone());
                 }
             }
         }
@@ -93,14 +93,21 @@ public class ParamsMap {
                 childB.put(param, children.getLeft());
             } else {
                 if (map.containsKey(param)) {
-                    childB.put(param, map.get(param));
+                    childB.put(param, (Feature)map.get(param).clone());
                 }
                 if (parentB.map.containsKey(param)) {
-                    childA.put(param, parentB.map.get(param));
+                    childA.put(param, (Feature)parentB.map.get(param).clone());
                 }
             }
         }
 
         return Pair.of(childA, childB);
+    }
+
+    @Override
+    public String toString() {
+        return "ParamsMap{" +
+                "map=" + map +
+                '}';
     }
 }

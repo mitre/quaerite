@@ -27,7 +27,7 @@ import java.util.Set;
 import org.mitre.quaerite.QueryInfo;
 import org.mitre.quaerite.scorers.AbstractRankScorer;
 
-class SummingScoreCollector extends AbstractScoreCollector {
+public class SummingScoreCollector extends AbstractScoreCollector {
     public static String SUM = "sum";
 
     private static final List<String> STATISTICS =

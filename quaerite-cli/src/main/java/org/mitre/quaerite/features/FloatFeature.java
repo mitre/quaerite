@@ -48,6 +48,9 @@ public class FloatFeature implements Feature<FloatFeature> {
         }
     }
 
+    public float getValue() {
+        return v;
+    }
     @Override
     public FloatFeature clone() {
         return new FloatFeature(v);

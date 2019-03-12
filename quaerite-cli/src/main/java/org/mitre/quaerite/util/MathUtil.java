@@ -22,18 +22,31 @@ public class MathUtil {
 
     public static ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
 
-    public static float calcMutatedWeight(float min, float max, double amplitude) {
+    public static float calcMutatedWeight(Float currentValue, float min, float max, double amplitude) {
         if (amplitude < 0 || amplitude > 1.0) {
             throw new IllegalArgumentException("amplitude must be >= 0 and <= 1");
         }
         if (Math.abs(max-min) < 0.0000001) {
             return min;
         }
-        float length = max - min;
-        float mean = (max+min)/2f;
+        float curr;
+        if (currentValue == null) {
+            curr = (max+min)/2f;
+        } else {
+            curr = currentValue;
+        }
+        curr = (curr < min) ? min: curr;
+        curr = (curr > max) ? max : curr;
 
-        float amplitudeAdjustedLength = (float)(length*amplitude);
-        return getRandomFloat((mean-amplitudeAdjustedLength), (mean+amplitudeAdjustedLength));
+        float distBelow = (float)amplitude*(curr-min);
+        float distAbove = (float)amplitude*(max-curr);
+
+        float adjustedMin = curr-distBelow;
+        float adjustedMax = curr+distAbove;
+        adjustedMin = (adjustedMin < min) ? min : adjustedMin;
+        adjustedMax = (adjustedMax > max) ? max : adjustedMax;
+
+        return getRandomFloat(adjustedMin, adjustedMax);
     }
 
     public static float getRandomFloat(float min, float max) {

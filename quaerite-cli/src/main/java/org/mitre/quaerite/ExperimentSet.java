@@ -60,6 +60,20 @@ public class ExperimentSet {
         return GSON.toJson(this);
     }
 
+    public String toJson(List<String> experiments) {
+        ExperimentSet tmpExperimentSet = new ExperimentSet();
+        for (ScoreCollector scoreCollector : scoreCollectors) {
+            tmpExperimentSet.addScoreCollector(scoreCollector);
+        }
+        for (String experimentName : experiments) {
+            Experiment experiment = getExperiment(experimentName);
+            if (experiment != null) {
+                tmpExperimentSet.addExperiment(experimentName, experiment);
+            }
+        }
+        return GSON.toJson(tmpExperimentSet);
+    }
+
     public static ExperimentSet fromJson(Reader reader) {
         return GSON.fromJson(reader, ExperimentSet.class);
     }

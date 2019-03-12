@@ -72,7 +72,6 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             return;
         }
         LOG.info("running experiment " + experimentName);
-        System.out.println("running " + experimentName);
         ExperimentSet experimentSet = experimentDB.getExperiments();
         Experiment ex = experimentSet.getExperiment(experimentName);
         List<ScoreCollector> scoreCollectors = experimentSet.getScoreCollectors();
@@ -116,7 +115,6 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         long start = System.currentTimeMillis();
         insertScores(experimentDB, experimentName, scoreCollectors);
         experimentDB.insertScoresAggregated(experimentName, scoreCollectors);
-        System.out.println("took " + (System.currentTimeMillis() - start) + " milliseconds to summarize scores");
     }
 
     private void insertScores(ExperimentDB experimentDB, String experimentName, List<ScoreCollector> scoreCollectors)

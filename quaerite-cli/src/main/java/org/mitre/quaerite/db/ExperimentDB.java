@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.Experiment;
 import org.mitre.quaerite.ExperimentSet;
@@ -74,25 +75,37 @@ public class ExperimentDB implements Closeable {
 
     private PreparedStatement insertScores;
     private PreparedStatement insertScoresAggregated;
-    private PreparedStatement selectNBestExperiments;
 
     private PreparedStatement selectScores;
     //cache of upserting scores keyed by scorer name
     private Map<String, PreparedStatement> upsertScoreStatements = new HashMap<>();
     private Map<String, PreparedStatement> selectScoreStatements = new HashMap<>();
 
-    public static ExperimentDB open(Path dbDir) throws SQLException, IOException {
+    public static ExperimentDB openAndDrop(Path dbDir) throws SQLException, IOException {
+        try {
+            Class.forName("org.h2.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return new ExperimentDB(DriverManager.getConnection(
+                "jdbc:h2:" + dbDir.resolve("h2_database").toAbsolutePath()), true);
+    }
+
+        public static ExperimentDB open(Path dbDir) throws SQLException, IOException {
         try {
             Class.forName ("org.h2.Driver");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
         return new ExperimentDB(DriverManager.getConnection(
-                    "jdbc:h2:"+dbDir.resolve("h2_database").toAbsolutePath()));
+                    "jdbc:h2:"+dbDir.resolve("h2_database").toAbsolutePath()), false);
     }
 
-    private ExperimentDB(Connection connection) throws SQLException {
+    private ExperimentDB(Connection connection, boolean dropAll) throws SQLException {
         this.connection = connection;
+        if (dropAll) {
+            dropTables();
+        }
         initTables();
         selectExperiments = connection.prepareStatement("select name, last_edited, json from experiments");
 
@@ -145,6 +158,15 @@ public class ExperimentDB implements Closeable {
         initJudgments();
         initScorers();
     }
+
+    private void dropTables() throws SQLException {
+        executeSQL(connection, "drop table if exists experiments");
+        executeSQL(connection, "drop table if exists judgments");
+        executeSQL(connection, "drop table if exists scorers");
+        executeSQL(connection, "drop table if exists scores");
+        executeSQL(connection, "drop table if exists scores_aggregated");
+    }
+
 
     private void initExperiments() throws SQLException {
         String sql = "CREATE TABLE IF NOT EXISTS " +
@@ -353,8 +375,6 @@ public class ExperimentDB implements Closeable {
                 }
                 if (! mismatch) {
                     for (int i = 0; i < scoreCollectors.size(); i++) {
-                        System.out.println(metaData.getColumnName(i+5) + " : "+
-                                scoreCollectors.get(i).getName());
                         if (!metaData.getColumnName(i + 5).equalsIgnoreCase(scoreCollectors.get(i).getName())) {
                             mismatch = true;
                             break;
@@ -424,11 +444,6 @@ public class ExperimentDB implements Closeable {
                 "ALTER TABLE SCORES_AGGREGATED ADD PRIMARY KEY (QUERY_SET, EXPERIMENT)");
 
         initInsertScores(scoreCollectors);
-        selectNBestExperiments = connection.prepareStatement("select sa.experiment, e.json " +
-                "from scores_aggregated sa " +
-                "join experiments e on sa.experiment=e.name " +
-                "where sa.experiment ilike ? order by ? desc");
-
     }
 
     private void initInsertScores(List<ScoreCollector> scoreCollectors) throws SQLException {
@@ -690,38 +705,66 @@ public class ExperimentDB implements Closeable {
     }
 
     public List<Experiment> getNBestExperiments(String experimentNamePrefix, int num, String scorerName) throws SQLException {
-        selectNBestExperiments.clearParameters();
+
         if (experimentNamePrefix.endsWith("*")) {
             experimentNamePrefix = experimentNamePrefix.substring(0, experimentNamePrefix.length()-1);
         }
         experimentNamePrefix = experimentNamePrefix+"%";
-        selectNBestExperiments.setString(1, experimentNamePrefix);
-        selectNBestExperiments.setString(2, scorerName);
-        selectNBestExperiments.setMaxRows(num);
+        String sql = "select sa.experiment, e.json " +
+                "from scores_aggregated sa " +
+                "join experiments e on sa.experiment=e.name " +
+                "where sa.experiment ilike '"+experimentNamePrefix+"' "+
+                "order by "+scorerName+" desc "+
+                "limit "+num;
+        return getNBestExperiments(sql);
+    }
+
+    private List<Experiment> getNBestExperiments(String sql) throws SQLException {
         List<Experiment> experiments = new ArrayList<>();
-        try (ResultSet resultSet = selectNBestExperiments.executeQuery()) {
-            while (resultSet.next()) {
-                String name = resultSet.getString(1);
-                String json = resultSet.getString(2);
-                System.out.println("JSON NOW: "+json);
-                Experiment ex = Experiment.fromJson(json);
-                experiments.add(ex);
+        try (Statement st = connection.createStatement()) {
+            try (ResultSet resultSet = st.executeQuery(sql)) {
+                while (resultSet.next()) {
+                    String name = resultSet.getString(1);
+                    String json = resultSet.getString(2);
+                    Experiment ex = Experiment.fromJson(json);
+                    experiments.add(ex);
+                }
             }
         }
 
         return experiments;
+
     }
 
-    public List<ExperimentScorePair> getNBestResults(String experimentNamePrefix, int num, String scorerName) throws SQLException {
+    public List<Experiment> getNBestExperiments(int num, String scorerName) throws SQLException {
+        String sql = "select sa.experiment, e.json " +
+                "from scores_aggregated sa " +
+                "join experiments e on sa.experiment=e.name " +
+                "order by "+scorerName+" desc "+
+                "limit "+num;
+        return getNBestExperiments(sql);
+
+    }
+
+        public List<ExperimentScorePair> getNBestResults(String experimentNamePrefix, int num, String scorerName) throws SQLException {
+        if (StringUtils.isBlank(scorerName)) {
+            throw new IllegalArgumentException("scorer name must not be null/blank");
+        }
         if (experimentNamePrefix.endsWith("*")) {
             experimentNamePrefix = experimentNamePrefix.substring(0, experimentNamePrefix.length()-1);
         }
         experimentNamePrefix = experimentNamePrefix+"%";
 
-
-        String sql = "select experiment, "+scorerName+" from scores_aggregated " +
-                "where experiment ilike '"+experimentNamePrefix+"' "+
-                "order by "+scorerName+" desc limit "+num;
+        String sql = null;
+        if (experimentNamePrefix.equals("%")) {
+            sql = "select experiment, " + scorerName + " from scores_aggregated " +
+                    "order by " + scorerName + " desc limit " + num;
+        } else {
+            sql = "select experiment, " + scorerName + " from scores_aggregated " +
+                    "where experiment ilike '" + experimentNamePrefix + "' " +
+                    "order by " + scorerName + " desc limit " + num;
+        }
+        System.out.println(sql);
         List<ExperimentScorePair> results = new ArrayList<>();
         try (Statement st = connection.createStatement()) {
             try (ResultSet resultSet = st.executeQuery(sql)) {

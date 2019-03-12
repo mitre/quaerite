@@ -17,7 +17,11 @@
 package org.mitre.quaerite.features.sets;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.mitre.quaerite.features.Feature;
 import org.mitre.quaerite.features.WeightableField;
@@ -30,6 +34,7 @@ public abstract class WeightableFeatureSet<T> implements FeatureSet<WeightableLi
 
 
     transient WeightableListFeature features;
+    transient Map<String, WeightableField> featureMap;
     transient float min;
     transient float max;
 
@@ -57,9 +62,15 @@ public abstract class WeightableFeatureSet<T> implements FeatureSet<WeightableLi
             min = tmpMin;
             max = tmpMax;
         }
+        featureMap = new HashMap<>();
+        for (WeightableField f : features.getWeightableFields()) {
+            featureMap.put(f.getFeature(), f);
+        }
     }
+
     private static WeightableListFeature convert(List<String> fields) {
         WeightableListFeature ret = new WeightableListFeature();
+
         for (String f : fields) {
             ret.add(new WeightableField(f));
         }
@@ -116,7 +127,7 @@ public abstract class WeightableFeatureSet<T> implements FeatureSet<WeightableLi
         WeightableListFeature base = new WeightableListFeature();
         base.addAll(currFeatures.getWeightableFields());
         if (features.get(i).hasWeight()) {
-            recurse(i+1, maxSize, base, collector);
+            recurse(i + 1, maxSize, base, collector);
         } else {
             for (Float f : defaultWeights) {
                 if (f > 0.0f) {
@@ -136,16 +147,55 @@ public abstract class WeightableFeatureSet<T> implements FeatureSet<WeightableLi
     @Override
     public WeightableListFeature mutate(WeightableListFeature weightableListFeature, double probability, double amplitude) {
         WeightableListFeature mutated = new WeightableListFeature();
-        for (WeightableField f : features.getWeightableFields()) {
-            if (MathUtil.RANDOM.nextDouble() <= probability) {
-                WeightableField mutatedFeature =
-                        new WeightableField(f.getFeature(),
-                                MathUtil.calcMutatedWeight(min, max, amplitude));
-                mutated.add(mutatedFeature);
+        Set<String> added = new HashSet<>();
+
+        for (WeightableField weightableField : weightableListFeature.getWeightableFields()) {
+            if (featureMap.containsKey(weightableField.getFeature()) &&
+                featureMap.get(weightableField.getFeature()).hasWeight()) {
+                mutated.add(featureMap.get(weightableField.getFeature()));
+                added.add(weightableField.getFeature());
             } else {
-                mutated.add(f);
+                if (MathUtil.RANDOM.nextDouble() < probability) {
+                    Float baseline = weightableField.getWeight();
+                    if (baseline == null) {
+                        baseline = min;
+                    }
+                    WeightableField mutatedFeature =
+                            new WeightableField(weightableField.getFeature(),
+                                    MathUtil.calcMutatedWeight(baseline, min, max, amplitude));
+                    mutated.add(mutatedFeature);
+                    added.add(weightableField.getFeature());
+                } else {
+                    //inverse probability of dropping a field
+                    if (MathUtil.RANDOM.nextDouble() > probability) {
+                        mutated.add(weightableField);
+                        added.add(weightableField.getFeature());
+                    } else {
+                        //drop this feature
+                    }
+                }
             }
         }
+        //consider adding 1 field
+        //TODO: might want to apply amplitude to how many fields to drop and/or add
+        if (MathUtil.RANDOM.nextDouble() < probability) {
+            Set<String> candidateFields = new HashSet<>();
+            for (String k : featureMap.keySet()) {
+                if (!added.contains(k)) {
+                    candidateFields.add(k);
+                }
+            }
+            List<String> candidateFieldList = new ArrayList<>(candidateFields);
+            if (candidateFieldList.size() > 0) {
+                String field = candidateFieldList.get(
+                        MathUtil.RANDOM.nextInt(candidateFieldList.size()));
+                WeightableField mutatedFeature =
+                        new WeightableField(field,
+                                MathUtil.calcMutatedWeight(min, min, max, amplitude));
+                mutated.add(mutatedFeature);
+            }
+        }
+
         return mutated;
     }
 }

@@ -70,10 +70,13 @@ public abstract class SearchClient implements Closeable {
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
+        //this was required because of connection already bound exceptions
+        httpGet.setHeader("Connection", "close");
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             try(CloseableHttpResponse httpResponse = httpClient.execute(target, httpGet)) {
                 if (httpResponse.getStatusLine().getStatusCode() != 200) {
+                    EntityUtils.consumeQuietly(httpResponse.getEntity());
                     throw new SearchClientException("Bad status code: "+httpResponse.getStatusLine().getStatusCode());
                 }
                 return EntityUtils.toByteArray(httpResponse.getEntity());
