@@ -707,4 +707,28 @@ public class ExperimentDB implements Closeable {
 
         return experiments;
     }
+
+    public List<ExperimentScorePair> getNBestResults(String experimentNamePrefix, int num, String scorerName) throws SQLException {
+        if (experimentNamePrefix.endsWith("*")) {
+            experimentNamePrefix = experimentNamePrefix.substring(0, experimentNamePrefix.length()-1);
+        }
+        experimentNamePrefix = experimentNamePrefix+"%";
+
+
+        String sql = "select experiment, "+scorerName+" from aggregated_scores " +
+                "where experiment ilike '"+experimentNamePrefix+"' "+
+                "order by "+scorerName+" desc limit "+num;
+        List<ExperimentScorePair> results = new ArrayList<>();
+        try (Statement st = connection.createStatement()) {
+            try (ResultSet resultSet = st.executeQuery(sql)) {
+                while (resultSet.next()) {
+                    String name = resultSet.getString(1);
+                    double score = resultSet.getDouble(2);
+                    results.add(new ExperimentScorePair(name, score));
+                }
+            }
+        }
+        return results;
+    }
+
 }

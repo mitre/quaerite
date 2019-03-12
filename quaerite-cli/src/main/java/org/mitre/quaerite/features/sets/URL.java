@@ -21,10 +21,10 @@ import java.util.List;
 
 import org.mitre.quaerite.features.StringFeature;
 
-public class URLS extends StringFeatureSet {
+public class URL extends StringFeatureSet {
 
 
-    public URLS(List<StringFeature> features) {
+    public URL(List<StringFeature> features) {
         super(features);
     }
 

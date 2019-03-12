@@ -186,14 +186,15 @@ public class GenerateExperiments {
     private void addExperiments(Map<String, Feature> features,
                                 ExperimentSet experimentSet) {
         String experimentName = "experiment_"+experimentCount++;
-        String searchServerUrl = features.get("urls").toString();
-        String customHandler = features.get("customHandlers").toString();
+        String searchServerUrl = features.get(Experiment.URL_KEY).toString();
+        String customHandler = features.get(Experiment.CUSTOM_HANDLER_KEY).toString();
 
         Experiment experiment = (customHandler == null) ?
                 new Experiment(experimentName, searchServerUrl) :
                 new Experiment(experimentName, searchServerUrl, customHandler);
         for (Map.Entry<String, Feature> e : features.entrySet()) {
-            if (!e.getKey().equals("urls") && !e.getKey().equals("customHandlers")) {
+            if (!e.getKey().equals(Experiment.URL_KEY)
+                    && !e.getKey().equals(Experiment.CUSTOM_HANDLER_KEY)) {
                 experiment.addParam(e.getKey(), e.getValue());
             }
         }

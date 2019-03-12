@@ -96,4 +96,14 @@ public class WeightableListFeature implements Feature<WeightableListFeature> {
     public WeightableField get(int i) {
         return weightableFields.get(i);
     }
+
+    @Override
+    public WeightableListFeature clone() {
+        //deep copy
+        WeightableListFeature clone = new WeightableListFeature();
+        for (WeightableField field : weightableFields) {
+            clone.add(new WeightableField(field.getFeature(), field.getWeight()));
+        }
+        return clone;
+    }
 }

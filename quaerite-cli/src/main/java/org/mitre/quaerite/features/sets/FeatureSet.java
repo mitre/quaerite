@@ -17,7 +17,7 @@
 package org.mitre.quaerite.features.sets;
 
 import java.util.List;
-import java.util.Set;
+
 
 import org.mitre.quaerite.features.Feature;
 

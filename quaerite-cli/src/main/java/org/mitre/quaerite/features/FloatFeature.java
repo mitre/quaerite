@@ -47,4 +47,9 @@ public class FloatFeature implements Feature<FloatFeature> {
             return Pair.of(parentB, this);
         }
     }
+
+    @Override
+    public FloatFeature clone() {
+        return new FloatFeature(v);
+    }
 }

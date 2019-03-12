@@ -14,15 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.features;
+package org.mitre.quaerite.cli;
 
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.Test;
 
-public interface Feature<T> {
-    Pair<T, T> crossover(T parentB);
+public class TestRunGA {
 
-    //this should be a deep copy
-    T clone();
+    @Test
+    public void testListLength() {
+        assertEquals(5, RunGA.calcListLength(10));
+        assertEquals(15, RunGA.calcListLength(100));
+        assertEquals(47, RunGA.calcListLength(1000));
+        assertEquals(146, RunGA.calcListLength(10000));
+        assertEquals(459, RunGA.calcListLength(100000));
+    }
 }

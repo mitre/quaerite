@@ -48,4 +48,9 @@ public class StringFeature implements Feature<StringFeature> {
             return Pair.of(parentB, this);
         }
     }
+
+    @Override
+    public StringFeature clone() {
+        return new StringFeature(feature);
+    }
 }

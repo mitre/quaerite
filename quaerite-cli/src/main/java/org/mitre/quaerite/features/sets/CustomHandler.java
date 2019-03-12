@@ -21,9 +21,9 @@ import java.util.List;
 import org.mitre.quaerite.features.StringFeature;
 
 
-public class CustomHandlers extends StringFeatureSet {
+public class CustomHandler extends StringFeatureSet {
 
-    public CustomHandlers(List<StringFeature> features) {
+    public CustomHandler(List<StringFeature> features) {
         super(features);
     }
 

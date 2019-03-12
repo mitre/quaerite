@@ -14,15 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.features;
 
+package org.mitre.quaerite.db;
 
+public class ExperimentScorePair {
+    private final String experimentName;
+    private final double score;
 
-import org.apache.commons.lang3.tuple.Pair;
+    public ExperimentScorePair(String experimentName, double score) {
+        this.experimentName = experimentName;
+        this.score = score;
+    }
 
-public interface Feature<T> {
-    Pair<T, T> crossover(T parentB);
+    public String getExperimentName() {
+        return experimentName;
+    }
 
-    //this should be a deep copy
-    T clone();
+    public double getScore() {
+        return score;
+    }
+
+    @Override
+    public String toString() {
+        return "ExperimentScorePair{" +
+                "experimentName='" + experimentName + '\'' +
+                ", score=" + score +
+                '}';
+    }
 }

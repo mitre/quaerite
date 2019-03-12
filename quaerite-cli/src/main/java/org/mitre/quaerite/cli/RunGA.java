@@ -34,11 +34,13 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.Experiment;
 import org.mitre.quaerite.ExperimentFeatures;
 import org.mitre.quaerite.ExperimentSet;
 import org.mitre.quaerite.db.ExperimentDB;
+import org.mitre.quaerite.db.ExperimentScorePair;
 import org.mitre.quaerite.features.Feature;
 import org.mitre.quaerite.features.ParamsMap;
 import org.mitre.quaerite.features.sets.FeatureSet;
@@ -177,11 +179,10 @@ public class RunGA extends AbstractExperimentRunner {
             generateRandom(experimentFeatures.getFeatureSets(), experimentDB, gaConfig.population);
             //write out the seed generation
         }
-
         scoreSeed(experimentDB);
 
         for (int i = 0 ; i < gaConfig.generations; i++) {
-            runGeneration(i, experimentDB, experimentFeatures, gaConfig);
+            runGeneration(i, experimentDB, experimentFeatures.getFeatureSets(), gaConfig);
         }
     }
 
@@ -193,39 +194,68 @@ public class RunGA extends AbstractExperimentRunner {
     }
 
     private void runGeneration(int generation, ExperimentDB experimentDB,
-                               ExperimentFeatures experimentFeatures, GAConfig gaConfig) throws SQLException {
-        List<String> experimentNames = generateNewExperiments(generation, experimentDB, gaConfig);
+                               FeatureSets featureSets, GAConfig gaConfig) throws SQLException {
+        List<String> experimentNames = generateNewExperiments(generation, experimentDB, featureSets, gaConfig);
+        System.out.println("starting generation "+generation);
         for (String experimentName : experimentNames) {
+            System.out.println("running: "+experimentName);
             runExperiment(experimentName, experimentDB);
         }
+        List<ExperimentScorePair> scores = experimentDB.getNBestResults(
+                GEN_PREFIX+generation+"_*", 3, gaConfig.scorerName);
+
+        for (ExperimentScorePair esp : scores) {
+            System.out.println(esp);
+        }
+        System.out.println("");
     }
 
-    private List<String> generateNewExperiments(int generation, ExperimentDB experimentDB, GAConfig gaConfig) throws SQLException{
+    private List<String> generateNewExperiments(int generation,
+                                                ExperimentDB experimentDB,
+                                                FeatureSets featureSets,
+                                                GAConfig gaConfig) throws SQLException{
         String genPat = (generation == 0) ? "*" : GEN_PREFIX+(generation-1)+"_*";
 
+        int listLength = calcListLength(gaConfig.population);
         //create new experiments
-        List<Experiment> experiments = experimentDB.getNBestExperiments(genPat, ((int)Math.sqrt(gaConfig.population)+1), gaConfig.scorerName);
+        List<Experiment> experiments = experimentDB.getNBestExperiments(genPat, listLength, gaConfig.scorerName);
         int expCount = 0;
         List<String> nextGenExpNames = new ArrayList<>();
         for (int i = 0; i < experiments.size()-1; i++) {
             for (int j = i+1; j < experiments.size(); j++) {
-                Pair<ParamsMap, ParamsMap> pair =  experiments.get(i).getParamsMap().crossover(experiments.get(j).getParamsMap());
+                Pair<ParamsMap, ParamsMap> pair =  experiments.get(i).getAllFeatures()
+                        .crossover(experiments.get(j).getAllFeatures());
 
                 String nameA = getExperimentName(generation, expCount++);
+                Experiment childA = new Experiment(nameA,
+                        pair.getLeft().mutate(featureSets, gaConfig.mutationProbability, gaConfig.mutationAmplitude));
+
                 experimentDB.addExperiment(
-                        new Experiment(nameA, pair.getLeft()));
+                        childA);
                 nextGenExpNames.add(nameA);
 
                 String nameB = getExperimentName(generation, expCount++);
+                Experiment childB = new Experiment(nameA,
+                        pair.getRight().mutate(featureSets, gaConfig.mutationProbability, gaConfig.mutationAmplitude));
+
                 nextGenExpNames.add(nameB);
                 experimentDB.addExperiment(
-                        new Experiment(nameB, pair.getRight()));
+                        childB);
                 if (expCount > gaConfig.population) {
                     return nextGenExpNames;
                 }
             }
         }
         return nextGenExpNames;
+    }
+
+    static int calcListLength(int population) {
+        //TODO: derive the correct formula...
+        //this was determined via experimentation
+        //and returns a list _slightly_ longer than necessary
+        return (int)FastMath.ceil(Math.sqrt(population) *
+                (1.5-(0.01*Math.log10(population))));
+
     }
 
     private String getExperimentName(int generation, int i) {

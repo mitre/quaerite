@@ -27,9 +27,15 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.mitre.quaerite.features.Feature;
 import org.mitre.quaerite.features.ParamsMap;
+import org.mitre.quaerite.features.StringFeature;
 import org.mitre.quaerite.features.serializers.ParamsSerializer;
 
+
 public class Experiment {
+
+    public static final String URL_KEY = "url";
+    public static final String CUSTOM_HANDLER_KEY = "customHandler";
+
 
     private static Gson GSON = new GsonBuilder().setPrettyPrinting()
             .registerTypeAdapter(ParamsMap.class, new ParamsSerializer())
@@ -56,11 +62,11 @@ public class Experiment {
 
     public Experiment(String name, Map<String, Feature> features) {
         this.name = name;
-        this.searchServerUrl = features.get("urls").toString();
-        this.customHandler = features.get("customHandlers").toString();
+        this.searchServerUrl = features.get(URL_KEY).toString();
+        this.customHandler = features.get(CUSTOM_HANDLER_KEY).toString();
 
         for (Map.Entry<String, Feature> e : features.entrySet()) {
-            if (!e.getKey().equals("urls") && !e.getKey().equals("customHandlers")) {
+            if (!e.getKey().equals(URL_KEY) && !e.getKey().equals(CUSTOM_HANDLER_KEY)) {
                 addParam(e.getKey(), e.getValue());
             }
         }
@@ -104,8 +110,14 @@ public class Experiment {
         return ret;
     }
 
-    public ParamsMap getParamsMap() {
-        return params;
+    public ParamsMap getAllFeatures() {
+        ParamsMap ret = new ParamsMap();
+        for (Map.Entry<String, Feature> e : params.getParams().entrySet()) {
+            ret.put(e.getKey(), (Feature)e.getValue().clone());
+        }
+        ret.put(URL_KEY, new StringFeature(getSearchServerUrl()));
+        ret.put(CUSTOM_HANDLER_KEY, new StringFeature(getCustomHandler()));
+        return ret;
     }
 
     public String getCustomHandler() {
