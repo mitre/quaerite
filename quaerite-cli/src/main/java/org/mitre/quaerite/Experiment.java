@@ -97,7 +97,6 @@ public class Experiment {
     }
 
     public String toJson() {
-        String json = GSON.toJson(this);
         return GSON.toJson(this);
     }
 

@@ -99,7 +99,7 @@ public class SolrClient extends SearchClient {
             sb.append("/");
         }
         String handler = query.getCustomHandler();
-        handler = (handler == null) ? DEFAULT_HANDLER : handler;
+        handler = StringUtils.isBlank(handler) ? DEFAULT_HANDLER : handler;
         sb.append(handler);
         sb.append("?");
 

@@ -424,7 +424,10 @@ public class ExperimentDB implements Closeable {
                 "ALTER TABLE SCORES_AGGREGATED ADD PRIMARY KEY (QUERY_SET, EXPERIMENT)");
 
         initInsertScores(scoreCollectors);
-        selectNBestExperiments = connection.prepareStatement("select name, json from scores_aggregated where experiment ilike ? order by ? desc");
+        selectNBestExperiments = connection.prepareStatement("select sa.experiment, e.json " +
+                "from scores_aggregated sa " +
+                "join experiments e on sa.experiment=e.name " +
+                "where sa.experiment ilike ? order by ? desc");
 
     }
 
@@ -696,10 +699,11 @@ public class ExperimentDB implements Closeable {
         selectNBestExperiments.setString(2, scorerName);
         selectNBestExperiments.setMaxRows(num);
         List<Experiment> experiments = new ArrayList<>();
-        try (ResultSet resultSet = selectExperiments.executeQuery()) {
+        try (ResultSet resultSet = selectNBestExperiments.executeQuery()) {
             while (resultSet.next()) {
                 String name = resultSet.getString(1);
                 String json = resultSet.getString(2);
+                System.out.println("JSON NOW: "+json);
                 Experiment ex = Experiment.fromJson(json);
                 experiments.add(ex);
             }
@@ -715,7 +719,7 @@ public class ExperimentDB implements Closeable {
         experimentNamePrefix = experimentNamePrefix+"%";
 
 
-        String sql = "select experiment, "+scorerName+" from aggregated_scores " +
+        String sql = "select experiment, "+scorerName+" from scores_aggregated " +
                 "where experiment ilike '"+experimentNamePrefix+"' "+
                 "order by "+scorerName+" desc limit "+num;
         List<ExperimentScorePair> results = new ArrayList<>();

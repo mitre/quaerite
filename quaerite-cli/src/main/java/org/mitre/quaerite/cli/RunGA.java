@@ -48,7 +48,7 @@ import org.mitre.quaerite.features.sets.FeatureSets;
 
 public class RunGA extends AbstractExperimentRunner {
 
-    static Logger LOG = Logger.getLogger(RunExperiments.class);
+    static Logger LOG = Logger.getLogger(RunGA.class);
 
     static Options OPTIONS = new Options();
 
@@ -130,6 +130,13 @@ public class RunGA extends AbstractExperimentRunner {
                         .required(true)
                         .desc("output directory for experiment files and results").build()
         );
+        OPTIONS.addOption(
+                Option.builder("j")
+                        .longOpt("judgments")
+                        .hasArg(true)
+                        .required(true)
+                        .desc("judgments ('truth') file").build()
+        );
         
     }
 
@@ -144,7 +151,7 @@ public class RunGA extends AbstractExperimentRunner {
             commandLine = new DefaultParser().parse(OPTIONS, args);
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
-            helpFormatter.printHelp("java -jar org.mitre.eval.RunExperiments", OPTIONS);
+            helpFormatter.printHelp("java -jar org.mitre.quaerite.cli.RunGA", OPTIONS);
             return;
         }
         GAConfig gaConfig = new GAConfig();
@@ -157,6 +164,7 @@ public class RunGA extends AbstractExperimentRunner {
         gaConfig.outputDir = getPath(commandLine, "o", false);
         gaConfig.population = getInt(commandLine,"p", 100);
         gaConfig.scorerName = getString(commandLine, "sc", null);
+        gaConfig.judgmentsFile = getPath(commandLine, "j", true);
         int threads = getInt(commandLine, "n", 8);
         RunGA runGA = new RunGA(threads);
         runGA.execute(gaConfig);
@@ -164,6 +172,8 @@ public class RunGA extends AbstractExperimentRunner {
 
 
     private void execute(GAConfig gaConfig) throws IOException, SQLException {
+        loadJudgments(gaConfig.judgmentsFile, "id", gaConfig.dbPath, true);
+
         ExperimentFeatures experimentFeatures = null;
 
         try (Reader reader = Files.newBufferedReader(gaConfig.features, StandardCharsets.UTF_8)) {
@@ -278,6 +288,7 @@ public class RunGA extends AbstractExperimentRunner {
 
 
     private static class GAConfig {
+        Path judgmentsFile;
         Path dbPath;
         Path features;
         Path seedExperiments;

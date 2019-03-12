@@ -1,0 +1,42 @@
+{
+  "scoreCollectors": [
+    {
+      "class": "NDCGCollector",
+      "params": {
+        "atK": 10
+      }
+    }
+  ],
+  "featureSets" : {
+    "url" : [
+      "http://localhost:8983/solr/jnet-mitre2"
+    ],
+    "tie" : [
+      0.0, 0.2, 0.5, 0.7
+    ],
+    "customHandler" : [
+      ""
+    ],
+
+    "qf" : {
+      "fields" : [
+        "ts_title",
+        "ts_meta_description",
+        "ts_meta_keywords",
+        "ts_attachments_field_file_upload",
+        "ts_body_value",
+        "ts_content",
+        "tm_title",
+        "tm_meta_description",
+        "tm_meta_keywords",
+        "tm_attachments_field_file_upload",
+        "tm_body_value",
+        "content"
+      ],
+      "defaultWeights" : [
+        "0.0", "1.0", "7.0"
+      ]
+    }
+  }
+
+}

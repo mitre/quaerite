@@ -17,17 +17,27 @@
 package org.mitre.quaerite.cli;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.input.BOMInputStream;
 import org.mitre.quaerite.Experiment;
 import org.mitre.quaerite.ExperimentSet;
+import org.mitre.quaerite.Judgments;
+import org.mitre.quaerite.QueryInfo;
 import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.scorecollectors.ScoreCollector;
 
@@ -49,7 +59,7 @@ public abstract class AbstractCLI {
 
     static Path getPath(CommandLine commandLine, String opt, boolean mustExist) {
         if (! commandLine.hasOption(opt)) {
-            throw new IllegalArgumentException("commandline must have option: "+opt);
+            return null;
         }
         Path p = Paths.get(commandLine.getOptionValue(opt));
         if (mustExist && !Files.exists(p)) {
@@ -93,6 +103,49 @@ public abstract class AbstractCLI {
                 }
             }
         }
+    }
+
+    public static void loadJudgments(Path file, String idField, Path dbDir, boolean freshStart) throws IOException, SQLException {
+        try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
+            if (freshStart) {
+                experimentDB.clearJudgments();
+            }
+            experimentDB.setIdField(idField);
+            Map<String, Map<String, Judgments>> queries = new HashMap<>();
+            try (InputStream is = Files.newInputStream(file)) {
+                try (Reader reader = new InputStreamReader(new BOMInputStream(is), "UTF-8")) {
+                    Iterable<CSVRecord> records = CSVFormat.EXCEL
+                            .withFirstRecordAsHeader().parse(reader);
+                    boolean hasQuerySet = (((CSVParser) records).getHeaderMap().containsKey("querySet")) ? true : false;
+                    boolean hasCount = (((CSVParser) records).getHeaderMap().containsKey("count")) ? true : false;
+                    for (CSVRecord record : records) {
+                        String querySet = (hasQuerySet) ? record.get("querySet") : QueryInfo.DEFAULT_QUERY_SET;
+                        String query = record.get("query");
+                        String id = record.get("id");
+                        int count = (hasCount) ? Integer.parseInt(record.get("count")) : 1;
+                        double relevanceScore =
+                                Double.parseDouble(record.get("relevance"));
+                        Map<String, Judgments> querySetMap = queries.get(querySet);
+                        if (querySetMap == null) {
+                            querySetMap = new HashMap<>();
+                        }
+                        Judgments judgments = querySetMap.get(query);
+                        if (judgments == null) {
+                            judgments = new Judgments(new QueryInfo(querySet, query, count));
+                        }
+                        judgments.addJugment(id, relevanceScore);
+                        querySetMap.put(query, judgments);
+                        queries.put(querySet, querySetMap);
+                    }
+                }
+            }
+            for (String querySet : queries.keySet()) {
+                for (Judgments judgments : queries.get(querySet).values()) {
+                    experimentDB.addJudgment(judgments);
+                }
+            }
+        }
+
     }
 
 

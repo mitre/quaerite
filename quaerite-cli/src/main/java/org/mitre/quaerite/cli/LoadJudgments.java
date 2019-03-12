@@ -42,7 +42,7 @@ import org.mitre.quaerite.QueryInfo;
 import org.mitre.quaerite.db.ExperimentDB;
 
 
-public class LoadJudgments {
+public class LoadJudgments extends AbstractCLI {
     static Options OPTIONS = new Options();
     static {
 
@@ -90,51 +90,8 @@ public class LoadJudgments {
         Path file = Paths.get(commandLine.getOptionValue("f"));
         Path dbDir = Paths.get(commandLine.getOptionValue("db"));
         boolean freshStart = (commandLine.hasOption("freshStart")) ? true : false;
-        load(file, idField, dbDir, freshStart);
-
+        loadJudgments(file, idField, dbDir, freshStart);
     }
 
-    public static void load(Path file, String idField, Path dbDir, boolean freshStart) throws IOException, SQLException {
-        try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
-            if (freshStart) {
-                experimentDB.clearJudgments();
-            }
-            experimentDB.setIdField(idField);
-            Map<String, Map<String, Judgments>> queries = new HashMap<>();
-            try (InputStream is = Files.newInputStream(file)) {
-                try (Reader reader = new InputStreamReader(new BOMInputStream(is), "UTF-8")) {
-                    Iterable<CSVRecord> records = CSVFormat.EXCEL
-                            .withFirstRecordAsHeader().parse(reader);
-                    boolean hasQuerySet = (((CSVParser) records).getHeaderMap().containsKey("querySet")) ? true : false;
-                    boolean hasCount = (((CSVParser) records).getHeaderMap().containsKey("count")) ? true : false;
-                    for (CSVRecord record : records) {
-                        String querySet = (hasQuerySet) ? record.get("querySet") : QueryInfo.DEFAULT_QUERY_SET;
-                        String query = record.get("query");
-                        String id = record.get("id");
-                        int count = (hasCount) ? Integer.parseInt(record.get("count")) : 1;
-                        double relevanceScore =
-                                Double.parseDouble(record.get("relevance"));
-                        Map<String, Judgments> querySetMap = queries.get(querySet);
-                        if (querySetMap == null) {
-                            querySetMap = new HashMap<>();
-                        }
-                        Judgments judgments = querySetMap.get(query);
-                        if (judgments == null) {
-                            judgments = new Judgments(new QueryInfo(querySet, query, count));
-                        }
-                        judgments.addJugment(id, relevanceScore);
-                        querySetMap.put(query, judgments);
-                        queries.put(querySet, querySetMap);
-                    }
-                }
-            }
-            for (String querySet : queries.keySet()) {
-                for (Judgments judgments : queries.get(querySet).values()) {
-                    experimentDB.addJudgment(judgments);
-                }
-            }
-        }
-
-    }
 
 }
