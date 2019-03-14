@@ -23,18 +23,19 @@ Background and Goals
 --------------------
 
 This project includes tools to help evaluate relevance
-ranking.  This code was initially developed for Solr 4.x.
-We plan to add a connector for Elasticsearch and confirm
-that the Solr connector works with more modern versions of Solr. 
+ranking.  This code has been tested with Solr 4.x, 7.x and 8.x.
+We plan to add a connector for Elasticsearch. 
 
 This project is not intended to compete with existing relevance
-evaluation tools; see for example: [1] and [2]. Rather, this was 
-developed for use cases not currently covered by other open source 
-software packages. The author encourages collaboration 
-among these projects.
+evaluation tools, such as [Splainer](http://splainer.io/),
+[Quepid](https://quepid.com/), [Rated Ranking Evaluator](https://github.com/SeaseLtd/rated-ranking-evaluator/wiki/Maven-Plugin),
+or [Luigi's Box](https://www.luigisbox.com/).
+Rather, this project was developed for use cases not currently 
+covered by open source software packages. The author encourages 
+collaboration among these projects.
 
-**NOTE: This project is under construction and is quite dynamic.  There will be breaking changes before 
-the first major release.**
+**NOTE: This project is under construction and is quite dynamic.  
+There will be breaking changes before the first major release.**
 
 While the name of this project may change in the future, we selected
 _quaerite_ -- Latin imperative "seek", root of English "query" -- to
@@ -61,8 +62,7 @@ Getting Started
 ---------------
 See the ```quaerite-examples``` module and its [README](https://github.com/mitre/quaerite/blob/master/quaerite-examples/README.md).
 
-References
+Road Map
 ----------
-* [1] [Quepid](https://quepid.com/)
-
-* [2] [Rated Ranking Evaluator](https://github.com/SeaseLtd/rated-ranking-evaluator/wiki/Maven-Plugin)
+* We plan to release 1.0.0-ALPHA before March 25, 2019
+* We plan to release 1.0.0-BETA before April 23, 2019
