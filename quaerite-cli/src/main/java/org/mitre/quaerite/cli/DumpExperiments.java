@@ -57,7 +57,7 @@ public class DumpExperiments {
         } catch (ParseException e) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp(
-                    "java -jar org.mitre.quaerite.cli.AddExperiments",
+                    "java -jar org.mitre.quaerite.cli.DumpExperiments",
                     OPTIONS);
             return;
         }

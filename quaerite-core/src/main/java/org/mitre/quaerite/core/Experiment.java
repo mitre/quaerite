@@ -16,6 +16,7 @@
  */
 package org.mitre.quaerite.core;
 
+import java.io.Reader;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -126,6 +127,11 @@ public class Experiment {
     public static Experiment fromJson(String s) {
         return GSON.fromJson(s, Experiment.class);
     }
+
+    public static Experiment fromJson(Reader r) {
+        return GSON.fromJson(r, Experiment.class);
+    }
+
 
     public String getName() {
         return name;

@@ -64,6 +64,9 @@ public class ParamsSerializer extends AbstractFeatureSerializer
         if (element == null || element.isJsonNull()) {
             return null;
         }
+        if (element.isJsonArray() && ((JsonArray)element).size() == 0) {
+            return null;
+        }
         Class featureSetClass = determineClass(parameterName);
         if (WeightableFeatureSet.class.isAssignableFrom(featureSetClass)) {
             return buildWeightableListFeature(element);

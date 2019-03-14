@@ -44,7 +44,7 @@ public class LoadJudgments extends AbstractCLI {
                 Option.builder("id")
                         .hasArg()
                         .required(false)
-                        .desc("field name for id field for ground truth (default: 'id')").build()
+                        .desc("field name for id field for ground truth (optional default: 'id')").build()
         );
 
         OPTIONS.addOption(

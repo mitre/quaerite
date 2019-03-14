@@ -26,8 +26,10 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -43,6 +45,7 @@ import org.mitre.quaerite.connectors.SearchClientException;
 import org.mitre.quaerite.connectors.StoredDocument;
 
 public class SolrClient extends SearchClient {
+
     private static final String DEFAULT_HANDLER = "select";
     private static final String JSON_RESPONSE = "&wt=json";
     private static final Gson GSON = new Gson();
@@ -59,6 +62,7 @@ public class SolrClient extends SearchClient {
 
     @Override
     public ResultSet search(QueryRequest query) throws SearchClientException, IOException {
+
         String url = generateRequestURL(query);
         long start = System.currentTimeMillis();
         byte[] response = get(url);
@@ -66,10 +70,12 @@ public class SolrClient extends SearchClient {
         return translateResponse(elapsed, response);
     }
 
+
     private ResultSet translateResponse(long totalTime, byte[] bytes) throws IOException {
         JsonParser parser = new JsonParser();
         JsonElement root = null;
         String jsonString = new String(bytes, StandardCharsets.UTF_8);
+        System.out.println(jsonString);
         try (Reader reader = new BufferedReader(
                 new InputStreamReader(
                         new ByteArrayInputStream(bytes), StandardCharsets.UTF_8))) {
@@ -136,7 +142,7 @@ public class SolrClient extends SearchClient {
             sb.append("&facet=true");
             //TODO: parameterize
             sb.append("&facet.missing=true");
-            sb.append("&facet.limit=10000");
+            sb.append("&facet.limit=100000");
             for (String field : query.getFacetFields()) {
                 sb.append("&facet.field=").append(encode(field));
             }
@@ -194,4 +200,37 @@ public class SolrClient extends SearchClient {
         String json = GSON.toJson(data);
         postJson(url+"/update/json/docs?commitWithin=1000", json);
     }
+
+    public Set<String> getCopyFieldDests() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append(url);
+        if (! url.endsWith("/")) {
+            sb.append("/");
+        }
+        sb.append("schema/copyfields?wt=json");
+        byte[] bytes;
+        try {
+            bytes = get(sb.toString());
+        } catch (SearchClientException e) {
+            e.printStackTrace();
+            throw new UnsupportedOperationException("can't find copy fields");
+        }
+        JsonParser parser = new JsonParser();
+        JsonElement root = null;
+        String jsonString = new String(bytes, StandardCharsets.UTF_8);
+        try (Reader reader = new BufferedReader(
+                new InputStreamReader(
+                        new ByteArrayInputStream(bytes), StandardCharsets.UTF_8))) {
+            root = parser.parse(reader);
+        }
+        JsonArray copyFields = (JsonArray) ((JsonObject)root).get("copyFields");
+        Set<String> dests = new HashSet<>();
+        for (int i = 0; i < copyFields.size(); i++) {
+            JsonObject entry = (JsonObject)copyFields.get(i);
+            String dest = entry.get("dest").getAsString();
+            dests.add(dest);
+        }
+        return dests;
+    }
+
 }

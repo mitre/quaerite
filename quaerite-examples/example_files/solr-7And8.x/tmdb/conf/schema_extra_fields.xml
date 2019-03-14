@@ -13,6 +13,11 @@
   <field name="directors" type="text_en" stored="true" multiValued="true"/>
   <field name="people" type="text_en" stored="true" multiValued="true"/>
 
+  <field name="original_language_facet" type="lowercase" stored="true"/>
+  <field name="genres_facet" type="lowercase" stored="true" multiValued="true"/>
+  <field name="production_companies_facet" type="lowercase" stored="true" multiValued="true"/>
+
+
   <field name="budget" type="pdouble" stored="true"/>
   <field name="revenue" type="pdouble" stored="true"/>
   <field name="popularity" type="pdouble" stored="true"/>
@@ -32,6 +37,11 @@
     stored="true" multiValued="true"/>
   <dynamicField name="tsst_*" type="text_simple_stem"  indexed="true" 
     stored="false" multiValued="true"/>
+
+  <!-- copy to facet fields -->
+  <copyField source="original_language" dest="original_language_facet"/>
+  <copyField source="production_companies" dest="production_companies_facet"/>
+  <copyField source="genres" dest="genres_facet"/>
 
   <!-- model "people" as their own field -->
   <copyField source="cast" dest="people"/>
@@ -60,8 +70,6 @@
   <copyField source="directors" dest="tbs_directors"/>
   <copyField source="cast" dest="tbs_people"/>
   <copyField source="directors" dest="tbs_people"/>
-  
-
 
   <!-- now copy all those "text basic" to "text simple stem" -->
   <copyField source="title" dest="tss_title"/>

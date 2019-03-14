@@ -54,10 +54,10 @@ Quaerite -- The Basics
 ---------------
 Make sure that Solr is running as specified above.
 
-1. Load the truth set into the local Quaerite database: ```java -jar quaerite.jar LoadJudgments -db my_db -f ground_truth.csv```
-2. Load some initial experiments: ```java -jar quaerite.jar AddExperiments -db my_db -f experiments.json```
-3. Run the experiments: ```java -jar quaerite.jar RunExperiments -db my_db -s http://localhost:8983/tmdb```
-4. Once the experiments have completed, output the reports: ```java -jar quaerite.jar DumpResults -db my_db -d results```
+1. Load the truth set into the local Quaerite database: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar LoadJudgments -db my_db -f movie_judgments.csv```
+2. Load some initial experiments: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar AddExperiments -db my_db -f experiments.json```
+3. Run the experiments: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunExperiments -db my_db```
+4. Once the experiments have completed, output the reports: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar DumpResults -db my_db -d results```
 
 You will find the standard reports in the ```reports/``` directory, including:
 * Scores per query -- a score for each query for each experiment

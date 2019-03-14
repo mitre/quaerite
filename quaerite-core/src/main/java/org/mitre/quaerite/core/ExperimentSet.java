@@ -24,16 +24,18 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.mitre.quaerite.core.features.ParamsMap;
 import org.mitre.quaerite.core.featuresets.FeatureSets;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollectorListSerializer;
 import org.mitre.quaerite.core.serializers.FeatureSetsSerializer;
+import org.mitre.quaerite.core.serializers.ParamsSerializer;
 
 public class ExperimentSet {
 
     private static Gson GSON = new GsonBuilder().setPrettyPrinting()
-            .registerTypeHierarchyAdapter(ScoreCollector.class, new ScoreCollectorListSerializer.ScoreCollectorSerializer())
-            .registerTypeHierarchyAdapter(FeatureSets.class, new FeatureSetsSerializer())
+            .registerTypeAdapter(ScoreCollector.class, new ScoreCollectorListSerializer.ScoreCollectorSerializer())
+            .registerTypeHierarchyAdapter(ParamsMap.class, new ParamsSerializer())
             .create();
 
     private transient int maxRows = -1;

@@ -10,6 +10,11 @@
   <field name="directors" type="text_en" stored="true" multiValued="true"/>
   <field name="people" type="text_en" stored="true" multiValued="true"/>
 
+  <field name="original_language_facet" type="lowercase" stored="true"/>
+  <field name="genres_facet" type="lowercase" stored="true" multiValued="true"/>
+  <field name="production_companies_facet" type="lowercase" stored="true" multiValued="true"/>
+
+
   <field name="budget" type="tdouble" stored="true"/>
   <field name="revenue" type="tdouble" stored="true"/>
   <field name="popularity" type="tdouble" stored="true"/>
@@ -29,6 +34,11 @@
     stored="true" multiValued="true"/>
   <dynamicField name="tsst_*" type="text_simple_stem"  indexed="true" 
     stored="false" multiValued="true"/>
+
+  <!-- copy to facet fields -->
+  <copyField source="original_language" dest="original_language_facet"/>
+  <copyField source="production_companies" dest="production_companies_facet"/>
+  <copyField source="genres" dest="genres_facet"/>
 
   <!-- model "people" as their own field -->
   <copyField source="cast" dest="people"/>
