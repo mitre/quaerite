@@ -34,9 +34,8 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>quaerite-cli</artifactId>
+            <artifactId>quaerite-connectors</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
     <build>

@@ -36,15 +36,15 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.mitre.quaerite.FacetResult;
-import org.mitre.quaerite.JudgmentList;
-import org.mitre.quaerite.Judgments;
+import org.mitre.quaerite.core.FacetResult;
+import org.mitre.quaerite.core.JudgmentList;
+import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.connectors.QueryRequest;
 import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.db.ExperimentDB;
-import org.mitre.quaerite.stats.ContrastResult;
-import org.mitre.quaerite.stats.YatesChi;
+import org.mitre.quaerite.core.stats.ContrastResult;
+import org.mitre.quaerite.core.stats.YatesChi;
 
 public class FindFeatures {
 

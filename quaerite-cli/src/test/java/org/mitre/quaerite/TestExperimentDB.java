@@ -26,12 +26,15 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mitre.quaerite.core.Experiment;
+import org.mitre.quaerite.core.ExperimentSet;
+import org.mitre.quaerite.core.JudgmentList;
+import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.features.WeightableField;
+import org.mitre.quaerite.core.features.WeightableListFeature;
+import org.mitre.quaerite.core.scorecollectors.HadAtLeastOneHitAtKCollector;
 import org.mitre.quaerite.db.ExperimentDB;
-import org.mitre.quaerite.features.StringFeature;
-import org.mitre.quaerite.features.WeightableField;
-import org.mitre.quaerite.features.WeightableListFeature;
-import org.mitre.quaerite.features.sets.WeightableFeatureSet;
-import org.mitre.quaerite.scorecollectors.HadAtLeastOneHitAtKCollector;
 
 public class TestExperimentDB {
     private static Path DB_DIR;

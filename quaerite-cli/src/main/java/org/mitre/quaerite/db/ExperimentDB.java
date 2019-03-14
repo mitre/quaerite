@@ -39,13 +39,13 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.mitre.quaerite.Experiment;
-import org.mitre.quaerite.ExperimentSet;
-import org.mitre.quaerite.JudgmentList;
-import org.mitre.quaerite.Judgments;
-import org.mitre.quaerite.QueryInfo;
-import org.mitre.quaerite.scorecollectors.ScoreCollector;
-import org.mitre.quaerite.scorecollectors.ScoreCollectorListSerializer;
+import org.mitre.quaerite.core.Experiment;
+import org.mitre.quaerite.core.ExperimentSet;
+import org.mitre.quaerite.core.JudgmentList;
+import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
+import org.mitre.quaerite.core.scorecollectors.ScoreCollectorListSerializer;
 
 public class ExperimentDB implements Closeable {
 

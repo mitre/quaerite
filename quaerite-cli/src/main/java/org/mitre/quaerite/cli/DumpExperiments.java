@@ -30,7 +30,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.mitre.quaerite.ExperimentSet;
+import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.db.ExperimentDB;
 
 public class DumpExperiments {

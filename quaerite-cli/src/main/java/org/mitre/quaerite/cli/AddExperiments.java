@@ -16,14 +16,7 @@
  */
 package org.mitre.quaerite.cli;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.SQLException;
-import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -31,10 +24,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.mitre.quaerite.Experiment;
-import org.mitre.quaerite.ExperimentSet;
-import org.mitre.quaerite.db.ExperimentDB;
-import org.mitre.quaerite.scorecollectors.ScoreCollector;
+import org.mitre.quaerite.core.Experiment;
+import org.mitre.quaerite.core.ExperimentSet;
 
 public class AddExperiments extends AbstractCLI {
 

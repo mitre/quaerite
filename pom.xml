@@ -39,8 +39,10 @@
 
     <modules>
         <module>quaerite-parent</module>
+        <module>quaerite-connectors</module>
         <module>quaerite-cli</module>
         <module>quaerite-examples</module>
+        <module>quaerite-core</module>
     </modules>
 
 </project>

@@ -28,7 +28,7 @@
  For more information, on how to customize this file, please see
  http://wiki.apache.org/solr/SchemaXml
 
- PERFORMANCE NOTE: this schema includes many optional features and should not
+ PERFORMANCE NOTE: this schema includes many optional featuresets and should not
  be used for benchmarking.  To improve performance one could
   - set stored="false" for all fields possible (esp large fields) when you
     only need to search on the field but don't need to return the original
@@ -126,7 +126,7 @@
    <field name="name" type="text_general" indexed="true" stored="true"/>
    <field name="manu" type="text_general" indexed="true" stored="true" omitNorms="true"/>
    <field name="cat" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="features" type="text_general" indexed="true" stored="true" multiValued="true"/>
+   <field name="featuresets" type="text_general" indexed="true" stored="true" multiValued="true"/>
    <field name="includes" type="text_general" indexed="true" stored="true" termVectors="true" termPositions="true" termOffsets="true" />
 
    <field name="weight" type="float" indexed="true" stored="true"/>
@@ -270,7 +270,7 @@
    <copyField source="cat" dest="text"/>
    <copyField source="name" dest="text"/>
    <copyField source="manu" dest="text"/>
-   <copyField source="features" dest="text"/>
+   <copyField source="featuresets" dest="text"/>
    <copyField source="includes" dest="text"/>
    <copyField source="manu" dest="manu_exact"/>
 
@@ -524,7 +524,7 @@
     </fieldType>
 
     <!-- A text field with defaults appropriate for English, plus
-	 aggressive word-splitting and autophrase features enabled.
+	 aggressive word-splitting and autophrase featuresets enabled.
 	 This field is just like text_en, except it adds
 	 WordDelimiterFilter to enable splitting and matching of
 	 words on case-change, alpha numeric boundaries, and

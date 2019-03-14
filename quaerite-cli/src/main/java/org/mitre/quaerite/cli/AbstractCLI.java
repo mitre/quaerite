@@ -34,12 +34,12 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
-import org.mitre.quaerite.Experiment;
-import org.mitre.quaerite.ExperimentSet;
-import org.mitre.quaerite.Judgments;
-import org.mitre.quaerite.QueryInfo;
+import org.mitre.quaerite.core.Experiment;
+import org.mitre.quaerite.core.ExperimentSet;
+import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
 import org.mitre.quaerite.db.ExperimentDB;
-import org.mitre.quaerite.scorecollectors.ScoreCollector;
 
 public abstract class AbstractCLI {
 

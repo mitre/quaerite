@@ -20,19 +20,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -42,20 +29,17 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.mitre.quaerite.Experiment;
-import org.mitre.quaerite.ExperimentSet;
-import org.mitre.quaerite.JudgmentList;
-import org.mitre.quaerite.Judgments;
-import org.mitre.quaerite.QueryInfo;
-import org.mitre.quaerite.ResultSet;
+import org.mitre.quaerite.core.Experiment;
+import org.mitre.quaerite.core.ExperimentSet;
+import org.mitre.quaerite.core.JudgmentList;
+import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.connectors.QueryRequest;
 import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientException;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.db.ExperimentDB;
-import org.mitre.quaerite.features.Feature;
-import org.mitre.quaerite.features.WeightableListFeature;
-import org.mitre.quaerite.scorecollectors.ScoreCollector;
 
 public class RunExperiments extends AbstractExperimentRunner {
 

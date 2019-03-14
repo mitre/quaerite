@@ -345,7 +345,7 @@
        ** Experimental Feature **
 
        Please note - Using a custom IndexReaderFactory may prevent
-       certain other features from working. The API to
+       certain other featuresets from working. The API to
        IndexReaderFactory may change without warning or may even be
        removed from future releases if the problems cannot be
        resolved.
@@ -1216,7 +1216,7 @@
          <bool name="enabled">true</bool>
          <str name="signatureField">id</str>
          <bool name="overwriteDupes">false</bool>
-         <str name="fields">name,features,cat</str>
+         <str name="fields">name,featuresets,cat</str>
          <str name="signatureClass">solr.processor.Lookup3Signature</str>
        </processor>
        <processor class="solr.LogUpdateProcessorFactory" />

@@ -16,16 +16,8 @@
  */
 package org.mitre.quaerite.cli;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -33,13 +25,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.io.input.BOMInputStream;
-import org.mitre.quaerite.Judgments;
-import org.mitre.quaerite.QueryInfo;
-import org.mitre.quaerite.db.ExperimentDB;
+import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.QueryInfo;
 
 
 public class LoadJudgments extends AbstractCLI {

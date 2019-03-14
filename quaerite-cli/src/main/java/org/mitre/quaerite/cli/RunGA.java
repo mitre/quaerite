@@ -36,18 +36,18 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.log4j.Logger;
-import org.mitre.quaerite.Experiment;
-import org.mitre.quaerite.ExperimentFeatures;
-import org.mitre.quaerite.ExperimentSet;
+import org.mitre.quaerite.core.Experiment;
+import org.mitre.quaerite.core.ExperimentFeatures;
+import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.db.ExperimentScorePair;
-import org.mitre.quaerite.features.Feature;
-import org.mitre.quaerite.features.ParamsMap;
-import org.mitre.quaerite.features.sets.FeatureSet;
-import org.mitre.quaerite.features.sets.FeatureSets;
-import org.mitre.quaerite.scorecollectors.DistributionalScoreCollector;
-import org.mitre.quaerite.scorecollectors.ScoreCollector;
-import org.mitre.quaerite.scorecollectors.SummingScoreCollector;
+import org.mitre.quaerite.core.features.Feature;
+import org.mitre.quaerite.core.features.ParamsMap;
+import org.mitre.quaerite.core.featuresets.FeatureSet;
+import org.mitre.quaerite.core.featuresets.FeatureSets;
+import org.mitre.quaerite.core.scorecollectors.DistributionalScoreCollector;
+import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
+import org.mitre.quaerite.core.scorecollectors.SummingScoreCollector;
 
 public class RunGA extends AbstractExperimentRunner {
 
@@ -69,7 +69,7 @@ public class RunGA extends AbstractExperimentRunner {
                 Option.builder("i")
                         .longOpt("input_features")
                         .hasArg()
-                        .desc("experiment features json file")
+                        .desc("experiment featuresets json file")
                         .required().build()
         );
         OPTIONS.addOption(
@@ -78,7 +78,7 @@ public class RunGA extends AbstractExperimentRunner {
                         .required(false)
                         .hasArg()
                         .desc("specify initial seed experiments (json file) as the first generation; " +
-                                "if not specified, first generation is randomly generated from the features file").build()
+                                "if not specified, first generation is randomly generated from the featuresets file").build()
         );
         OPTIONS.addOption(
                 Option.builder("sc")

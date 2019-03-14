@@ -43,7 +43,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.mitre.quaerite.db.ExperimentDB;
-import org.mitre.quaerite.util.MapUtil;
+import org.mitre.quaerite.core.util.MapUtil;
 
 public class DumpResults {
 

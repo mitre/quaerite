@@ -34,14 +34,14 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.mitre.quaerite.Experiment;
-import org.mitre.quaerite.ExperimentFeatures;
-import org.mitre.quaerite.ExperimentSet;
-import org.mitre.quaerite.features.Feature;
+import org.mitre.quaerite.core.Experiment;
+import org.mitre.quaerite.core.ExperimentFeatures;
+import org.mitre.quaerite.core.ExperimentSet;
+import org.mitre.quaerite.core.features.Feature;
 
-import org.mitre.quaerite.features.sets.FeatureSet;
-import org.mitre.quaerite.features.sets.FeatureSets;
-import org.mitre.quaerite.scorecollectors.ScoreCollector;
+import org.mitre.quaerite.core.featuresets.FeatureSet;
+import org.mitre.quaerite.core.featuresets.FeatureSets;
+import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
 
 public class GenerateExperiments {
 
@@ -59,7 +59,7 @@ public class GenerateExperiments {
                 Option.builder("i")
                         .longOpt("input_features")
                         .hasArg()
-                        .desc("experiment features json file")
+                        .desc("experiment featuresets json file")
                         .required().build()
         );
         OPTIONS.addOption(
@@ -80,7 +80,7 @@ public class GenerateExperiments {
                 Option.builder("r")
                         .longOpt("random")
                         .hasArg(true)
-                        .desc("generate x random experiments based on features")
+                        .desc("generate x random experiments based on featuresets")
                         .required(false).build()
         );
         OPTIONS.addOption(
@@ -206,7 +206,7 @@ public class GenerateExperiments {
             return null;
         }
         if (features.size() != 1) {
-            throw new IllegalArgumentException("features must have only one value: "+ features.size());
+            throw new IllegalArgumentException("featuresets must have only one value: "+ features.size());
         }
         for (Feature f : features) {
             return f.toString();

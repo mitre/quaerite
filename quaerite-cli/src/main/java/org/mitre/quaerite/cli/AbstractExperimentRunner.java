@@ -33,20 +33,20 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
-import org.mitre.quaerite.Experiment;
-import org.mitre.quaerite.ExperimentSet;
-import org.mitre.quaerite.JudgmentList;
-import org.mitre.quaerite.Judgments;
-import org.mitre.quaerite.QueryInfo;
-import org.mitre.quaerite.ResultSet;
 import org.mitre.quaerite.connectors.QueryRequest;
 import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientException;
 import org.mitre.quaerite.connectors.SearchClientFactory;
+import org.mitre.quaerite.core.Experiment;
+import org.mitre.quaerite.core.ExperimentSet;
+import org.mitre.quaerite.core.JudgmentList;
+import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.features.Feature;
+import org.mitre.quaerite.core.features.WeightableListFeature;
+import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
 import org.mitre.quaerite.db.ExperimentDB;
-import org.mitre.quaerite.features.Feature;
-import org.mitre.quaerite.features.WeightableListFeature;
-import org.mitre.quaerite.scorecollectors.ScoreCollector;
 
 public abstract class AbstractExperimentRunner extends AbstractCLI {
     static final Judgments POISON = new Judgments(new QueryInfo("", "", -1));
