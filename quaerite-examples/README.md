@@ -18,12 +18,13 @@
 -->
 Quaerite Examples
 ===========================
-This module offers examples to get your hands wet on example data
+This module offers examples to get your hands dirty on example data
 with example tasks.
 This set of examples is built around the "TheMovieDB" (_tmdb_).
 The inspiration for the use of this dataset comes from Doug Turnbull and John Berryman's book, [Relevant Search](https://www.manning.com/books/relevant-search)
 and the "Think Like a Relevance Engineer" training offered by Doug and colleagues at [OpenSourceConnections (o19s)](https://opensourceconnections.com).
-As you'll see, these examples rely on data and a Solr config kindly made available by Doug and _o19s_.
+As you'll see, these examples rely on data and a Solr config kindly made 
+available by Doug and _o19s_.
 
 **Note: this module is under construction.  We still need to add the ```ground_truth.csv``` and ```experiments.json``` 
 files... among other things.**
@@ -31,7 +32,7 @@ files... among other things.**
 Prerequisites
 ------------
 0. Install Java 8 and confirm that it is runnable from the commandline:
- ```$xslt java -version```
+ ```java -version```
 1. Download the OpenSourceConnection's _tmdb_ Solr index from [here](https://github.com/o19s/solr-tmdb/tree/master/solr_home)
 
 2. Download and unpack Solr 7.7.1 from [here](http://www.apache.org/dyn/closer.lua/lucene/solr/7.7.1/solr-7.7.1.zip)   
@@ -45,7 +46,7 @@ Prerequisites
 
 6. Ingest the _tmdb_ data ```java -jar quaerite-examples.jar tmdb.json http://localhost:8983/solr/tmdb```
 
-7. Navigate to [here](http://localhost:8983/solr) to confirm that _tmdb_ was loaded into Solr.
+7. Navigate to [here](http://localhost:8983/solr/#/tmdb) to confirm that _tmdb_ was loaded into Solr.
 
 The stage is now set to start searching -- not for documents, but for relevance features.
 
