@@ -24,7 +24,8 @@ This set of examples is built around the "TheMovieDB" (_tmdb_).
 The inspiration for the use of this dataset comes from Doug Turnbull and John Berryman's book, [Relevant Search](https://www.manning.com/books/relevant-search)
 and the "Think Like a Relevance Engineer" training offered by Doug and colleagues at [OpenSourceConnections (o19s)](https://opensourceconnections.com).
 As you'll see, these examples rely on data kindly made 
-available by Doug and _o19s_.
+available by Doug and _o19s_ -- the ```tmdb.json``` file is hosted by _o19s_, and the ```movie_judgments.csv``` 
+file is a reformatting of _o19s_'s [judgment-lists](https://github.com/o19s/solr-tmdb/blob/master/ltr/judgment-lists.html).
 
 Prerequisites
 ------------
@@ -53,6 +54,9 @@ The stage is now set to start searching -- not for documents, but for relevance 
 Quaerite -- The Basics -- Running Experiments (```RunExperiments```)
 ---------------
 Make sure that Solr is running as specified above.
+You can find the files, such as (```movie_judgments``` and 
+```experiments.json```) in [this directory](https://github.com/mitre/quaerite/tree/master/quaerite-examples/example_files).
+
 
 Run some experiments: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunExperiments -db my_db -j movie_judgments.csv -e experiments.json```
 
