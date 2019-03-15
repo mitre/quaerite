@@ -16,16 +16,16 @@
  */
 package org.mitre.quaerite.cli;
 
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Disabled("need to turn this into a real unit test")
 public class TestGenerateExperiments {
     static Path JSON;
     @BeforeAll
@@ -44,8 +44,8 @@ public class TestGenerateExperiments {
     @Test
     public void testSimple() throws Exception {
         GenerateExperiments.main(new String[]{
-                "-i", JSON.toAbsolutePath().toString(),
-                "-o", "C:/data/tmp.json"
+                "-f", JSON.toAbsolutePath().toString(),
+                "-e", "C:/data/experiments.json"
         });
     }
 }

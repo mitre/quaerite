@@ -100,8 +100,12 @@ genetic algorithms to learn which combinations of features lead to better result
 2. Or run the genetic algorithm from the features specification file with the a random seed: 
 ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_2.json -sc ndcg_10_mean```
 
+```RunGA``` shows the top 10 experiments from each generation, and it writes the `.json` experiment files 
+(by default) to the ```ga_experiments``` directory.  ```RunGA``` does not currently automatically write reports on the results.
+
 On this data set, with the available features, there is not much improvement over random seeding from option 2.  However, option 1 should show how the GA is finding better parameter settings over the initial experiment with each generation.  
-Note, that the next generations is not guaranteed to be better than the last -- at least with the current settings.
+Note, that the next generation is not guaranteed to be better than the last -- at least with the current settings.
+
 
 
 Quaerite -- Finding Features
