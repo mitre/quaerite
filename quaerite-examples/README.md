@@ -23,28 +23,26 @@ with example tasks.
 This set of examples is built around the "TheMovieDB" (_tmdb_).
 The inspiration for the use of this dataset comes from Doug Turnbull and John Berryman's book, [Relevant Search](https://www.manning.com/books/relevant-search)
 and the "Think Like a Relevance Engineer" training offered by Doug and colleagues at [OpenSourceConnections (o19s)](https://opensourceconnections.com).
-As you'll see, these examples rely on data and a Solr config kindly made 
+As you'll see, these examples rely on data kindly made 
 available by Doug and _o19s_.
-
-**Note: this module is under construction.  We still need to add the ```ground_truth.csv``` and ```experiments.json``` 
-files... among other things.**
 
 Prerequisites
 ------------
 0. Install Java 8 and confirm that it is runnable from the commandline:
  ```java -version```
-1. Download the OpenSourceConnection's _tmdb_ Solr index from [here](https://github.com/o19s/solr-tmdb/tree/master/solr_home)
+1. Download the _tmdb_ Solr index [Solr 7.x-8.x](https://github.com/mitre/quaerite/blob/master/quaerite-examples/example_files/solr-7And8.x.zip)
+   or [Solr 4.x](https://github.com/mitre/quaerite/blob/master/quaerite-examples/example_files/solr-4.x.zip)
 
-2. Download and unpack Solr 7.7.1 from [here](http://www.apache.org/dyn/closer.lua/lucene/solr/7.7.1/solr-7.7.1.zip)   
+2. Download and unpack Solr 8.0.0 from [here](http://www.apache.org/dyn/closer.lua/lucene/solr/8.0.0/solr-8.0.0.zip)   
 
-3. Copy the directory ```demo_files/solr-7.x/tmbd``` to your Solr core directory
+3. Unzip the index from step 1 to your Solr core directory, e.g. ```solr-8.0.0/solr/server/tmdb```
 
 4. Start Solr:  ```./bin/solr start -f -s /path/to/solr/tmdb```
 
 5. Download _tmdb.json_ from
    [AWS](https://s3.amazonaws.com/es-learn-to-rank.labs.o19s.com/tmdb.json) or [OpenSourceConnections](http://es-learn-to-rank.labs.o19s.com/tmdb.json)
 
-6. Ingest the _tmdb_ data ```java -jar quaerite-examples.jar tmdb.json http://localhost:8983/solr/tmdb```
+6. Ingest the _tmdb_ data ```java -jar quaerite-examples-1.0.0-SNAPSHOT.jar tmdb.json http://localhost:8983/solr/tmdb```
 
 7. Navigate to [here](http://localhost:8983/solr/#/tmdb) to confirm that _tmdb_ was loaded into Solr.
 
@@ -160,8 +158,8 @@ genres_facet:
 ```
 
 In this judgment set, the contrastive values are not exceedingly strong.  
-In practice, however, this technique has revealed some very important patterns that helped either:
+In practice, however, this technique has revealed some very important patterns that could help with either:
 
-1. fill out the truth set
-2. tune the boost weights based on popular categories
+1. pointing out areas for improvement in supplementing the truth set
+2. tuning the boost weights based on popular categories
 
