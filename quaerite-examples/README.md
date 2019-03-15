@@ -46,6 +46,8 @@ Prerequisites
 
 7. Navigate to [here](http://localhost:8983/solr/#/tmdb) to confirm that _tmdb_ was loaded into Solr.
 
+8. Until there is an official release of ```quaerite```, you'll need to build the project to build the jars:     ```mvn clean install```
+    
 The stage is now set to start searching -- not for documents, but for relevance features.
 
 Quaerite -- The Basics -- Running Experiments (```RunExperiments```)
