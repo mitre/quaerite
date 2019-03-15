@@ -43,7 +43,7 @@ Prerequisites
 5. Start Solr:  ```./bin/solr start -f -s /path/to/solr/tmdb```
 
 6. Download _tmdb.json_ from
-   [AWS](https://s3.amazonaws.com/es-learn-to-rank.labs.o19s.com/tmdb.json) or [OpenSourceConnections](http://es-learn-to-rank.labs.o19s.com/tmdb.json)
+   [OpenSourceConnections via AWS](http://o19s-public-datasets.s3.amazonaws.com/tmdb.json).
 
 7. Ingest the _tmdb_ data ```java -jar quaerite-examples-1.0.0-SNAPSHOT.jar tmdb.json http://localhost:8983/solr/tmdb```
 
