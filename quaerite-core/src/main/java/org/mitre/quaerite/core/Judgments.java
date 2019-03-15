@@ -27,6 +27,7 @@ import com.google.gson.Gson;
 
 /**
  * This class captures the judgments about a single specific query
+ * The id is the document id in Solr
  */
 public class Judgments {
     private static Gson GSON = new Gson();

@@ -31,6 +31,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,8 +45,10 @@ import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.scorecollectors.DistributionalScoreCollector;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollectorListSerializer;
+import org.mitre.quaerite.core.scorecollectors.SummingScoreCollector;
 
 public class ExperimentDB implements Closeable {
 
@@ -283,6 +286,7 @@ public class ExperimentDB implements Closeable {
         insertJudgments.clearParameters();
         insertJudgments.setString(1, judgments.getQuerySet());
         insertJudgments.setString(2, judgments.getQuery());
+        //this is to use later, potentially, in weighting scores for more frequent queries
         insertJudgments.setInt(3, judgments.getQueryCount());
         insertJudgments.setString(4, judgments.toJson());
         insertJudgments.execute();
@@ -297,11 +301,14 @@ public class ExperimentDB implements Closeable {
     }
 
     public List<String> getQuerySets() throws SQLException {
-        List<String> querySets = new ArrayList<>();
-        try (ResultSet rs = getQuerySets.executeQuery()) {
-            querySets.add(rs.getString(1));
+        if (hasNamedQuerySets()) {
+            List<String> querySets = new ArrayList<>();
+            try (ResultSet rs = getQuerySets.executeQuery()) {
+                querySets.add(rs.getString(1));
+            }
+            return querySets;
         }
-        return querySets;
+        return Collections.singletonList(QueryInfo.DEFAULT_QUERY_SET);
     }
 
     public JudgmentList getJudgments() throws SQLException {
@@ -366,6 +373,7 @@ public class ExperimentDB implements Closeable {
 
     public void initScoreTable(List<ScoreCollector> scoreCollectors) throws SQLException {
         boolean mismatch = false;
+        boolean tableProbDoesntExist = false;
         try(Statement st = connection.createStatement()) {
             try (ResultSet rs = st.executeQuery("select * from scores limit 1")) {
                 ResultSetMetaData metaData = rs.getMetaData();
@@ -382,17 +390,22 @@ public class ExperimentDB implements Closeable {
                     }
                 }
             } catch (SQLException e) {
-                mismatch = true;
+                tableProbDoesntExist = true;
             }
         }
-        if (mismatch) {
-            LOG.warn("dropping score table to reload with new columns");
-        } else {
-            if (insertScores == null) {
-                initInsertScores(scoreCollectors);
+        if (mismatch || tableProbDoesntExist) {
+            if (mismatch) {
+                LOG.warn("dropping score table to reload with new columns");
             }
-            return;
+            dropCreateScoreTables(scoreCollectors);
         }
+        if (insertScores == null) {
+            initInsertScores(scoreCollectors);
+        }
+
+    }
+
+    private void dropCreateScoreTables(List<ScoreCollector> scoreCollectors) throws SQLException {
         executeSQL(connection, "drop table if exists scores");
         executeSQL(connection, "drop index if exists scores_query_idx");
         executeSQL(connection, "drop index if exists scores_experiment_idx");
@@ -443,7 +456,6 @@ public class ExperimentDB implements Closeable {
         executeSQL(connection,
                 "ALTER TABLE SCORES_AGGREGATED ADD PRIMARY KEY (QUERY_SET, EXPERIMENT)");
 
-        initInsertScores(scoreCollectors);
     }
 
     private void initInsertScores(List<ScoreCollector> scoreCollectors) throws SQLException {
@@ -605,9 +617,17 @@ public class ExperimentDB implements Closeable {
         return false;
     }
 
-    public Map<String, Double> getMeanExperimentScores(String scorer) throws SQLException {
+    public Map<String, Double> getKeyExperimentScore(ScoreCollector scoreCollector) throws SQLException {
         Map<String, Double> map = new HashMap<>();
-        String sql = "select experiment, "+scorer+"_mean from scores_aggregated";
+        String columnName;
+        if (scoreCollector instanceof SummingScoreCollector) {
+            columnName = scoreCollector.getName()+"_"+SummingScoreCollector.SUM;
+        } else if (scoreCollector instanceof DistributionalScoreCollector) {
+            columnName = scoreCollector.getName()+"_"+DistributionalScoreCollector.MEAN;
+        } else {
+            throw new IllegalArgumentException("I don't yet support: "+ scoreCollector.getClass());
+        }
+        String sql = "select experiment, "+columnName+" from scores_aggregated";
         try (Statement st = connection.createStatement()) {
             try (ResultSet rs = st.executeQuery(sql)) {
                 while (rs.next()) {

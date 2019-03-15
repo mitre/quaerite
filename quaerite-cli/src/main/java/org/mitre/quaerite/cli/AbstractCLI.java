@@ -83,69 +83,69 @@ public abstract class AbstractCLI {
     }
 
 
-    static void addExperiments(Path file, Path dbDir, boolean merge, boolean freshStart) throws SQLException, IOException {
-        try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
-            if (freshStart) {
-                experimentDB.clearExperiments();
-                experimentDB.clearScorers();
-            }
-            ExperimentSet experiments = null;
-            try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-                experiments = ExperimentSet.fromJson(reader);
-            }
-            for (Experiment experiment : experiments.getExperiments().values()) {
-                experimentDB.addExperiment(experiment, merge);
-            }
-            List<ScoreCollector> scoreCollectors = experiments.getScoreCollectors();
-            if (scoreCollectors != null) {
-                for (ScoreCollector scoreCollector : scoreCollectors) {
-                    experimentDB.addScoreCollector(scoreCollector);
-                }
+    static void addExperiments(ExperimentDB experimentDB, Path experimentsJson, boolean merge, boolean freshStart) throws SQLException, IOException {
+        if (freshStart) {
+            experimentDB.clearExperiments();
+            experimentDB.clearScorers();
+            experimentDB.clearScores();
+        }
+        ExperimentSet experiments = null;
+        try (Reader reader = Files.newBufferedReader(experimentsJson, StandardCharsets.UTF_8)) {
+            experiments = ExperimentSet.fromJson(reader);
+        }
+
+        for (Experiment experiment : experiments.getExperiments().values()) {
+            experimentDB.addExperiment(experiment, merge);
+        }
+
+        List<ScoreCollector> scoreCollectors = experiments.getScoreCollectors();
+        if (scoreCollectors != null && scoreCollectors.size() > 0) {
+            experimentDB.clearScorers();
+            for (ScoreCollector scoreCollector : scoreCollectors) {
+                experimentDB.addScoreCollector(scoreCollector);
             }
         }
+
     }
 
-    public static void loadJudgments(Path file, String idField, Path dbDir, boolean freshStart) throws IOException, SQLException {
-        try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
-            if (freshStart) {
-                experimentDB.clearJudgments();
-            }
-            experimentDB.setIdField(idField);
-            Map<String, Map<String, Judgments>> queries = new HashMap<>();
-            try (InputStream is = Files.newInputStream(file)) {
-                try (Reader reader = new InputStreamReader(new BOMInputStream(is), "UTF-8")) {
-                    Iterable<CSVRecord> records = CSVFormat.EXCEL
-                            .withFirstRecordAsHeader().parse(reader);
-                    boolean hasQuerySet = (((CSVParser) records).getHeaderMap().containsKey("querySet")) ? true : false;
-                    boolean hasCount = (((CSVParser) records).getHeaderMap().containsKey("count")) ? true : false;
-                    for (CSVRecord record : records) {
-                        String querySet = (hasQuerySet) ? record.get("querySet") : QueryInfo.DEFAULT_QUERY_SET;
-                        String query = record.get("query");
-                        String id = record.get("id");
-                        int count = (hasCount) ? Integer.parseInt(record.get("count")) : 1;
-                        double relevanceScore =
-                                Double.parseDouble(record.get("relevance"));
-                        Map<String, Judgments> querySetMap = queries.get(querySet);
-                        if (querySetMap == null) {
-                            querySetMap = new HashMap<>();
-                        }
-                        Judgments judgments = querySetMap.get(query);
-                        if (judgments == null) {
-                            judgments = new Judgments(new QueryInfo(querySet, query, count));
-                        }
-                        judgments.addJugment(id, relevanceScore);
-                        querySetMap.put(query, judgments);
-                        queries.put(querySet, querySetMap);
+    public static void loadJudgments(ExperimentDB experimentDB, Path file, String idField, boolean freshStart) throws IOException, SQLException {
+        if (freshStart) {
+            experimentDB.clearJudgments();
+        }
+        experimentDB.setIdField(idField);
+        Map<String, Map<String, Judgments>> queries = new HashMap<>();
+        try (InputStream is = Files.newInputStream(file)) {
+            try (Reader reader = new InputStreamReader(new BOMInputStream(is), "UTF-8")) {
+                Iterable<CSVRecord> records = CSVFormat.EXCEL
+                        .withFirstRecordAsHeader().parse(reader);
+                boolean hasQuerySet = (((CSVParser) records).getHeaderMap().containsKey("querySet")) ? true : false;
+                boolean hasCount = (((CSVParser) records).getHeaderMap().containsKey("count")) ? true : false;
+                for (CSVRecord record : records) {
+                    String querySet = (hasQuerySet) ? record.get("querySet") : QueryInfo.DEFAULT_QUERY_SET;
+                    String query = record.get("query");
+                    String id = record.get("id");
+                    int count = (hasCount) ? Integer.parseInt(record.get("count")) : 1;
+                    double relevanceScore =
+                            Double.parseDouble(record.get("relevance"));
+                    Map<String, Judgments> querySetMap = queries.get(querySet);
+                    if (querySetMap == null) {
+                        querySetMap = new HashMap<>();
                     }
-                }
-            }
-            for (String querySet : queries.keySet()) {
-                for (Judgments judgments : queries.get(querySet).values()) {
-                    experimentDB.addJudgment(judgments);
+                    Judgments judgments = querySetMap.get(query);
+                    if (judgments == null) {
+                        judgments = new Judgments(new QueryInfo(querySet, query, count));
+                    }
+                    judgments.addJugment(id, relevanceScore);
+                    querySetMap.put(query, judgments);
+                    queries.put(querySet, querySetMap);
                 }
             }
         }
-
+        for (String querySet : queries.keySet()) {
+            for (Judgments judgments : queries.get(querySet).values()) {
+                experimentDB.addJudgment(judgments);
+            }
+        }
     }
 
 

@@ -182,7 +182,7 @@ public class RunGA extends AbstractExperimentRunner {
 
         ExperimentDB experimentDB = ExperimentDB.openAndDrop(gaConfig.dbPath);
 
-        loadJudgments(gaConfig.judgmentsFile, "id", gaConfig.dbPath, true);
+        loadJudgments(experimentDB, gaConfig.judgmentsFile, "id", true);
 
         ExperimentFeatures experimentFeatures = null;
 
@@ -191,7 +191,7 @@ public class RunGA extends AbstractExperimentRunner {
         }
 
         if (gaConfig.seedExperiments != null) {
-            addExperiments(gaConfig.seedExperiments, gaConfig.dbPath, false, true);
+            addExperiments(experimentDB, gaConfig.seedExperiments, false, true);
         }
         experimentDB = ExperimentDB.open(gaConfig.dbPath);
 
@@ -350,8 +350,6 @@ public class RunGA extends AbstractExperimentRunner {
                     new Experiment(name, instanceFeatures), false);
         }
     }
-
-
 
     private static class GAConfig {
         Path judgmentsFile;

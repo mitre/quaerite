@@ -75,7 +75,6 @@ public class SolrClient extends SearchClient {
         JsonParser parser = new JsonParser();
         JsonElement root = null;
         String jsonString = new String(bytes, StandardCharsets.UTF_8);
-        System.out.println(jsonString);
         try (Reader reader = new BufferedReader(
                 new InputStreamReader(
                         new ByteArrayInputStream(bytes), StandardCharsets.UTF_8))) {

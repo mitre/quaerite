@@ -17,17 +17,19 @@
 package org.mitre.quaerite.cli;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.h2.tools.Console;
+
 public class QuaeriteCLI {
 
     public static void main(String[] args) throws Exception {
         String tool = args[0];
         String[] newArgs = new String[args.length-1];
         System.arraycopy(args,1, newArgs, 0, newArgs.length);
-        if (tool.equals("LoadJudgments")) {
-            LoadJudgments.main(newArgs);
-        } else if (tool.equals("AddExperiments")) {
-            AddExperiments.main(newArgs);
-        } else if (tool.equals("DumpExperiments")) {
+
+        if (tool.equals("DumpExperiments")) {
             DumpExperiments.main(newArgs);
         } else if (tool.equals("RunExperiments")) {
             RunExperiments.main(newArgs);
@@ -37,8 +39,23 @@ public class QuaeriteCLI {
             GenerateExperiments.main(newArgs);
         } else if (tool.equals("DumpResults")) {
             DumpResults.main(newArgs);
+        } else if (tool.equals("StartDB")) {
+            startDB();
         } else {
             System.err.println("I'm sorry, but I don't recognize \""+tool + "\" as a tool");
+        }
+    }
+
+    private static void startDB() throws Exception {
+        List<String> argList = new ArrayList<>();
+        argList.add("-web");
+        Console.main(argList.toArray(new String[argList.size()]));
+        while(true) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e){
+                break;
+            }
         }
     }
 }

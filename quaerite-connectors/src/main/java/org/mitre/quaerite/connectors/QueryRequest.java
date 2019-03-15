@@ -93,4 +93,17 @@ public class QueryRequest {
     public int getFacetLimit() {
         return facetLimit;
     }
+
+    @Override
+    public String toString() {
+        return "QueryRequest{" +
+                "parameters=" + parameters +
+                ", facetFields=" + facetFields +
+                ", facetLimit=" + facetLimit +
+                ", query='" + query + '\'' +
+                ", customHandler='" + customHandler + '\'' +
+                ", idField='" + idField + '\'' +
+                ", numResults=" + numResults +
+                '}';
+    }
 }
