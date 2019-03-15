@@ -75,7 +75,7 @@ Be careful:
 * Permutation explosion -- the number of experiments grows exponentially with each new parameter
 * Overfitting -- this is something to be wary of throughout
 
-1. Generate experiments from the features specification file: ```java -jar quaerite.jar GenerateExperiments -f experiment_features.json -e experiments_1.json```
+1. Generate experiments from the features specification file: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar GenerateExperiments -f experiment_features.json -e experiments_1.json```
 2. Now run the new experiments: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunExperiments -db my_db -j movie_judgments.csv -e experiments_1.json```
 
 This will overwrite the results in the ```results/``` directory.
@@ -84,7 +84,7 @@ For kicks, let's say you're interested in testing out different analyzer chains 
 (e.g. ```title``` vs. ```tb_title``` vs. ```tss_title```), and you'd like to experiment with 
 more weighting parameters, and you'd like to experiment with different values for ```tie```.  Look no further than ```experiment_features_2.json```.
 
-1. Generate experiments from the example file: ```java -jar quaerite.jar GenerateExperiments -f experiment_features_2.json -e experiments_2.json```
+1. Generate experiments from the example file: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar GenerateExperiments -f experiment_features_2.json -e experiments_2.json```
 2. Now run the new experiments: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunExperiments -db my_db -j movie_judgments.csv -e experiments_2.json```
 
 Get some coffee because that generated >3,000 experiments.  Rather than running all of these experiments, 
