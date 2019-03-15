@@ -176,7 +176,8 @@ public class RunExperiments extends AbstractExperimentRunner {
             batchStart = System.currentTimeMillis();
             int finished = 0;
             for (String eName : experimentSet.getExperiments().keySet()) {
-                runExperiment(eName, experimentDB);
+                LOG.info("running experiment: '" + experimentName + "'");
+                runExperiment(eName, experimentDB, true);
                 long elapsed = System.currentTimeMillis() - batchStart;
                 finished++;
                 LOG.info("Finished " + finished + " in " +
@@ -185,7 +186,7 @@ public class RunExperiments extends AbstractExperimentRunner {
                 int togo = experimentSet.getExperiments().entrySet().size() - finished;
                 if (togo > 0) {
                     LOG.info("Still have " + togo + " to go; estimate: " +
-                            ((double) togo * perExperiment) / (double) 1000 + " seconds\n\n");
+                            threePlaces.format(((double) togo * perExperiment) / (double) 1000) + " seconds\n\n");
                 }
             }
         } else {
@@ -195,7 +196,7 @@ public class RunExperiments extends AbstractExperimentRunner {
                 return;
             }
             experimentDB.clearScores(experimentName);
-            runExperiment(experimentName, experimentDB);
+            runExperiment(experimentName, experimentDB, true);
         }
     }
 }

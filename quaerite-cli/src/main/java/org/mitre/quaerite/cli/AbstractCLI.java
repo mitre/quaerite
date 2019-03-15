@@ -77,7 +77,7 @@ public abstract class AbstractCLI {
 
     static String getString(CommandLine commandLine, String opt, String dfault) {
         if (commandLine.hasOption(opt)) {
-            return commandLine.getOptionValue("opt");
+            return commandLine.getOptionValue(opt);
         }
         return dfault;
     }

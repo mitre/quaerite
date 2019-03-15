@@ -42,8 +42,11 @@ public abstract class SearchClient implements Closeable {
     public abstract ResultSet search(QueryRequest query) throws SearchClientException, IOException;
     public abstract FacetResult facet(QueryRequest query) throws SearchClientException, IOException;
 
+    private final CloseableHttpClient httpClient;
 
-
+    public SearchClient() {
+        httpClient = HttpClients.createDefault();
+    }
     protected byte[] get(String url) throws SearchClientException {
         //overly simplistic...need to add proxy, etc., but good enough for now
         URI uri = null;
@@ -63,10 +66,11 @@ public abstract class SearchClient implements Closeable {
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
-        //this was required because of connection already bound exceptions
-        httpGet.setHeader("Connection", "close");
+        //this is required because of connection already bound exceptions
+        //on windows. :(
+        //httpGet.setHeader("Connection", "close");
 
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        //try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             try(CloseableHttpResponse httpResponse = httpClient.execute(target, httpGet)) {
                 if (httpResponse.getStatusLine().getStatusCode() != 200) {
                     EntityUtils.consumeQuietly(httpResponse.getEntity());
@@ -74,7 +78,7 @@ public abstract class SearchClient implements Closeable {
                 }
                 return EntityUtils.toByteArray(httpResponse.getEntity());
             }
-        } catch (IOException e) {
+         catch (IOException e) {
             throw new SearchClientException(e);
         }
     }
@@ -87,14 +91,14 @@ public abstract class SearchClient implements Closeable {
 
         httpPost.setHeader("Accept", "application/json");
         httpPost.setHeader("Content-type", "application/json; charset=utf-8");
-        //this was required because of connection already bound exceptions
-        httpPost.setHeader("Connection", "close");
+        //this was required because of connection already bound exceptions on windows :(
+        //httpPost.setHeader("Connection", "close");
 
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        //try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
                 EntityUtils.consume(response.getEntity());
                 return response.getStatusLine().getStatusCode();
-            }
+          //  }
         } finally {
             httpPost.releaseConnection();
         }
@@ -112,6 +116,7 @@ public abstract class SearchClient implements Closeable {
 
     public void close() throws IOException {
         //no-op
+        httpClient.close();
     }
 
     public abstract void addDocuments(List<StoredDocument> buildDocuments) throws IOException;

@@ -41,6 +41,8 @@ public class QuaeriteCLI {
             DumpResults.main(newArgs);
         } else if (tool.equals("StartDB")) {
             startDB();
+        } else if (tool.equals("RunGA")) {
+            RunGA.main(newArgs);
         } else {
             System.err.println("I'm sorry, but I don't recognize \""+tool + "\" as a tool");
         }

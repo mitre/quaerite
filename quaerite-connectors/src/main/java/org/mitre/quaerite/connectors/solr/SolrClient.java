@@ -122,6 +122,9 @@ public class SolrClient extends SearchClient {
         }
         for (Map.Entry<String, List<String>> e : query.getParameters().entrySet()) {
             for (String value: e.getValue()) {
+                if (value == null) {
+                    System.out.println("here");
+                }
                 try {
                     sb.append("&");
                     sb.append(URLEncoder.encode(e.getKey(), StandardCharsets.UTF_8.name()));

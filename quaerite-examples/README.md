@@ -50,21 +50,18 @@ Prerequisites
 
 The stage is now set to start searching -- not for documents, but for relevance features.
 
-Quaerite -- The Basics
+Quaerite -- The Basics -- Running Experiments (```RunExperiments```)
 ---------------
 Make sure that Solr is running as specified above.
 
-1. Load the truth set into the local Quaerite database: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar LoadJudgments -db my_db -f movie_judgments.csv```
-2. Load some initial experiments: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar AddExperiments -db my_db -f experiments.json```
-3. Run the experiments: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunExperiments -db my_db```
-4. Once the experiments have completed, output the reports: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar DumpResults -db my_db -d results```
+Run some experiments: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunExperiments -db my_db -j movie_judgments.csv -e experiments.json```
 
 You will find the standard reports in the ```reports/``` directory, including:
 * Scores per query -- a score for each query for each experiment
 * Scores aggregated by experiment -- a score for each experiment and query set
 * A table showing the pairwise statistical significance tests (``paired t-test``) for each pair of experiments 
 
-Quaerite -- Generating Experiments
+Quaerite -- Generating Experiments (```GenerateExperiments```)
 --------------------------
 It is a bit unwieldy to have to specify a definition for all of the experiments you might want to run.
 You can specify features and ranges and have Quaerite create all the permutations of those experiments for you.
@@ -73,12 +70,32 @@ Be careful:
 * Permutation explosion -- the number of experiments grows exponentially with each new parameter
 * Overfitting -- this is something to be wary of throughout
 
-1. Generate experiments from the example file: ```java -jar quaerite.jar GenerateExperiments -i experiment_parameters.json 
--o plethora_of_experiments.json```
-2. Load the new experiments file: ```java -jar quaerite.jar AddExperiments -freshStart -db my_db -f plethora_of_experiments.json```
+1. Generate experiments from the features specification file: ```java -jar quaerite.jar GenerateExperiments -f experiment_features.json -e experiments_1.json```
+2. Now run the new experiments: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunExperiments -db my_db -j movie_judgments.csv -e experiments_1.json```
 
-Then run the experiments and dump the results.
+This will overwrite the results in the ```results/``` directory.
 
+For kicks, let's say you're interested in testing out different analyzer chains on copy fields 
+(e.g. ```title``` vs. ```tb_title``` vs. ```ts_title```), and you'd like to experiment with 
+more weighting parameters, and you'd like to experiment with different values for ```tie```.  Look no further than ```experiment_features_2.json```.
+
+1. Generate experiments from the example file: ```java -jar quaerite.jar GenerateExperiments -f experiment_features_2.json -e experiments_2.json```
+2. Now run the new experiments: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunExperiments -db my_db -j movie_judgments.csv -e experiments_2.json```
+
+Get some coffee because that generated >3,000 experiments.  Rather than running all of these experiments, 
+give the genetic algorithm a try (see ```RunGA``` below).
+
+Genetic Algorithms (GA) (```RunGA```)
+---------------------------------
+Rather than going through all of the permutatations with ```GenerateExperiments```, it would be useful to apply 
+genetic algorithms to learn which combinations of features lead to better results.
+
+1. Run the genetic algorithm from the features specification file with the original experiments as the seed: 
+```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_2.json -sc ndcg_10_mean -e experiments.json```
+2. Or run the genetic algorithm from the features specification file with the a random seed: 
+```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_2.json -sc ndcg_10_mean```
+
+The the GA
 Quaerite -- Finding Features
 -----------------------------
 Elasticsearch made popular the notion of "SignificantTerms" -- that is, given a query
@@ -97,11 +114,54 @@ What you do with this information with regard to relevance tuning depends on man
 but it can be helpful at least to understand statistical patterns that
 your truth set may reveal.
 
-1. Load the truth set as above.
-2. Run FindFeatures and specify which fields are your facetable fields with the ```-f``` flag:
-```java -jar quaerite.jar FindFeatures -db my_db -s http://localhost:8983/solr/tmdb -f title,keywords,content```
+1. Run FindFeatures and specify which fields are your facetable fields with the ```-f``` flag:
+```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar FindFeatures -db my_db -j movie_judgments.csv -s http://localhost:8983/solr/tmdb -f genres_facet,original_language_facet,production_companies_facet```
 
-Coming Soon -- Genetic Algorithms
----------------------------------
-Rather than going through all of the permutatations with ```GenerateExperiments```, it would be useful to apply 
-genetic algorithms to learn which combinations of features that lead to better results.
+For each facet, the results are sorted by the descending order of contrast value. 
+For example:
+```
+production_companies_facet:
+   	facet_value=dc comics
+   		targCount=16
+   		targTotal=1481
+   		targPercent=1.08%
+   		backgroundCount=23
+   		backgroundTotal=26365
+   		backgroundPercent=0.09%
+   		contrastValue=98.884
+   	facet_value=lin pictures
+   		targCount=3
+   		targTotal=1481
+   		targPercent=0.20%
+   		backgroundCount=0
+   		backgroundTotal=26365
+   		backgroundPercent=0.00%
+   		contrastValue=53.412
+```
+
+Slightly more than one percent (1.08%) of the production companies in the truth set are ```dc_comics```, 
+however, in the rest of ```tmdb```, only 23 movies in the rest of ```tmdb``` (0.20%) are ```dc_comics```.
+
+Note, that the contrastive value is irrespective of the directionality.  
+This shows that the truth set has _fewer_ ```drama``` movies than you'd expect.
+
+```
+genres_facet:
+...
+	facet_value=drama
+		targCount=402
+		targTotal=1481
+		targPercent=27.14%
+		backgroundCount=8914
+		backgroundTotal=26365
+		backgroundPercent=33.81%
+		contrastValue=27.989
+...
+```
+
+In this judgment set, the contrastive values are not exceedingly strong.  
+In practice, however, this technique has revealed some very important patterns that helped either:
+
+1. fill out the truth set
+2. tune the boost weights based on popular categories
+

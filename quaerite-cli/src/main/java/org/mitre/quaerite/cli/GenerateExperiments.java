@@ -43,30 +43,30 @@ import org.mitre.quaerite.core.featuresets.FeatureSet;
 import org.mitre.quaerite.core.featuresets.FeatureSets;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
 
-public class GenerateExperiments {
+public class GenerateExperiments extends AbstractCLI {
 
     enum MODE {
         PERMUTE,
         RANDOM
     }
 
-    private static final int DEFAULT_MAX = 1000;
+    private static final int DEFAULT_MAX = 10000;
 
     static Options OPTIONS = new Options();
 
     static {
         OPTIONS.addOption(
-                Option.builder("i")
-                        .longOpt("input_features")
+                Option.builder("f")
+                        .longOpt("features")
                         .hasArg()
                         .desc("experiment featuresets json file")
                         .required().build()
         );
         OPTIONS.addOption(
-                Option.builder("o")
-                        .longOpt("output_experiments")
+                Option.builder("e")
+                        .longOpt("experiments")
                         .hasArg()
-                        .desc("experiments file")
+                        .desc("experiments file to write to")
                         .required().build()
         );
         OPTIONS.addOption(
@@ -98,6 +98,7 @@ public class GenerateExperiments {
         try {
             commandLine = new DefaultParser().parse(OPTIONS, args);
         } catch (ParseException e) {
+            System.err.println(e.getMessage());
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.printHelp(
                     "java -jar org.mitre.quaerite.cli.GenerateExperiments",
@@ -114,8 +115,8 @@ public class GenerateExperiments {
         if (commandLine.hasOption("r")) {
             mode = MODE.RANDOM;
         }
-        Path input = Paths.get(commandLine.getOptionValue('i'));
-        Path output = Paths.get(commandLine.getOptionValue("o"));
+        Path input = getPath(commandLine, "f", true);
+        Path output = getPath(commandLine, "e", false);
         GenerateExperiments generateExperiments = new GenerateExperiments();
         generateExperiments.execute(input, output, new GenerateConfig(mode, max));
     }
@@ -187,7 +188,11 @@ public class GenerateExperiments {
                                 ExperimentSet experimentSet) {
         String experimentName = "experiment_"+experimentCount++;
         String searchServerUrl = features.get(Experiment.URL_KEY).toString();
-        String customHandler = features.get(Experiment.CUSTOM_HANDLER_KEY).toString();
+
+        String customHandler = null;
+        if (features.containsKey(Experiment.CUSTOM_HANDLER_KEY)) {
+            customHandler = features.get(Experiment.CUSTOM_HANDLER_KEY).toString();
+        }
 
         Experiment experiment = (customHandler == null) ?
                 new Experiment(experimentName, searchServerUrl) :

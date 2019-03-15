@@ -38,20 +38,21 @@
     }
   ],
   "featureSets" : {
-    "tie": {
-      "defaultWeights": [
-        0.0, 0.1, 0.2
-      ]
-    },
-    "urls" : [
+    "tie": [ 0.0, 0.1, 0.2  ],
+    "url" : [
       "http://localhost:8983/solr/tmdb"
     ],
     "qf": {
       "fields": [
         "title",
-        "description^2.0",
-        "keywords",
-        "content"
+        "tb_title",
+        "tss_title",
+        "overview",
+        "tb_overview",
+        "tss_overview",
+		"people",
+		"tb_people",
+		"tss_people"
       ],
       "defaultWeights": [
         "0.0",

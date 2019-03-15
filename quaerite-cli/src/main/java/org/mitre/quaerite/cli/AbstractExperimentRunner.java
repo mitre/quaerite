@@ -75,20 +75,19 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     Map<String, JudgmentList> searchServerValidatedMap = new HashMap<>();
 
     private final int numThreads;
-    private NumberFormat threePlaces = new DecimalFormat(".###",
+    NumberFormat threePlaces = new DecimalFormat(".000",
             DecimalFormatSymbols.getInstance(Locale.US));
     public AbstractExperimentRunner(int numThreads) {
         this.numThreads = numThreads;
     }
 
 
-    void runExperiment(String experimentName, ExperimentDB experimentDB) throws SQLException {
+    void runExperiment(String experimentName, ExperimentDB experimentDB, boolean logResults) throws SQLException {
         if (experimentDB.hasScores(experimentName)) {
             LOG.info("Already has scores for " + experimentName + "; skipping.  " +
                     "Use the -freshStart commandline option to clear all scores");
             return;
         }
-        LOG.info("running experiment: '" + experimentName + "'");
         ExperimentSet experimentSet = experimentDB.getExperiments();
         Experiment ex = experimentSet.getExperiment(experimentName);
         List<ScoreCollector> scoreCollectors = experimentSet.getScoreCollectors();
@@ -132,7 +131,9 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         long start = System.currentTimeMillis();
         insertScores(experimentDB, experimentName, scoreCollectors);
         experimentDB.insertScoresAggregated(experimentName, scoreCollectors);
-        logResults(scoreCollectors);
+        if (logResults) {
+            logResults(scoreCollectors);
+        }
     }
 
     private void logResults(List<ScoreCollector> scoreCollectors) {

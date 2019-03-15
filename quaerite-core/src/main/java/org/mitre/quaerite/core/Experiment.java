@@ -64,7 +64,8 @@ public class Experiment {
     public Experiment(String name, Map<String, Feature> features) {
         this.name = name;
         this.searchServerUrl = features.get(URL_KEY).toString();
-        this.customHandler = features.get(CUSTOM_HANDLER_KEY).toString();
+        this.customHandler = (features.containsKey(CUSTOM_HANDLER_KEY)) ?
+                features.get(CUSTOM_HANDLER_KEY).toString() : null;
 
         for (Map.Entry<String, Feature> e : features.entrySet()) {
             if (!e.getKey().equals(URL_KEY) && !e.getKey().equals(CUSTOM_HANDLER_KEY)) {

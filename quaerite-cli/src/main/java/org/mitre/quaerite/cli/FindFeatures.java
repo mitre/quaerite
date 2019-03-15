@@ -36,6 +36,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
@@ -44,13 +46,10 @@ import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.core.stats.ContrastResult;
-import org.mitre.quaerite.core.stats.YatesChi;
 
-public class FindFeatures {
+public class FindFeatures extends AbstractCLI {
 
     static Options OPTIONS = new Options();
-    private static NumberFormat NUMBER_FORMAT = new DecimalFormat("#.##",
-            DecimalFormatSymbols.getInstance(Locale.US));
 
     static {
         OPTIONS.addOption(
@@ -77,9 +76,24 @@ public class FindFeatures {
                         .required(false)
                         .desc("filter query to run to subset data").build()
         );
-    }
+        OPTIONS.addOption(
+                Option.builder("j")
+                        .longOpt("judgments")
+                        .hasArg(true)
+                        .required(false)
+                        .desc("judgment .csv file (optional as long as judgements have been loaded earlier!)").build()
+        );
+        OPTIONS.addOption(
+                Option.builder("id")
+                        .hasArg()
+                        .required(false)
+                        .desc("field name for id field for judgments file (optional; default: 'id')").build()
+        );
 
-    private YatesChi yatesChi = new YatesChi();
+    }
+    ChiSquareTest chi = new ChiSquareTest();
+    private NumberFormat decimalFormat = new DecimalFormat("0.000",
+            DecimalFormatSymbols.getInstance(Locale.US));
 
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
@@ -95,7 +109,12 @@ public class FindFeatures {
         }
         String searchServerUrl = commandLine.getOptionValue("s");
         Path dbDir = Paths.get(commandLine.getOptionValue("db"));
+        Path judgmentsFile = getPath(commandLine, "j", false);
         ExperimentDB db = ExperimentDB.open(dbDir);
+        if (judgmentsFile != null) {
+            String idField = getString(commandLine, "id", RunExperiments.DEFAULT_ID_FIELD);
+            loadJudgments(db, judgmentsFile, idField, true);
+        }
         SearchClient searchClient = SearchClientFactory.getClient(searchServerUrl);
         String[] fields = commandLine.getOptionValue("f").split(",");
         String filterQuery = null;
@@ -119,7 +138,9 @@ public class FindFeatures {
         for (String f : fields) {
             FacetResult truthCounts = getFacets(f, idField, ids, searchClient);
             QueryRequest sq = new QueryRequest("*:*");
-            sq.addParameter("fq", filterQuery);
+            if (filterQuery != null) {
+                sq.addParameter("fq", filterQuery);
+            }
             FacetResult backgroundCounts = getFacets(f, sq, searchClient);
             List<ContrastResult> chis = getChis(truthCounts, backgroundCounts);
             reportResult(f, chis);
@@ -163,10 +184,25 @@ public class FindFeatures {
         System.out.println(field + ":");
         int reported = 0;
         for (ContrastResult chi : chis) {
-            if (++reported >= 100) {
+            if (++reported >= 10) {
                 break;
             }
-            System.out.println("\t" + chi);
+            String targPercent = (chi.getTargTotal() == 0L) ? "" :
+                    String.format(Locale.US, "%.2f%%", ((double)chi.getTargCount()/(double)chi.getTargTotal())*100.0f);
+            String otherPercent = (chi.getOtherTotal() == 0L) ? "" :
+                    String.format(Locale.US, "%.2f%%", ((double)chi.getOtherCount()/(double)chi.getOtherTotal())*100.0f);
+
+            System.out.println(StringUtils.join(new String[]{
+                    "\tfacet_value="+chi.getTerm(),
+                    "\t\ttargCount="+chi.getTargCount(),
+                    "\t\ttargTotal="+chi.getTargTotal(),
+                    "\t\ttargPercent="+targPercent,
+                    "\t\tbackgroundCount="+chi.getOtherCount(),
+                    "\t\tbackgroundTotal="+chi.getOtherTotal(),
+                    "\t\tbackgroundPercent="+otherPercent,
+                    "\t\tcontrastValue="+decimalFormat.format(chi.getContrastValue())
+
+            }, '\n'));
         }
     }
 
@@ -188,9 +224,9 @@ public class FindFeatures {
             long a = e.getValue();
             Long b = tmpB.get(e.getKey());
             b = (b == null) ? 0 : b;
-            double c = foreground.getTotalDocs() - a;
-            double d = totalDocs - b;
-            double chi = (a == 0) ? 0.0 : yatesChi.calculateValue(a, (double) b, c, d);
+            long c = foreground.getTotalDocs() - a;
+            long d = totalDocs - b;
+            double chi = (a == 0) ? 0.0 : chi(a, b, c, d);
             if (a == 0L && b == 0L) {
                 //skip
             } else {
@@ -199,6 +235,15 @@ public class FindFeatures {
         }
         Collections.sort(ret);
         return ret;
+    }
+
+    private double chi(long a, Long b, long c, long d) {
+        long[][] twoByTwo = new long[2][2];
+        twoByTwo[0][0] = a;
+        twoByTwo[0][1] = b;
+        twoByTwo[1][0] = c;
+        twoByTwo[1][1] = d;
+        return chi.chiSquare(twoByTwo);
     }
 
     private FacetResult getFacets(String facetFieldName, QueryRequest queryRequest,

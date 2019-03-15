@@ -56,6 +56,9 @@ public class ContrastResult implements Comparable<ContrastResult> {
 	public long getOtherTotal() {
 		return otherTotal;
 	}
+	public double getContrastValue() {
+		return contrastValue;
+	}
 
 	@Override
 	public String toString() {
