@@ -31,8 +31,10 @@ import org.mitre.quaerite.core.FacetResult;
 
 @Disabled("need to have Solr tmdb instance running")
 public class TestSolrClient {
+
     private static String ALL_DOCS = "*:*";
     private static String TMDB_URL = "http://localhost:8983/solr/tmdb";
+
     @Test
     public void testCopyFields() throws Exception {
         SolrClient client = new SolrClient(TMDB_URL);
