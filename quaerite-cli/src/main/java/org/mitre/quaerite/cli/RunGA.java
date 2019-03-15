@@ -102,7 +102,7 @@ public class RunGA extends AbstractExperimentRunner {
                         .longOpt("mutation_probability")
                         .hasArg()
                         .required(false)
-                        .desc("probability of mutation; must be >=0.0 and <= 1.0 (default = 0.1)").build()
+                        .desc("probability of mutation; must be >=0.0 and <= 1.0 (default = 0.3)").build()
         );
 
         OPTIONS.addOption(
@@ -110,7 +110,7 @@ public class RunGA extends AbstractExperimentRunner {
                         .longOpt("mutation_amplitude")
                         .hasArg()
                         .required(false)
-                        .desc("amplitude of mutation; must be >=0.0 and <= 1.0 (default = 0.2)").build()
+                        .desc("amplitude of mutation; must be >=0.0 and <= 1.0 (default = 0.8)").build()
         );
 
         OPTIONS.addOption(
@@ -161,7 +161,7 @@ public class RunGA extends AbstractExperimentRunner {
         }
         GAConfig gaConfig = new GAConfig();
         gaConfig.generations = getInt(commandLine, "g", 20);
-        gaConfig.mutationProbability = getFloat(commandLine, "mp", 0.4f);
+        gaConfig.mutationProbability = getFloat(commandLine, "mp", 0.3f);
         gaConfig.mutationAmplitude = getFloat(commandLine, "ma", 0.8f);
         gaConfig.dbPath = getPath(commandLine, "db", false);
         gaConfig.features = getPath(commandLine, "f", true);
@@ -238,7 +238,8 @@ public class RunGA extends AbstractExperimentRunner {
                 "*", 10, gaConfig.scorerName);
 
         for (ExperimentScorePair esp : scores) {
-            System.out.println("experiment '"+esp.getExperimentName()+"': "+threePlaces.format(esp.getScore()));
+            System.out.println("experiment '"+esp.getExperimentName()+"': "
+                    +threePlaces.format(esp.getScore()));
         }
         System.out.println("");
         System.out.println("");
