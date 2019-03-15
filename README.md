@@ -64,5 +64,11 @@ See the ```quaerite-examples``` module and its [README](https://github.com/mitre
 
 Road Map
 ----------
-* We plan to release 1.0.0-ALPHA before March 25, 2019
-* We plan to release 1.0.0-BETA before April 23, 2019
+High priorities
+* Bake crossfold validation into the Genetic Algorithm code
+* Add other features (e.g. ```bq```, ```bf```) as needed
+* Add a connector for Elasticsearch
+
+Planned Releases
+* 1.0.0-ALPHA before March 25, 2019
+* 1.0.0-BETA before April 23, 2019

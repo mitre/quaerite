@@ -31,30 +31,31 @@ Prerequisites
 ------------
 0. Install Java 8 and confirm that it is runnable from the commandline:
  ```java -version```
-1. Download the _tmdb_ Solr index [Solr 7.x-8.x](https://github.com/mitre/quaerite/blob/master/quaerite-examples/example_files/solr-7And8.x.zip)
+1. Until there is an official release of ```quaerite```, you'll need to build the project to build the jars:     ```mvn clean install```
+
+2. Download the _tmdb_ Solr index config [Solr 7.x-8.x](https://github.com/mitre/quaerite/blob/master/quaerite-examples/example_files/solr-7And8.x.zip)
    or [Solr 4.x](https://github.com/mitre/quaerite/blob/master/quaerite-examples/example_files/solr-4.x.zip)
 
-2. Download and unpack Solr 8.0.0 from [here](http://www.apache.org/dyn/closer.lua/lucene/solr/8.0.0/solr-8.0.0.zip)   
+3. Download and unpack Solr 8.0.0 from [here](http://www.apache.org/dyn/closer.lua/lucene/solr/8.0.0/solr-8.0.0.zip).
 
-3. Unzip the index from step 1 to your Solr core directory, e.g. ```solr-8.0.0/solr/server/tmdb```
+4. Unzip the index config from step 1 to your Solr core directory, e.g. ```solr-8.0.0/solr/server/tmdb```
 
-4. Start Solr:  ```./bin/solr start -f -s /path/to/solr/tmdb```
+5. Start Solr:  ```./bin/solr start -f -s /path/to/solr/tmdb```
 
-5. Download _tmdb.json_ from
+6. Download _tmdb.json_ from
    [AWS](https://s3.amazonaws.com/es-learn-to-rank.labs.o19s.com/tmdb.json) or [OpenSourceConnections](http://es-learn-to-rank.labs.o19s.com/tmdb.json)
 
-6. Ingest the _tmdb_ data ```java -jar quaerite-examples-1.0.0-SNAPSHOT.jar tmdb.json http://localhost:8983/solr/tmdb```
+7. Ingest the _tmdb_ data ```java -jar quaerite-examples-1.0.0-SNAPSHOT.jar tmdb.json http://localhost:8983/solr/tmdb```
 
-7. Navigate to [here](http://localhost:8983/solr/#/tmdb) to confirm that _tmdb_ was loaded into Solr.
+8. Navigate to [here](http://localhost:8983/solr/#/tmdb) to confirm that _tmdb_ was loaded into Solr.
 
-8. Until there is an official release of ```quaerite```, you'll need to build the project to build the jars:     ```mvn clean install```
     
 The stage is now set to start searching -- not for documents, but for relevance features.
 
 Quaerite -- The Basics -- Running Experiments (```RunExperiments```)
 ---------------
-Make sure that Solr is running as specified above.
-You can find the files, such as (```movie_judgments``` and 
+
+You can find the files (such as ```movie_judgments.csv``` and 
 ```experiments.json```) in [this directory](https://github.com/mitre/quaerite/tree/master/quaerite-examples/example_files).
 
 
@@ -68,7 +69,7 @@ You will find the standard reports in the ```reports/``` directory, including:
 Quaerite -- Generating Experiments (```GenerateExperiments```)
 --------------------------
 It is a bit unwieldy to have to specify a definition for all of the experiments you might want to run.
-You can specify features and ranges and have Quaerite create all the permutations of those experiments for you.
+You can specify features and ranges and have ```quaerite``` create all the permutations of those experiments for you.
 
 Be careful:
 * Permutation explosion -- the number of experiments grows exponentially with each new parameter
@@ -80,14 +81,14 @@ Be careful:
 This will overwrite the results in the ```results/``` directory.
 
 For kicks, let's say you're interested in testing out different analyzer chains on copy fields 
-(e.g. ```title``` vs. ```tb_title``` vs. ```ts_title```), and you'd like to experiment with 
+(e.g. ```title``` vs. ```tb_title``` vs. ```tss_title```), and you'd like to experiment with 
 more weighting parameters, and you'd like to experiment with different values for ```tie```.  Look no further than ```experiment_features_2.json```.
 
 1. Generate experiments from the example file: ```java -jar quaerite.jar GenerateExperiments -f experiment_features_2.json -e experiments_2.json```
 2. Now run the new experiments: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunExperiments -db my_db -j movie_judgments.csv -e experiments_2.json```
 
 Get some coffee because that generated >3,000 experiments.  Rather than running all of these experiments, 
-give the genetic algorithm a try (see ```RunGA``` below).
+give the genetic algorithm a try (see the next section:```RunGA```).
 
 Genetic Algorithms (GA) (```RunGA```)
 ---------------------------------
@@ -99,7 +100,10 @@ genetic algorithms to learn which combinations of features lead to better result
 2. Or run the genetic algorithm from the features specification file with the a random seed: 
 ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_2.json -sc ndcg_10_mean```
 
-The the GA
+On this data set, with the available features, there is not much improvement over random seeding from option 2.  However, option 1 should show how the GA is finding better parameter settings over the initial experiment with each generation.  
+Note, that the next generations is not guaranteed to be better than the last -- at least with the current settings.
+
+
 Quaerite -- Finding Features
 -----------------------------
 Elasticsearch made popular the notion of "SignificantTerms" -- that is, given a query
