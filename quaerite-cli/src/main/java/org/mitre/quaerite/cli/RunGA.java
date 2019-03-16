@@ -333,12 +333,8 @@ public class RunGA extends AbstractExperimentRunner {
     }
 
     static int calcListLength(int population) {
-        //TODO: derive the correct formula...
-        //this was determined via experimentation
-        //and returns a list _slightly_ longer than necessary
-        return (int)FastMath.ceil(Math.sqrt(population) *
-                (1.5-(0.01*Math.log10(population))));
-
+        return (int)FastMath.ceil((1.0 + Math.sqrt(1.0+
+                (8.0*(double)population)))/2.0);
     }
 
     private String getExperimentName(int generation, int i) {

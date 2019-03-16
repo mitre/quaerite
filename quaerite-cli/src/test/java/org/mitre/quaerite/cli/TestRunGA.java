@@ -27,8 +27,8 @@ public class TestRunGA {
     public void testListLength() {
         assertEquals(5, RunGA.calcListLength(10));
         assertEquals(15, RunGA.calcListLength(100));
-        assertEquals(47, RunGA.calcListLength(1000));
-        assertEquals(146, RunGA.calcListLength(10000));
-        assertEquals(459, RunGA.calcListLength(100000));
+        assertEquals(46, RunGA.calcListLength(1000));
+        assertEquals(142, RunGA.calcListLength(10000));
+        assertEquals(448, RunGA.calcListLength(100000));
     }
 }
