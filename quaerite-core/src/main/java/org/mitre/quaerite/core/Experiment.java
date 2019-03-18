@@ -26,9 +26,11 @@ import java.util.Set;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.ParamsMap;
 import org.mitre.quaerite.core.features.StringFeature;
+import org.mitre.quaerite.core.features.URL;
 import org.mitre.quaerite.core.serializers.ParamsSerializer;
 
 
@@ -119,10 +121,10 @@ public class Experiment {
     public ParamsMap getAllFeatures() {
         ParamsMap ret = new ParamsMap();
         for (Map.Entry<String, Feature> e : params.getParams().entrySet()) {
-            ret.put(e.getKey(), (Feature)e.getValue().clone());
+            ret.put(e.getKey(), (Feature)e.getValue().deepCopy());
         }
-        ret.put(URL_KEY, new StringFeature(getSearchServerUrl()));
-        ret.put(CUSTOM_HANDLER_KEY, new StringFeature(getCustomHandler()));
+        ret.put(URL_KEY, new URL(getSearchServerUrl()));
+        ret.put(CUSTOM_HANDLER_KEY, new CustomHandler(getCustomHandler()));
         return ret;
     }
 

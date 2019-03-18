@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.featuresets;
+package org.mitre.quaerite.core.features.factories;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.util.MathUtil;
 
@@ -29,19 +29,34 @@ import org.mitre.quaerite.core.util.MathUtil;
  * option is expected at a time, e.g. server url.
  * Note that permute returns just the list
  */
-public abstract class StringFeatureSet implements FeatureSet<StringFeature> {
+public class StringFeatureFactory<T extends StringFeature>
+        extends AbstractFeatureFactory<T> {
     Random random = new Random();
     final List<StringFeature> features;
 
-    protected StringFeatureSet(List<StringFeature> features) {
+    public StringFeatureFactory(String name, Class<?extends StringFeature> clazz, List<String> strings) {
+        super(name);
+        features = new ArrayList<>();
+        for (String s : strings) {
+            try {
+                features.add(clazz.getConstructor(String.class).newInstance(s));
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Can't build "+clazz, e);
+            }
+        }
+    }
+
+
+    protected StringFeatureFactory(String name, List<StringFeature> features) {
+        super(name);
         this.features = features;
     }
 
     @Override
-    public List<Feature> permute(int maxSize) {
-        List<Feature> ret = new ArrayList<>();
+    public List<T> permute(int maxSize) {
+        List<T> ret = new ArrayList<>();
         for (StringFeature feature : features) {
-            ret.add(feature);
+            ret.add((T)feature);
             if (ret.size() >= maxSize) {
                 return ret;
             }
@@ -50,18 +65,18 @@ public abstract class StringFeatureSet implements FeatureSet<StringFeature> {
     }
 
     @Override
-    public Feature random() {
+    public T random() {
         int i = random.nextInt(features.size());
-        return features.get(i);
+        return (T)features.get(i);
     }
 
     @Override
-    public StringFeature mutate(StringFeature instanceFeatures, double probability, double amplitude) {
+    public T mutate(T stringFeature, double probability, double amplitude) {
         if (MathUtil.RANDOM.nextDouble() < probability) {
             int i = random.nextInt(features.size());
-            return features.get(i);
+            return (T)features.get(i);
         }
-        return instanceFeatures;
+        return stringFeature;
     }
 
     public List<StringFeature> getStrings() {

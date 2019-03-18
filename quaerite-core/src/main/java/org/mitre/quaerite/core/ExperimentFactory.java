@@ -21,23 +21,23 @@ import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.mitre.quaerite.core.featuresets.FeatureSets;
+import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollectorListSerializer;
-import org.mitre.quaerite.core.serializers.FeatureSetsSerializer;
+import org.mitre.quaerite.core.serializers.FeatureFactorySerializer;
 
-public class ExperimentFeatures {
+public class ExperimentFactory {
 
 
     List<ScoreCollector> scoreCollectors;
-    FeatureSets featureSets;
+    FeatureFactories featureFactories;
 
-    public static ExperimentFeatures fromJson(Reader reader) {
+    public static ExperimentFactory fromJson(Reader reader) {
         Gson gson = new GsonBuilder().setPrettyPrinting()
                 .registerTypeHierarchyAdapter(ScoreCollector.class, new ScoreCollectorListSerializer.ScoreCollectorSerializer())
-                .registerTypeAdapter(FeatureSets.class, new FeatureSetsSerializer())
+                .registerTypeAdapter(FeatureFactories.class, new FeatureFactorySerializer())
                 .create();
-        return gson.fromJson(reader, ExperimentFeatures.class);
+        return gson.fromJson(reader, ExperimentFactory.class);
     }
 
     public List<ScoreCollector> getScoreCollectors() {
@@ -46,13 +46,13 @@ public class ExperimentFeatures {
 
     @Override
     public String toString() {
-        return "ExperimentFeatures{" +
+        return "ExperimentFactory{" +
                 "scoreCollectors=" + scoreCollectors +
-                ", featureSets=" + featureSets +
+                ", featureFactories=" + featureFactories +
                 '}';
     }
 
-    public FeatureSets getFeatureSets() {
-        return featureSets;
+    public FeatureFactories getFeatureFactories() {
+        return featureFactories;
     }
 }

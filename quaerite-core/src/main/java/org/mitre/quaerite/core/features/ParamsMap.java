@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.mitre.quaerite.core.featuresets.FeatureSet;
-import org.mitre.quaerite.core.featuresets.FeatureSets;
+import org.mitre.quaerite.core.features.factories.FeatureFactories;
+import org.mitre.quaerite.core.features.factories.FeatureFactory;
 import org.mitre.quaerite.core.util.MathUtil;
 
 public class ParamsMap {
@@ -40,12 +40,12 @@ public class ParamsMap {
         return map;
     }
 
-    public ParamsMap mutate(FeatureSets featureSets, float probability, float amplitude) {
+    public ParamsMap mutate(FeatureFactories featureFactories, float probability, float amplitude) {
         ParamsMap ret = new ParamsMap();
         for (Map.Entry<String, Feature> e : map.entrySet()) {
-            if (featureSets.get(e.getKey()) != null) {
-                FeatureSet featureSet = featureSets.get(e.getKey());
-                Feature mutated = (Feature) featureSet.mutate(e.getValue(), probability, amplitude);
+            if (featureFactories.get(e.getKey()) != null) {
+                FeatureFactory featureFactory = featureFactories.get(e.getKey());
+                Feature mutated = (Feature) featureFactory.mutate(e.getValue(), probability, amplitude);
                 ret.put(e.getKey(), mutated);
             } else {
                 ret.put(e.getKey(), e.getValue());
@@ -75,10 +75,10 @@ public class ParamsMap {
                 childB.put(param, children.getRight());
             } else {
                 if (map.containsKey(param)) {
-                    childA.put(param, (Feature)map.get(param).clone());
+                    childA.put(param, (Feature)map.get(param).deepCopy());
                 }
                 if (parentB.map.containsKey(param)) {
-                    childB.put(param, (Feature)parentB.map.get(param).clone());
+                    childB.put(param, (Feature)parentB.map.get(param).deepCopy());
                 }
             }
         }
@@ -93,10 +93,10 @@ public class ParamsMap {
                 childB.put(param, children.getLeft());
             } else {
                 if (map.containsKey(param)) {
-                    childB.put(param, (Feature)map.get(param).clone());
+                    childB.put(param, (Feature)map.get(param).deepCopy());
                 }
                 if (parentB.map.containsKey(param)) {
-                    childA.put(param, (Feature)parentB.map.get(param).clone());
+                    childA.put(param, (Feature)parentB.map.get(param).deepCopy());
                 }
             }
         }

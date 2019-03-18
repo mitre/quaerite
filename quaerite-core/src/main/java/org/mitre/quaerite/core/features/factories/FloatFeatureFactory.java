@@ -14,25 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.featuresets;
+package org.mitre.quaerite.core.features.factories;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.FloatFeature;
 import org.mitre.quaerite.core.util.MathUtil;
 
 
-abstract public class FloatFeatureSet implements FeatureSet<FloatFeature> {
+public class FloatFeatureFactory<T extends FloatFeature>
+        extends AbstractFeatureFactory<T> {
 
     private final Random random = new Random();
     private final float min;
     private final float max;
     List<Float> floats;
 
-    public FloatFeatureSet(List<Float> floats) {
+    public FloatFeatureFactory(String name, List<Float> floats) {
+        super(name);
         this.floats = floats;
         if (floats.size() > 0) {
             float tmpMin = floats.get(0);
@@ -54,16 +55,16 @@ abstract public class FloatFeatureSet implements FeatureSet<FloatFeature> {
     }
 
     @Override
-    public Feature random() {
+    public T random() {
         float f = floats.get(random.nextInt(floats.size()));
-        return new FloatFeature(f);
+        return (T)new FloatFeature(getName(), f);
     }
 
     @Override
-    public List<Feature> permute(int maxSize) {
-        List<Feature> ret = new ArrayList<>();
+    public List<T> permute(int maxSize) {
+        List<T> ret = new ArrayList<>();
         for (float f : floats) {
-            ret.add(new FloatFeature(f));
+            ret.add((T)new FloatFeature(getName(), f));
         }
         return ret;
     }
@@ -74,9 +75,10 @@ abstract public class FloatFeatureSet implements FeatureSet<FloatFeature> {
     }
 
     @Override
-    public FloatFeature mutate(FloatFeature floatFeature, double probability, double amplitude) {
+    public T mutate(T floatFeature, double probability, double amplitude) {
         if (MathUtil.RANDOM.nextDouble() <= probability) {
-            return new FloatFeature(MathUtil.calcMutatedWeight(floatFeature.getValue(), min, max, amplitude));
+            return (T)new FloatFeature(
+                    floatFeature.getName(), MathUtil.calcMutatedWeight(floatFeature.getValue(), min, max, amplitude));
         } else {
             return floatFeature;
         }

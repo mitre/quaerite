@@ -25,10 +25,8 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.mitre.quaerite.core.features.ParamsMap;
-import org.mitre.quaerite.core.featuresets.FeatureSets;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollectorListSerializer;
-import org.mitre.quaerite.core.serializers.FeatureSetsSerializer;
 import org.mitre.quaerite.core.serializers.ParamsSerializer;
 
 public class ExperimentSet {

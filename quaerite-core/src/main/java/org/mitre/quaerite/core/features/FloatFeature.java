@@ -24,12 +24,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.util.MathUtil;
 
 
-public class FloatFeature implements Feature<FloatFeature> {
+public class FloatFeature extends AbstractFeature<FloatFeature> {
     private final transient DecimalFormat df = new DecimalFormat("#.###",
             DecimalFormatSymbols.getInstance(Locale.US));
 
     private float v;
-    public FloatFeature(float value) {
+    public FloatFeature(String name, float value) {
+        super(name);
         this.v = value;
     }
 
@@ -51,8 +52,9 @@ public class FloatFeature implements Feature<FloatFeature> {
     public float getValue() {
         return v;
     }
+
     @Override
-    public FloatFeature clone() {
-        return new FloatFeature(v);
+    public FloatFeature deepCopy() {
+        return new FloatFeature(getName(), v);
     }
 }

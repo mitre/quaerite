@@ -14,36 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.featuresets;
+package org.mitre.quaerite.core.features;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+public class CustomHandler extends StringFeature {
 
-
-public class PF extends WeightableFeatureSet {
-
-    public static PF EMPTY = new PF(Collections.emptyList(), Collections.emptyList());
-
-    private static final String PF = "pf";
-
-    List<String> fields = new ArrayList<>();
-    List<Float> weights = new ArrayList<>();
-
-    public PF(List<String> fields, List<Float> weights) {
-        super(fields, weights);
-    }
-    @Override
-    public String toString() {
-        return "PF{" +
-                "featuresets=" + getFeatures() +
-                ", fields=" + fields +
-                ", weights=" + weights +
-                '}';
+    private static final String NAME = "customHandler";
+    public CustomHandler(String value) {
+        super(NAME, value);
     }
 
     @Override
-    public String getParameter() {
-        return PF;
+    public CustomHandler deepCopy() {
+        return new CustomHandler(getFeature());
     }
 }

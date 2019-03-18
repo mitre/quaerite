@@ -14,36 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.featuresets;
+package org.mitre.quaerite.core.features;
 
-import java.util.Map;
-import java.util.Set;
+public class PF2 extends WeightableListFeature {
 
-public class FeatureSets {
+    private static final String NAME = "pf2";
 
-
-    Map<String, FeatureSet> featureSets;
-
-    public FeatureSets(Map<String, FeatureSet> featureSetMap) {
-        this.featureSets = featureSetMap;
-    }
-
-    public FeatureSet get(String fName) {
-        return featureSets.get(fName);
-    }
-
-    @Override
-    public String toString() {
-        return "FeatureSets{" +
-                "featureSets=" + featureSets +
-                '}';
-    }
-
-    public Set<String> keySet() {
-        return featureSets.keySet();
-    }
-
-    public Map<String, FeatureSet> getFeatureSets() {
-        return featureSets;
+    public PF2() {
+        super(NAME);
     }
 }

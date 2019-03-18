@@ -21,22 +21,22 @@ package org.mitre.quaerite.core.features;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.util.MathUtil;
 
-public class StringFeature implements Feature<StringFeature> {
+public abstract class StringFeature extends AbstractFeature<StringFeature> {
 
     private String feature;
 
-    public StringFeature(String feature) {
+    public StringFeature(String name, String feature) {
+        super(name);
         this.feature = feature;
+    }
+
+    public String getFeature() {
+        return feature;
     }
 
     @Override
     public String toString() {
         return feature;
-    }
-
-    public static Pair<StringFeature, StringFeature> crossover(StringFeature parentA,
-                                                               StringFeature parentB) {
-        return Pair.of(parentA, parentB);
     }
 
     @Override
@@ -49,8 +49,4 @@ public class StringFeature implements Feature<StringFeature> {
         }
     }
 
-    @Override
-    public StringFeature clone() {
-        return new StringFeature(feature);
-    }
 }

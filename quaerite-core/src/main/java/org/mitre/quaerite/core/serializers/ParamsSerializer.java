@@ -17,6 +17,7 @@
 package org.mitre.quaerite.core.serializers;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Locale;
@@ -38,10 +39,10 @@ import org.mitre.quaerite.core.features.ParamsMap;
 import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
-import org.mitre.quaerite.core.featuresets.FeatureSet;
-import org.mitre.quaerite.core.featuresets.FloatFeatureSet;
-import org.mitre.quaerite.core.featuresets.StringFeatureSet;
-import org.mitre.quaerite.core.featuresets.WeightableFeatureSet;
+import org.mitre.quaerite.core.features.factories.FeatureFactory;
+import org.mitre.quaerite.core.features.factories.FloatFeatureFactory;
+import org.mitre.quaerite.core.features.factories.StringFeatureFactory;
+import org.mitre.quaerite.core.features.factories.WeightableListFeatureFactory;
 
 public class ParamsSerializer extends AbstractFeatureSerializer
         implements JsonSerializer<ParamsMap>, JsonDeserializer<ParamsMap> {
@@ -67,28 +68,61 @@ public class ParamsSerializer extends AbstractFeatureSerializer
         if (element.isJsonArray() && ((JsonArray)element).size() == 0) {
             return null;
         }
-        Class featureSetClass = determineClass(parameterName);
-        if (WeightableFeatureSet.class.isAssignableFrom(featureSetClass)) {
-            return buildWeightableListFeature(element);
-        } else if (StringFeatureSet.class.isAssignableFrom(featureSetClass)) {
-            return buildStringFeature(element);
-        } else if (FloatFeatureSet.class.isAssignableFrom(featureSetClass)) {
-            return buildFloatFeature(element);
+        Class paramClass = determineClass(parameterName);
+        if (WeightableListFeature.class.isAssignableFrom(paramClass)) {
+            return buildWeightableListFeature(parameterName, element);
+        } else if (StringFeature.class.isAssignableFrom(paramClass)) {
+            return buildStringFeature(parameterName, element);
+        } else if (FloatFeature.class.isAssignableFrom(paramClass)) {
+            return buildFloatFeature(parameterName, element);
         } else {
             throw new IllegalArgumentException("I regret I don't know how to build: "+parameterName);
         }
     }
 
-    private Feature buildFloatFeature(JsonElement element) {
-        return new FloatFeature(element.getAsFloat());
+    private Feature buildFloatFeature(String name, JsonElement element) {
+        try {
+            Class clazz = Class.forName(getClassName(name));
+        if (!(FloatFeature.class.isAssignableFrom(clazz))) {
+            throw new IllegalArgumentException(getClassName(name) + " must be assignable from WeightableListFeatureFactory");
+        }
+        Constructor constructor = null;
+
+            constructor = clazz.getConstructor(float.class);
+            return (FloatFeature)constructor.newInstance(element.getAsFloat());
+        } catch (Exception e) {
+            throw new JsonParseException(e.getMessage());
+        }
     }
 
-    private Feature buildStringFeature(JsonElement element) {
-        return new StringFeature(element.getAsString());
+    private Feature buildStringFeature(String name, JsonElement element) {
+        try {
+        Class clazz = Class.forName(getClassName(name));
+        if (!(FloatFeature.class.isAssignableFrom(clazz))) {
+            throw new IllegalArgumentException(getClassName(name) + " must be assignable from WeightableListFeatureFactory");
+        }
+        Constructor constructor = null;
+            constructor = clazz.getConstructor(Float.class);
+            return (StringFeature)constructor.newInstance(element.getAsString());
+        } catch (Exception e) {
+            throw new JsonParseException(e.getMessage());
+        }
     }
 
-    private WeightableListFeature buildWeightableListFeature(JsonElement element) {
-        WeightableListFeature weightableListFeature = new WeightableListFeature();
+    private WeightableListFeature buildWeightableListFeature(String name, JsonElement element) {
+        WeightableListFeature weightableListFeature;
+        try {
+            Class clazz = Class.forName(getClassName(name));
+            if (!(WeightableListFeature.class.isAssignableFrom(clazz))) {
+                throw new IllegalArgumentException(getClassName(name) + " must be assignable from WeightableListFeatureFactory");
+            }
+            weightableListFeature = (WeightableListFeature)clazz.newInstance();
+        } catch (Exception e) {
+            throw new JsonParseException(e.getMessage());
+        }
+
+
+
         if (element.isJsonPrimitive()) {
             weightableListFeature.add(new WeightableField(element.getAsString()));
         } else if (element.isJsonArray()) {
@@ -143,17 +177,17 @@ public class ParamsSerializer extends AbstractFeatureSerializer
     }
 
     /****** Helper method to get the className of the object to be deserialized *****/
-    private FeatureSet buildWeightableFeatureSet(String clazzName, List<String> fields, List<Float> defaultWeights) {
+    private FeatureFactory buildWeightableFeatureSet(String clazzName, List<String> fields, List<Float> defaultWeights) {
         if (!clazzName.contains(".")) {
             clazzName = getClassName(clazzName);
         }
         try {
             Class cl = Class.forName(clazzName);
-            if (!(WeightableFeatureSet.class.isAssignableFrom(cl))) {
-                throw new IllegalArgumentException(clazzName + " must be assignable from WeightableFeatureSet");
+            if (!(WeightableListFeatureFactory.class.isAssignableFrom(cl))) {
+                throw new IllegalArgumentException(clazzName + " must be assignable from WeightableListFeatureFactory");
             }
             Constructor con = cl.getConstructor(List.class, List.class);
-            return (FeatureSet) con.newInstance(fields, defaultWeights);
+            return (FeatureFactory) con.newInstance(fields, defaultWeights);
         } catch (Exception e) {
             e.printStackTrace();
             throw new JsonParseException(e.getMessage());

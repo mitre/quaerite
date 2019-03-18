@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.featuresets;
+package org.mitre.quaerite.core.features.factories;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,8 +29,11 @@ import java.util.List;
 
 import com.google.gson.Gson;
 import org.junit.jupiter.api.Test;
-import org.mitre.quaerite.core.ExperimentFeatures;
+import org.mitre.quaerite.core.ExperimentFactory;
 import org.mitre.quaerite.core.features.Feature;
+import org.mitre.quaerite.core.features.FloatFeature;
+import org.mitre.quaerite.core.features.QF;
+import org.mitre.quaerite.core.features.TIE;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
 
@@ -50,7 +53,7 @@ public class TestFeatures {
         defaultWeights.add(5.0f);
         defaultWeights.add(10.0f);
 
-        QF qf = new QF(fields, defaultWeights);
+        WeightableListFeatureFactory qf = new WeightableListFeatureFactory("qf", fields, defaultWeights);
         //test random
         for (int i = 0; i < 10; i++) {
             boolean foundAuthor = false;
@@ -80,11 +83,11 @@ public class TestFeatures {
 
     @Test
     public void testQFDeserialization() throws Exception {
-        ExperimentFeatures experimentFeatures = ExperimentFeatures.fromJson(newReader("/test-documents/qf.json"));
-        TIE tie = (TIE)experimentFeatures.getFeatureSets().get("tie");
-        assertEquals(0.0, tie.getFloats().get(0), 0.001);
-        assertEquals(0.1, tie.getFloats().get(1), 0.001);
-        assertEquals(0.2, tie.getFloats().get(2), 0.001);
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(newReader("/test-documents/experiment_features1.json"));
+        FloatFeatureFactory<FloatFeature> featureFactory = (FloatFeatureFactory)experimentFactory.getFeatureFactories().get("tie");
+        assertEquals(0.0, featureFactory.getFloats().get(0), 0.001);
+        assertEquals(0.1, featureFactory.getFloats().get(1), 0.001);
+        assertEquals(0.2, featureFactory.getFloats().get(2), 0.001);
 
     }
 

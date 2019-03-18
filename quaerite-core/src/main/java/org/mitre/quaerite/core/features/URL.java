@@ -14,34 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.featuresets;
+package org.mitre.quaerite.core.features;
 
-import java.util.List;
 
-import org.mitre.quaerite.core.features.WeightableField;
+public class URL extends StringFeature {
 
-public class QF extends WeightableFeatureSet<WeightableField> {
+    private static final String NAME = "url";
 
-    private static final String QF = "qf";
-
-    public QF(List<String> fields, List<Float> defaultWeights) {
-        super(fields, defaultWeights);
+    public URL(String feature) {
+        super(NAME, feature);
     }
 
     @Override
-    public String getParameter() {
-        return QF;
-    }
-
-    @Override
-    public String toString() {
-
-        return "QF{" +
-                "featuresets=" + features +
-                ", defaultWeights=" + defaultWeights +
-                ", fields=" + fields +
-                ", min=" + min +
-                ", max=" + max +
-                '}';
+    public URL deepCopy() {
+        return new URL(getFeature());
     }
 }

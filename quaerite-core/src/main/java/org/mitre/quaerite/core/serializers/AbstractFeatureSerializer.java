@@ -28,7 +28,7 @@ import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.features.WeightableField;
 
 public class AbstractFeatureSerializer {
-    static String DEFAULT_CLASS_NAME_SPACE = "org.mitre.quaerite.core.featuresets.";
+    static String DEFAULT_CLASS_NAME_SPACE = "org.mitre.quaerite.core.features.";
 
     String getClassName(String clazzName) {
         if (!clazzName.contains(".")) {
@@ -75,25 +75,25 @@ public class AbstractFeatureSerializer {
             throw new IllegalArgumentException("Didn't expect json object here:"+stringArr);
         }
     }
-    static List<StringFeature> toStringFeatureList(JsonElement stringArr) {
+/*    static List<StringFeature> toStringFeatureList(JsonElement stringArr) {
         List<String> strings = toStringList(stringArr);
         List<StringFeature> stringFeatures = new ArrayList<>();
         for (String s : strings) {
             stringFeatures.add(new StringFeature(s));
         }
         return stringFeatures;
-    }
+    }*/
 
-    static List<StringFeature> toStringFeatureList(JsonArray stringArr) {
+/*    static List<StringFeature> toStringFeatureList(String name, JsonArray stringArr) {
         if (stringArr == null) {
             return null;
         }
         List<StringFeature> ret = new ArrayList<>();
         for (JsonElement el : stringArr) {
-            ret.add(new StringFeature(el.getAsJsonPrimitive().getAsString()));
+            ret.add(new StringFeature(name, el.getAsJsonPrimitive().getAsString()));
         }
         return ret;
-    }
+    }*/
 
     static List<Float> toFloatList(JsonElement floatArr) {
         if (floatArr == null) {

@@ -14,21 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.featuresets;
+package org.mitre.quaerite.core.features;
 
-import java.util.List;
+public class QF extends WeightableListFeature {
 
-import org.mitre.quaerite.core.features.StringFeature;
+    private static final String NAME = "qf";
 
-
-public class CustomHandler extends StringFeatureSet {
-
-    public CustomHandler(List<StringFeature> features) {
-        super(features);
-    }
-
-    @Override
-    public String getParameter() {
-        return "simpleFeatureSet";
+    public QF() {
+        super(NAME);
     }
 }

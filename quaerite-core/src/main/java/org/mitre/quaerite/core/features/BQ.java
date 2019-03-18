@@ -14,20 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.featuresets;
+package org.mitre.quaerite.core.features;
+
+public class BQ extends StringFeature {
 
 
-import java.util.List;
+    private static final String NAME = "bq";
 
-public class TIE extends FloatFeatureSet {
-    private static final String TIE = "tie";
-
-    public TIE(List<Float> floats) {
-        super(floats);
+    public BQ(String feature) {
+        super(NAME, feature);
     }
 
     @Override
-    public String getParameter() {
-        return TIE;
+    public String getName() {
+        return NAME;
+    }
+
+    @Override
+    public BQ deepCopy() {
+        return new BQ(getFeature());
     }
 }

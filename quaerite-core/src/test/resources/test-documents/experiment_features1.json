@@ -7,7 +7,7 @@
       }
     }
   ],
-  "featureSets" : {
+  "featureFactories" : {
     "tie": [0.0, 0.1, 0.2],
     "url" : [
       "http://localhost:8983/solr/tmdb",

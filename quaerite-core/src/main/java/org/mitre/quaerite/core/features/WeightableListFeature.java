@@ -27,11 +27,11 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.util.MathUtil;
 
-public class WeightableListFeature implements Feature<WeightableListFeature> {
+public class WeightableListFeature extends AbstractFeature<WeightableListFeature> {
 
-    private List<WeightableField> weightableFields;
-
-    public WeightableListFeature() {
+    List<WeightableField> weightableFields;
+    public WeightableListFeature(String name) {
+        super(name);
         weightableFields = new ArrayList<>();
     }
 
@@ -53,8 +53,8 @@ public class WeightableListFeature implements Feature<WeightableListFeature> {
         List<String> fields = new ArrayList<>(fieldSet);
         int crossoverPoint =
                         MathUtil.RANDOM.nextInt(fields.size());
-        WeightableListFeature childA = new WeightableListFeature();
-        WeightableListFeature childB = new WeightableListFeature();
+        WeightableListFeature childA = new WeightableListFeature(getName());
+        WeightableListFeature childB = new WeightableListFeature(getName());
         for (int i = 0; i < crossoverPoint; i++) {
             String fieldName = fields.get(i);
             if (parentAWeights.containsKey(fieldName)) {
@@ -97,9 +97,9 @@ public class WeightableListFeature implements Feature<WeightableListFeature> {
     }
 
     @Override
-    public WeightableListFeature clone() {
+    public WeightableListFeature deepCopy() {
         //deep copy
-        WeightableListFeature clone = new WeightableListFeature();
+        WeightableListFeature clone = new WeightableListFeature(getName());
         for (WeightableField field : weightableFields) {
             if (field.hasWeight()) {
                 clone.add(new WeightableField(field.getFeature(), field.getWeight()));

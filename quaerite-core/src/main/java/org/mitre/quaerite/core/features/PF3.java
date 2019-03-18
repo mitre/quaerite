@@ -14,29 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.featuresets;
+package org.mitre.quaerite.core.features;
 
-import java.util.List;
 
-import org.mitre.quaerite.core.features.Feature;
+public class PF3 extends WeightableListFeature {
 
-public interface FeatureSet<T extends Feature> {
-    /**
-     * This is the literal Solr parameter name.
-     * @return
-     */
-    String getParameter();
+    private static final String NAME = "pf3";
 
-    /**
-     * For now, this returns a list of values
-     * for a given Solr parameter
-     * @return
-     */
-    //Set<Feature> getEachDefaultFeature();
-
-    List<Feature> permute(int maxSize);
-
-    Feature random();
-
-    T mutate(T feature, double probability, double amplitude);
+    public PF3() {
+        super(NAME);
+    }
 }

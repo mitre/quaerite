@@ -21,7 +21,6 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,12 +34,12 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.mitre.quaerite.core.Experiment;
-import org.mitre.quaerite.core.ExperimentFeatures;
+import org.mitre.quaerite.core.ExperimentFactory;
 import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.features.Feature;
 
-import org.mitre.quaerite.core.featuresets.FeatureSet;
-import org.mitre.quaerite.core.featuresets.FeatureSets;
+import org.mitre.quaerite.core.features.factories.FeatureFactory;
+import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
 
 public class GenerateExperiments extends AbstractCLI {
@@ -122,23 +121,23 @@ public class GenerateExperiments extends AbstractCLI {
     }
 
     private void execute(Path input, Path output, GenerateConfig generateConfig) throws Exception {
-        ExperimentFeatures experimentFeatures = null;
+        ExperimentFactory experimentFactory = null;
 
         try (Reader reader = Files.newBufferedReader(input, StandardCharsets.UTF_8)) {
-             experimentFeatures = ExperimentFeatures.fromJson(reader);
+             experimentFactory = ExperimentFactory.fromJson(reader);
         }
         ExperimentSet experimentSet = new ExperimentSet();
-        for (ScoreCollector scoreCollector : experimentFeatures.getScoreCollectors()) {
+        for (ScoreCollector scoreCollector : experimentFactory.getScoreCollectors()) {
             experimentSet.addScoreCollector(scoreCollector);
         }
         if (generateConfig.mode == MODE.PERMUTE) {
-            FeatureSets featureSets = experimentFeatures.getFeatureSets();
-            Set<String> featureKeySet = featureSets.keySet();
+            FeatureFactories featureFactories = experimentFactory.getFeatureFactories();
+            Set<String> featureKeySet = featureFactories.keySet();
             List<String> featureKeys = new ArrayList<>(featureKeySet);
             Map<String, Feature> instanceFeatures = new HashMap<>();
-            recurse(0, featureKeys, featureSets, instanceFeatures, experimentSet, generateConfig.max);
+            recurse(0, featureKeys, featureFactories, instanceFeatures, experimentSet, generateConfig.max);
         } else {
-            generateRandom(experimentFeatures.getFeatureSets(),
+            generateRandom(experimentFactory.getFeatureFactories(),
                     experimentSet, generateConfig.max);
         }
 
@@ -148,19 +147,19 @@ public class GenerateExperiments extends AbstractCLI {
         }
     }
 
-    private void generateRandom(FeatureSets featureSets, ExperimentSet experimentSet, int max) {
+    private void generateRandom(FeatureFactories featureFactories, ExperimentSet experimentSet, int max) {
         for (int i = 0; i < max; i++) {
             Map<String, Feature> instanceFeatures = new HashMap<>();
-            for (String featureKey : featureSets.keySet()) {
-                FeatureSet featureSet = featureSets.get(featureKey);
-                instanceFeatures.put(featureKey, featureSet.random());
+            for (String featureKey : featureFactories.keySet()) {
+                FeatureFactory featureFactory = featureFactories.get(featureKey);
+                instanceFeatures.put(featureKey, featureFactory.random());
             }
             addExperiments(instanceFeatures, experimentSet);
         }
     }
 
     private void recurse(int i, List<String> featureKeys,
-                         FeatureSets featureSets,
+                         FeatureFactories featureFactories,
                          Map<String, Feature> instanceFeatures,
                          ExperimentSet experimentSet, int max) {
         if (i >= featureKeys.size()) {
@@ -171,16 +170,16 @@ public class GenerateExperiments extends AbstractCLI {
             return;
         }
         String featureName = featureKeys.get(i);
-        FeatureSet featureSet = featureSets.get(featureName);
+        FeatureFactory featureFactory = featureFactories.get(featureName);
         boolean hadContents = false;
-        List<Feature> permutations = featureSet.permute(1000);
+        List<Feature> permutations = featureFactory.permute(1000);
         for (Feature feature : permutations) {
             instanceFeatures.put(featureName, feature);
-            recurse(i+1, featureKeys, featureSets, instanceFeatures, experimentSet, max);
+            recurse(i+1, featureKeys, featureFactories, instanceFeatures, experimentSet, max);
             hadContents = true;
         }
         if (! hadContents) {
-            recurse(i+1, featureKeys, featureSets, instanceFeatures, experimentSet, max);
+            recurse(i+1, featureKeys, featureFactories, instanceFeatures, experimentSet, max);
         }
     }
 

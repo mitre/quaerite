@@ -53,7 +53,7 @@ public class TestExperimentDB {
     public void testBasicDB() throws Exception {
         ExperimentDB db = ExperimentDB.open(DB_DIR);
         Experiment experiment = new Experiment("test1", "http://solr");
-        WeightableListFeature weightableListFeature = new WeightableListFeature();
+        WeightableListFeature weightableListFeature = new WeightableListFeature("qf");
         weightableListFeature.add(new WeightableField("f1^2"));
         weightableListFeature.add(new WeightableField("f2^5"));
         weightableListFeature.add(new WeightableField("f3^10"));

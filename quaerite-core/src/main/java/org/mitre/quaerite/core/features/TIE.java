@@ -16,20 +16,11 @@
  */
 package org.mitre.quaerite.core.features;
 
+public class TIE extends FloatFeature {
 
+    private static final String NAME = "tie";
 
-import org.apache.commons.lang3.tuple.Pair;
-
-public interface Feature<T> {
-
-    /**
-     * This is the literal Solr parameter name.
-     * @return
-     */
-    String getName();
-
-    Pair<T, T> crossover(T parentB);
-
-    //this should be a deep copy
-    T deepCopy();
+    public TIE(float value) {
+        super(NAME, value);
+    }
 }

@@ -14,21 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.featuresets;
+package org.mitre.quaerite.core.features.factories;
 
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import org.mitre.quaerite.core.features.StringFeature;
-
-public class BQ extends StringFeatureSet {
+public class FeatureFactories {
 
 
-    public BQ(List<StringFeature> features) {
-        super(features);
+    Map<String, FeatureFactory> featureFactories;
+
+    public FeatureFactories(Map<String, FeatureFactory> featureSetMap) {
+        this.featureFactories = featureSetMap;
+    }
+
+    public FeatureFactory get(String fName) {
+        return featureFactories.get(fName);
     }
 
     @Override
-    public String getParameter() {
-        return "searchServerUrls";
+    public String toString() {
+        return "FeatureFactories{" +
+                "featureFactories=" + featureFactories +
+                '}';
+    }
+
+    public Set<String> keySet() {
+        return featureFactories.keySet();
+    }
+
+    public Map<String, FeatureFactory> getFeatureFactories() {
+        return featureFactories;
     }
 }

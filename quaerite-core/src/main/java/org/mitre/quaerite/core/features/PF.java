@@ -14,22 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.featuresets;
+package org.mitre.quaerite.core.features;
 
 
-import java.util.List;
+public class PF extends WeightableListFeature {
 
-import org.mitre.quaerite.core.features.StringFeature;
+    public static PF EMPTY = new PF();
 
-public class URL extends StringFeatureSet {
+    private static final String NAME = "pf";
 
 
-    public URL(List<StringFeature> features) {
-        super(features);
-    }
-
-    @Override
-    public String getParameter() {
-        return "searchServerUrls";
+    public PF() {
+        super(NAME);
     }
 }
