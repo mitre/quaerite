@@ -33,7 +33,10 @@
 	{
       "class": "NDCGCollector",
       "params": {
-        "atK": 10
+        "atK": 10,
+        "useForTrain": true,
+        "useForTest": true,
+        "exportPMatrix": true
       }
     }
   ],

@@ -60,10 +60,18 @@ public class ExperimentFactory {
 
     public ScoreCollector getTrainScoreCollector() {
         if (trainScoreCollector == null) {
-            for (ScoreCollector scoreCollector : scoreCollectors) {
-                if (scoreCollector.getUseForTrain()) {
-                    trainScoreCollector = scoreCollector;
-                    break;
+            if (scoreCollectors.size() == 0) {
+                trainScoreCollector = scoreCollectors.get(0);
+            } else {
+                boolean found = false;
+                for (ScoreCollector scoreCollector : scoreCollectors) {
+                    if (scoreCollector.getUseForTrain()) {
+                        if (found) {
+                            throw new IllegalArgumentException("Can't have more than one train score collector!");
+                        }
+                        trainScoreCollector = scoreCollector;
+                        found = true;
+                    }
                 }
             }
         }
@@ -71,11 +79,19 @@ public class ExperimentFactory {
     }
 
     public ScoreCollector getTestScoreCollector() {
-        if (testScoreCollector == null && scoreCollectors.size() == 0) {
-            for (ScoreCollector scoreCollector : scoreCollectors) {
-                if (scoreCollector.getUseForTest()) {
-                    testScoreCollector = scoreCollector;
-                    break;
+        if (testScoreCollector == null) {
+            if (scoreCollectors.size() == 1) {
+                testScoreCollector = scoreCollectors.get(0);
+            } else {
+                boolean found = false;
+                for (ScoreCollector scoreCollector : scoreCollectors) {
+                    if (scoreCollector.getUseForTest()) {
+                        if (found) {
+                            throw new IllegalArgumentException("Can't have more than one test score collector!");
+                        }
+                        testScoreCollector = scoreCollector;
+                        found = true;
+                    }
                 }
             }
         }

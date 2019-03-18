@@ -108,6 +108,13 @@ public class RunExperiments extends AbstractExperimentRunner {
                         .required(false)
                         .desc("number of threads to use in running experiments").build()
         );
+        OPTIONS.addOption(
+                Option.builder("test")
+                        .hasArg(false)
+                        .required(false)
+                        .desc("use this if running a test set; " +
+                                "this will sort results by desc order of the test scorer").build()
+        );
     }
 
     long batchStart = -1l;
@@ -132,6 +139,7 @@ public class RunExperiments extends AbstractExperimentRunner {
         String experimentName = (commandLine.hasOption("experiment")) ? commandLine.getOptionValue("experiment") : "";
         boolean freshStart = getBoolean(commandLine, "freshStart");
         boolean latest = getBoolean(commandLine, "latest");
+        boolean isTest = getBoolean(commandLine, "test");
         int numThreads = getInt(commandLine, "n", DEFAULT_NUM_THREADS);
 
         Path judgments = getPath(commandLine, "j", false);
@@ -155,7 +163,7 @@ public class RunExperiments extends AbstractExperimentRunner {
 
             LOG.info("starting to write reports to: "+reportDir);
             dumpResults(experimentDB, experimentDB.getQuerySets(),
-                    experimentDB.getExperiments().getScoreCollectors(), reportDir);
+                    experimentDB.getExperiments().getScoreCollectors(), reportDir, isTest);
         }
         LOG.info("completed running and reporting experiments");
     }

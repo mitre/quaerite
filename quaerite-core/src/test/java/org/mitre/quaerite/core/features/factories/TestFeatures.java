@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.ExperimentFactory;
 import org.mitre.quaerite.core.features.Feature;
@@ -88,9 +89,16 @@ public class TestFeatures {
         assertEquals(0.0, featureFactory.getFloats().get(0), 0.001);
         assertEquals(0.1, featureFactory.getFloats().get(1), 0.001);
         assertEquals(0.2, featureFactory.getFloats().get(2), 0.001);
-
     }
 
+    @Test
+    public void testMultipleTrainScorers() throws Exception {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            ExperimentFactory.fromJson(newReader("/test-documents/experiment_features2.json")).getTrainScoreCollector();
+        });
+
+
+    }
     private Reader newReader(String path) {
         return new BufferedReader(
                 new InputStreamReader(

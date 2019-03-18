@@ -115,7 +115,7 @@ public class DumpResults extends AbstractExperimentRunner {
                     }
                 }
             }
-            dumpResults(experimentDB, querySets, targetScoreCollectors, outputDir);
+            dumpResults(experimentDB, querySets, targetScoreCollectors, outputDir, false);
         }
     }
 }

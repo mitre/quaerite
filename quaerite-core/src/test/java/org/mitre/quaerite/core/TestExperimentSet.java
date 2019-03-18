@@ -73,7 +73,6 @@ public class TestExperimentSet {
                 assertFalse(scoreCollector.getUseForTest());
             }
         }
-
     }
 
 }

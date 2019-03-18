@@ -359,7 +359,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     ////////////DUMP RESULTS
     static void dumpResults(ExperimentDB experimentDB,
                             List<String> querySets,
-                            List<ScoreCollector> targetScorers, Path outputDir) throws Exception {
+                            List<ScoreCollector> targetScorers, Path outputDir, boolean isTest) throws Exception {
         if (! Files.isDirectory(outputDir)) {
             Files.createDirectories(outputDir);
         }
@@ -377,9 +377,26 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
                 writer.flush();
             }
         }
+        String orderByPriority1 = null;
+        String orderByPriority2 = null;
+        for (ScoreCollector scoreCollector : experimentDB.getExperiments().getScoreCollectors()) {
+            if (isTest && scoreCollector.getUseForTest()) {
+                orderByPriority1 = scoreCollector.getPrimaryStatisticName();
+                break;
+            }
+            if (scoreCollector.getUseForTrain()) {
+                orderByPriority2 = scoreCollector.getPrimaryStatisticName();
+            }
+        }
+        String orderBy = "";
+        if (orderByPriority1 != null) {
+            orderBy = " order by "+orderByPriority1+" desc";
+        } else if (orderByPriority1 == null && orderByPriority2 != null) {
+            orderBy = " order by "+orderByPriority2+" desc";
+        }
         try (BufferedWriter writer = Files.newBufferedWriter(outputDir.resolve("scores_aggregated.csv"), StandardCharsets.UTF_8)) {
             try (Statement st = experimentDB.getConnection().createStatement()) {
-                try (java.sql.ResultSet resultSet = st.executeQuery("select * from SCORES_AGGREGATED")) {
+                try (java.sql.ResultSet resultSet = st.executeQuery("select * from SCORES_AGGREGATED "+orderBy)) {
                     writeHeaders(resultSet.getMetaData(), writer);
                     while (resultSet.next()) {
                         writeRow(resultSet, writer);

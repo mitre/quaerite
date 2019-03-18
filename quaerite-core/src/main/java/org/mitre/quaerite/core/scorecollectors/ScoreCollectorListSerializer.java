@@ -124,11 +124,9 @@ public class ScoreCollectorListSerializer {
                 }
                 return (T)scoreCollector;
             } catch (Exception e) {
-                e.printStackTrace();
                 throw new JsonParseException(e.getMessage());
             }
         }
-
     }
 
     public static String toJson(List<ScoreCollector> scoreCollectors) {
