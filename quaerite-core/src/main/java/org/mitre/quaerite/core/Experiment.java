@@ -41,7 +41,7 @@ public class Experiment {
     private static Gson GSON = new GsonBuilder().setPrettyPrinting()
             .registerTypeAdapter(ParamsMap.class, new ParamsSerializer())
             .create();
-    private final String name;
+    private String name;
     private final String searchServerUrl;
     private final String customHandler;
     ParamsMap params = new ParamsMap();
@@ -72,6 +72,11 @@ public class Experiment {
                 addParam(e.getKey(), e.getValue());
             }
         }
+    }
+
+    //consider adding clone to experiment with a new name
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void addParam(String key, Feature feature) {
@@ -156,4 +161,5 @@ public class Experiment {
                 ", filterQueries=" + filterQueries +
                 '}';
     }
+
 }

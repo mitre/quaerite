@@ -57,7 +57,7 @@ public class ExperimentDB implements Closeable {
 
     private static final String ID_FIELD = "ID_FIELD";
 
-    private final Connection connection;
+    final Connection connection;
     private final PreparedStatement selectExperiments;
     private final PreparedStatement insertExperiments;
     private final PreparedStatement mergeExperiments;
@@ -94,7 +94,7 @@ public class ExperimentDB implements Closeable {
                 "jdbc:h2:" + dbDir.resolve("h2_database").toAbsolutePath()), true);
     }
 
-        public static ExperimentDB open(Path dbDir) throws SQLException, IOException {
+    public static ExperimentDB open(Path dbDir) throws SQLException, IOException {
         try {
             Class.forName ("org.h2.Driver");
         } catch (ClassNotFoundException e) {
@@ -104,7 +104,7 @@ public class ExperimentDB implements Closeable {
                     "jdbc:h2:"+dbDir.resolve("h2_database").toAbsolutePath()), false);
     }
 
-    private ExperimentDB(Connection connection, boolean dropAll) throws SQLException {
+    ExperimentDB(Connection connection, boolean dropAll) throws SQLException {
         this.connection = connection;
         if (dropAll) {
             dropTables();
@@ -210,7 +210,7 @@ public class ExperimentDB implements Closeable {
     }
 
 
-    private static boolean executeSQL(Connection connection, String sql) throws SQLException{
+    static boolean executeSQL(Connection connection, String sql) throws SQLException{
         try (Statement st = connection.createStatement()) {
             return st.execute(sql);
         }
@@ -784,7 +784,7 @@ public class ExperimentDB implements Closeable {
                     "where experiment ilike '" + experimentNamePrefix + "' " +
                     "order by " + scorerName + " desc limit " + num;
         }
-        System.out.println(sql);
+        //System.out.println(sql);
         List<ExperimentScorePair> results = new ArrayList<>();
         try (Statement st = connection.createStatement()) {
             try (ResultSet resultSet = st.executeQuery(sql)) {

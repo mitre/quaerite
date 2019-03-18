@@ -177,7 +177,8 @@ public class RunExperiments extends AbstractExperimentRunner {
             int finished = 0;
             for (String eName : experimentSet.getExperiments().keySet()) {
                 LOG.info("running experiment: '" + experimentName + "'");
-                runExperiment(eName, experimentDB, true);
+                runExperiment(eName, experimentDB, experimentDB.getJudgments(),
+                        "train", true);
                 long elapsed = System.currentTimeMillis() - batchStart;
                 finished++;
                 LOG.info("Finished " + finished + " in " +
@@ -196,7 +197,8 @@ public class RunExperiments extends AbstractExperimentRunner {
                 return;
             }
             experimentDB.clearScores(experimentName);
-            runExperiment(experimentName, experimentDB, true);
+            runExperiment(experimentName, experimentDB, experimentDB.getJudgments(),
+                    "train", true);
         }
     }
 }

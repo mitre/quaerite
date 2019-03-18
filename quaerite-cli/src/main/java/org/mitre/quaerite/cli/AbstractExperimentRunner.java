@@ -82,7 +82,8 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     }
 
 
-    void runExperiment(String experimentName, ExperimentDB experimentDB, boolean logResults) throws SQLException {
+    void runExperiment(String experimentName, ExperimentDB experimentDB, JudgmentList judgmentList,
+                       String judgmentListId, boolean logResults) throws SQLException {
         if (experimentDB.hasScores(experimentName)) {
             LOG.info("Already has scores for " + experimentName + "; skipping.  " +
                     "Use the -freshStart commandline option to clear all scores");
@@ -92,12 +93,11 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         Experiment ex = experimentSet.getExperiment(experimentName);
         List<ScoreCollector> scoreCollectors = experimentSet.getScoreCollectors();
         experimentDB.initScoreTable(scoreCollectors);
-        JudgmentList judgmentList = experimentDB.getJudgments();
         SearchClient searchClient = SearchClientFactory.getClient(ex.getSearchServerUrl());
-        JudgmentList validated = searchServerValidatedMap.get(ex.getSearchServerUrl());
+        JudgmentList validated = searchServerValidatedMap.get(ex.getSearchServerUrl()+"_"+judgmentListId);
         if (validated == null) {
             validated = validate(searchClient, judgmentList);
-            searchServerValidatedMap.put(ex.getSearchServerUrl(), validated);
+            searchServerValidatedMap.put(ex.getSearchServerUrl()+"_"+judgmentListId, validated);
         }
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
         ExecutorCompletionService<Integer> executorCompletionService = new ExecutorCompletionService<>(executorService);
@@ -128,7 +128,6 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
         executorService.shutdown();
         executorService.shutdownNow();
-        long start = System.currentTimeMillis();
         insertScores(experimentDB, experimentName, scoreCollectors);
         experimentDB.insertScoresAggregated(experimentName, scoreCollectors);
         if (logResults) {
