@@ -101,8 +101,30 @@ public class ScoreCollectorListSerializer {
                     throw new IllegalArgumentException(clazzName + " must be assignable from AbstractScoreCollector");
                 }
                 Constructor con = cl.getConstructor(Map.class);
-                return (T)con.newInstance(params);
+                ScoreCollector scoreCollector = (ScoreCollector)con.newInstance(params);
+                if (params != null) {
+                    if (params.containsKey("useForTest")) {
+                        String val = params.get("useForTest");
+                        if (val.equalsIgnoreCase("true")) {
+                            scoreCollector.setUseForTest();
+                        }
+                    }
+                    if (params.containsKey("useForTrain")) {
+                        String val = params.get("useForTrain");
+                        if (val.equalsIgnoreCase("true")) {
+                            scoreCollector.setUseForTrain();
+                        }
+                    }
+                    if (params.containsKey("exportPMatrix")) {
+                        String val = params.get("exportPMatrix");
+                        if (val.equalsIgnoreCase("true")) {
+                            scoreCollector.setExportPMatrix();
+                        }
+                    }
+                }
+                return (T)scoreCollector;
             } catch (Exception e) {
+                e.printStackTrace();
                 throw new JsonParseException(e.getMessage());
             }
         }

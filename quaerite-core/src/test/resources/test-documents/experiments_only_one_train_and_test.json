@@ -27,7 +27,8 @@
     {
       "class": "HadAtLeastOneHitAtKCollector",
       "params": {
-        "atK": 30
+        "atK": 30,
+        "useForTrain": true
       }
     },
     {

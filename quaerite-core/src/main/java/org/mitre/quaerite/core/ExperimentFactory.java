@@ -39,6 +39,8 @@ public class ExperimentFactory {
                 .create();
         return gson.fromJson(reader, ExperimentFactory.class);
     }
+    private transient ScoreCollector trainScoreCollector;
+    private transient ScoreCollector testScoreCollector;
 
     public List<ScoreCollector> getScoreCollectors() {
         return scoreCollectors;
@@ -54,5 +56,29 @@ public class ExperimentFactory {
 
     public FeatureFactories getFeatureFactories() {
         return featureFactories;
+    }
+
+    public ScoreCollector getTrainScoreCollector() {
+        if (trainScoreCollector == null) {
+            for (ScoreCollector scoreCollector : scoreCollectors) {
+                if (scoreCollector.getUseForTrain()) {
+                    trainScoreCollector = scoreCollector;
+                    break;
+                }
+            }
+        }
+        return trainScoreCollector;
+    }
+
+    public ScoreCollector getTestScoreCollector() {
+        if (testScoreCollector == null && scoreCollectors.size() == 0) {
+            for (ScoreCollector scoreCollector : scoreCollectors) {
+                if (scoreCollector.getUseForTest()) {
+                    testScoreCollector = scoreCollector;
+                    break;
+                }
+            }
+        }
+        return testScoreCollector;
     }
 }

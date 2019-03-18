@@ -63,4 +63,9 @@ public class SummingScoreCollector extends AbstractScoreCollector {
     public List<String> getStatistics() {
         return STATISTICS;
     }
+
+    @Override
+    public String getPrimaryStatisticName() {
+        return getName()+"_"+SUM;
+    }
 }

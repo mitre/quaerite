@@ -39,7 +39,8 @@ public class ExperimentSet {
     private transient int maxRows = -1;
     private List<ScoreCollector> scoreCollectors = new ArrayList<>();
     private Map<String, Experiment> experiments = new LinkedHashMap<>();
-
+    private transient ScoreCollector trainScoreCollector;
+    private transient ScoreCollector testScoreCollector;
     public void addExperiment(String name, Experiment experiment) {
         experiments.put(name, experiment);
     }
@@ -50,6 +51,12 @@ public class ExperimentSet {
             maxRows = atN;
         }
         scoreCollectors.add(scoreCollector);
+        if (scoreCollector.getUseForTrain()) {
+            trainScoreCollector = scoreCollector;
+        }
+        if (scoreCollector.getUseForTest()) {
+            testScoreCollector = scoreCollector;
+        }
     }
 
     public Map<String, Experiment> getExperiments() {

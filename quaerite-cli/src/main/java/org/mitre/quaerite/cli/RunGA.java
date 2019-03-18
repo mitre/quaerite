@@ -93,13 +93,6 @@ public class RunGA extends AbstractExperimentRunner {
                         .desc("specify initial seed experiment(s) (json file) as the first generation; " +
                                 "if not specified, first generation is randomly generated from the featuresets file").build()
         );
-        OPTIONS.addOption(
-                Option.builder("sc")
-                        .longOpt("scorer")
-                        .required(false)
-                        .hasArg()
-                        .desc("scorer to select if there are multiple scorers").build()
-        );
 
         OPTIONS.addOption(
                 Option.builder("p")
@@ -180,7 +173,6 @@ public class RunGA extends AbstractExperimentRunner {
         gaConfig.seedExperiments = getPath(commandLine, "e", false);
         gaConfig.outputDir = getPath(commandLine, "o", false);
         gaConfig.population = getInt(commandLine,"p", 20);
-        gaConfig.scorerName = getString(commandLine, "sc", null);
         gaConfig.judgmentsFile = getPath(commandLine, "j", true);
         gaConfig.nfolds = getInt(commandLine, "nfolds", DEFAULT_NFOLDS);
         if (gaConfig.outputDir == null) {
@@ -219,22 +211,7 @@ public class RunGA extends AbstractExperimentRunner {
             generateRandomSeeds(experimentFactory.getFeatureFactories(), gaDb, gaConfig.nfolds, gaConfig.population);
         }
         gaDb.addScoreCollectors(experimentFactory.getScoreCollectors());
-        if (gaConfig.scorerName == null) {
-            List<ScoreCollector> scoreCollectors = experimentFactory.getScoreCollectors();
-            if (scoreCollectors.size() > 1) {
-                throw new IllegalArgumentException("Must specify target scorer on the commandline if there are more than one scorers available;" +
-                        "e.g. -sc ndcg_10");
-            }
-            ScoreCollector scoreCollector = experimentFactory.getScoreCollectors().get(0);
-            if (scoreCollector instanceof DistributionalScoreCollector) {
-                gaConfig.scorerName = scoreCollector.getName()+"_mean";
-            } else if (scoreCollector instanceof SummingScoreCollector) {
-                gaConfig.scorerName = scoreCollector.getName()+"_sum";
-            } else {
-                throw new IllegalArgumentException("Not yet supported: "+scoreCollector.getClass());
-            }
 
-        }
         gaDb.initTrainTest(gaConfig.nfolds);
 
         for (int i = 0; i < gaConfig.nfolds; i++) {
@@ -243,7 +220,8 @@ public class RunGA extends AbstractExperimentRunner {
         System.out.println("--------------------------------");
         System.out.println("FINAL RESULTS ON TESTING:");
         List<ExperimentScorePair> scores = gaDb.getNBestResults(
-                TEST_PREFIX, gaConfig.nfolds, gaConfig.scorerName);
+                TEST_PREFIX, gaConfig.nfolds,
+                experimentFactory.getTestScoreCollector().getPrimaryStatisticName());
 
         SummaryStatistics summaryStatistics = new SummaryStatistics();
         double[] vals = new double[gaConfig.nfolds];
@@ -286,7 +264,8 @@ public class RunGA extends AbstractExperimentRunner {
         TrainTestJudmentListPair trainTestJudmentListPair = gaDb.getTrainTestJudgmentsByFold(fold);
         JudgmentList trainJudgmentList = trainTestJudmentListPair.getTrain();
         LOG.info("scoring training seed for fold: "+fold);
-        scoreSeed(fold, gaDb, trainJudgmentList, gaConfig);
+        scoreSeed(fold, gaDb, trainJudgmentList,
+                experimentFactory.getTrainScoreCollector().getPrimaryStatisticName(), gaConfig);
         LOG.info("starting fold "+fold);
         LOG.debug("train size: "+ trainJudgmentList.getJudgmentsList().size());
         for (Judgments j : trainJudgmentList.getJudgmentsList()) {
@@ -298,10 +277,11 @@ public class RunGA extends AbstractExperimentRunner {
         }
 
         for (int i = 0 ; i < gaConfig.generations; i++) {
-            runGeneration(fold, i, gaDb, experimentFactory.getFeatureFactories(), trainJudgmentList, gaConfig);
+            runGeneration(fold, i, gaDb, experimentFactory, trainJudgmentList, gaConfig);
         }
         List<ExperimentScorePair> scores = gaDb.getNBestResults(
-                TRAIN_PREFIX+FOLD_PREFIX+fold+"_*", 10, gaConfig.scorerName);
+                TRAIN_PREFIX+FOLD_PREFIX+fold+"_*", 10,
+                experimentFactory.getTrainScoreCollector().getPrimaryStatisticName());
         System.out.println("FOLD "+fold+" TRAINING");
         for (ExperimentScorePair esp : scores) {
             System.out.println("experiment '"+esp.getExperimentName()+"': "+threePlaces.format(esp.getScore()));
@@ -318,7 +298,8 @@ public class RunGA extends AbstractExperimentRunner {
         runExperiment(testName,
                 gaDb, testingJudgments, "test_"+fold, false);
         scores = gaDb.getNBestResults(
-                TEST_PREFIX+FOLD_PREFIX+fold+"_*", 10, gaConfig.scorerName);
+                TEST_PREFIX+FOLD_PREFIX+fold+"_*", 10,
+                experimentFactory.getTrainScoreCollector().getName());
         System.out.println("FOLD "+fold+" TESTING");
         for (ExperimentScorePair esp : scores) {
             System.out.println("experiment '"+esp.getExperimentName()+"': "+threePlaces.format(esp.getScore()));
@@ -327,7 +308,8 @@ public class RunGA extends AbstractExperimentRunner {
 
     }
 
-    private void scoreSeed(int fold, GADB gaDb, JudgmentList trainJudgmentList, GAConfig gaConfig) throws SQLException, IOException {
+    private void scoreSeed(int fold, GADB gaDb, JudgmentList trainJudgmentList,
+                           String trainScoreCollectorName, GAConfig gaConfig) throws SQLException, IOException {
         ExperimentSet experimentSet = gaDb.getExperiments();
 
         String trainFoldSeedPrefix = TRAIN_PREFIX+FOLD_PREFIX+fold+"_"+SEED_PREFIX;
@@ -340,7 +322,8 @@ public class RunGA extends AbstractExperimentRunner {
 
         System.out.println("FOLD "+fold + " TRAINING (SEED)");
         List<ExperimentScorePair> scores = gaDb.getNBestResults(
-                trainFoldSeedPrefix, 10, gaConfig.scorerName);
+                trainFoldSeedPrefix, 10,
+                trainScoreCollectorName);
 
         for (ExperimentScorePair esp : scores) {
             System.out.println("experiment '"+esp.getExperimentName()+"': "
@@ -357,8 +340,10 @@ public class RunGA extends AbstractExperimentRunner {
     }
 
     private void runGeneration(int fold, int generation, ExperimentDB experimentDB,
-                               FeatureFactories featureFactories, JudgmentList judgmentList, GAConfig gaConfig) throws SQLException, IOException {
-        List<String> experimentNames = generateNewExperiments(fold, generation, experimentDB, featureFactories, gaConfig);
+                               ExperimentFactory experimentFactory,
+                               JudgmentList judgmentList, GAConfig gaConfig) throws SQLException, IOException {
+        List<String> experimentNames = generateNewExperiments(fold, generation,
+                experimentDB, experimentFactory, gaConfig);
         LOG.info("starting generation "+generation);
         for (String experimentName : experimentNames) {
             runExperiment(experimentName, experimentDB, judgmentList, "foldId_"+fold,
@@ -373,7 +358,7 @@ public class RunGA extends AbstractExperimentRunner {
 
     private List<String> generateNewExperiments(int fold, int generation,
                                                 ExperimentDB experimentDB,
-                                                FeatureFactories featureFactories,
+                                                ExperimentFactory experimentFactory,
                                                 GAConfig gaConfig) throws SQLException{
 
         int listLength = calcListLength(gaConfig.population);
@@ -385,7 +370,9 @@ public class RunGA extends AbstractExperimentRunner {
         //        String previousGenerationsNamePattern = (generation == 0) ? "*" : GEN_PREFIX+(generation-1)+"_*";
         //To limit to the previous generation add the above. to the call to getNBest
         //TODO: parameterize this?
-        List<Experiment> experiments = experimentDB.getNBestExperiments(TRAIN_PREFIX+FOLD_PREFIX+fold+"_", listLength, gaConfig.scorerName);
+        List<Experiment> experiments = experimentDB.getNBestExperiments(
+                TRAIN_PREFIX+FOLD_PREFIX+fold+"_", listLength,
+                experimentFactory.getTrainScoreCollector().getPrimaryStatisticName());
         if (experiments.size() == 0) {
             throw new IllegalArgumentException("Need to have some experiments from seed/last generation!");
         }        int expCount = 0;
@@ -400,7 +387,8 @@ public class RunGA extends AbstractExperimentRunner {
                     ParamsMap paramsMapA = pair.getLeft();
                     LOG.trace(experiments.get(i) +
                             "\n+\n" + experiments.get(j) + "\n->\n"+paramsMapA);
-                    paramsMapA = paramsMapA.mutate(featureFactories, gaConfig.mutationProbability, gaConfig.mutationAmplitude);
+                    paramsMapA = paramsMapA.mutate(experimentFactory.getFeatureFactories(),
+                            gaConfig.mutationProbability, gaConfig.mutationAmplitude);
                     LOG.trace("mutated: "+paramsMapA);
                     Experiment childA = new Experiment(nameA, paramsMapA);
 
@@ -415,7 +403,8 @@ public class RunGA extends AbstractExperimentRunner {
                     ParamsMap paramsMapB = pair.getRight();
                     LOG.trace(experiments.get(i) +
                             "\n+\n" + experiments.get(j) + "\n->\n"+paramsMapB);
-                    paramsMapB = paramsMapB.mutate(featureFactories, gaConfig.mutationProbability, gaConfig.mutationAmplitude);
+                    paramsMapB = paramsMapB.mutate(experimentFactory.getFeatureFactories(),
+                            gaConfig.mutationProbability, gaConfig.mutationAmplitude);
                     Experiment childB = new Experiment(nameB, paramsMapB);
 
                     LOG.trace("mutated: "+paramsMapB);
@@ -483,6 +472,5 @@ public class RunGA extends AbstractExperimentRunner {
         int nfolds;
         float mutationProbability;
         float mutationAmplitude;
-        String scorerName;
     }
 }

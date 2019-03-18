@@ -402,12 +402,14 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     private static void dumpSignificanceMatrices(String querySet, List<ScoreCollector> targetScorers, ExperimentDB experimentDB, Path outputDir) throws Exception {
         TTest tTest = new TTest();
         for (ScoreCollector scorer : targetScorers) {
-            Map<String, Double> aggregatedScores = experimentDB.getKeyExperimentScore(scorer);
+            if (scorer.getExportPMatrix()) {
+                Map<String, Double> aggregatedScores = experimentDB.getKeyExperimentScore(scorer);
 
-            Map<String, Double> sorted = MapUtil.sortByDescendingValue(aggregatedScores);
-            List<String> experiments = new ArrayList();
-            experiments.addAll(sorted.keySet());
-            writeMatrix(tTest, scorer, querySet, experiments, experimentDB, outputDir);
+                Map<String, Double> sorted = MapUtil.sortByDescendingValue(aggregatedScores);
+                List<String> experiments = new ArrayList();
+                experiments.addAll(sorted.keySet());
+                writeMatrix(tTest, scorer, querySet, experiments, experimentDB, outputDir);
+            }
         }
     }
 

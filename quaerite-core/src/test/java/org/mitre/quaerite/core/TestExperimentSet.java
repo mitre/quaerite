@@ -18,6 +18,8 @@
 package org.mitre.quaerite.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -28,8 +30,11 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.features.Feature;
+import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
+import org.mitre.quaerite.core.scorecollectors.NDCGCollector;
+import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
 
 public class TestExperimentSet {
 
@@ -50,11 +55,24 @@ public class TestExperimentSet {
         Experiment peopleTitle = map.get("people_title");
         Map<String, Feature> features = peopleTitle.getParams();
         Feature qf = features.get("qf");
-        assertEquals(WeightableListFeature.class, qf.getClass());
+        assertEquals(QF.class, qf.getClass());
         List<WeightableField> fields = ((WeightableListFeature)qf).getWeightableFields();
         assertEquals(2, fields.size());
         assertEquals("people", fields.get(0).getFeature());
         assertEquals("title", fields.get(1).getFeature());
+
+        List<ScoreCollector> scoreCollectors = experimentSet.getScoreCollectors();
+        for (ScoreCollector scoreCollector : scoreCollectors) {
+            if (scoreCollector instanceof NDCGCollector) {
+                assertTrue(scoreCollector.getExportPMatrix());
+                assertTrue(scoreCollector.getUseForTrain());
+                assertFalse(scoreCollector.getUseForTest());
+            } else {
+                assertFalse(scoreCollector.getExportPMatrix());
+                assertFalse(scoreCollector.getUseForTrain());
+                assertFalse(scoreCollector.getUseForTest());
+            }
+        }
 
     }
 

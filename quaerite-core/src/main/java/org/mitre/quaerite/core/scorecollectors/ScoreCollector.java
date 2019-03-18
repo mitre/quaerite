@@ -45,5 +45,20 @@ public interface ScoreCollector {
 
     String getName();
 
+    String getPrimaryStatisticName();
+
     Collection<? extends String> getQuerySets();
+
+    void setUseForTrain();
+
+    void setUseForTest();
+
+    void setExportPMatrix();
+
+    boolean getUseForTrain();
+
+    boolean getUseForTest();
+
+    boolean getExportPMatrix();
+
 }

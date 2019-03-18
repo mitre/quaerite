@@ -34,15 +34,16 @@ import org.mitre.quaerite.core.scorers.AbstractRankScorer;
 public abstract class AbstractScoreCollector implements ScoreCollector {
 
     static int extractAtK(Map<String, String> params) {
-        if (params.size() > 1) {
-            throw new IllegalArgumentException("can't have more than one param for now");
-        }
         String atK = params.get("atK");
         if (atK == null) {
             throw new IllegalArgumentException("must have atK param");
         }
         return Integer.parseInt(atK);
     }
+
+    private boolean useForTrain = false;
+    private boolean useForTest = false;
+    private boolean exportPMatrix = false;
 
     private final AbstractRankScorer scorer;
     private final Object[] lock = new Object[0];
@@ -118,5 +119,35 @@ public abstract class AbstractScoreCollector implements ScoreCollector {
     @Override
     public Collection<? extends String> getQuerySets() {
         return querySets.keySet();
+    }
+
+    @Override
+    public void setUseForTrain() {
+        useForTrain = true;
+    }
+
+    @Override
+    public void setUseForTest() {
+        useForTest = true;
+    }
+
+    @Override
+    public void setExportPMatrix() {
+        exportPMatrix = true;
+    }
+
+    @Override
+    public boolean getUseForTrain() {
+        return useForTrain;
+    }
+
+    @Override
+    public boolean getUseForTest() {
+        return useForTest;
+    }
+
+    @Override
+    public boolean getExportPMatrix() {
+        return exportPMatrix;
     }
 }

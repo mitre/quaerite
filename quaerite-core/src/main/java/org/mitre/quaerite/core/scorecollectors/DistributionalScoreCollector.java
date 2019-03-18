@@ -88,4 +88,8 @@ public class DistributionalScoreCollector extends AbstractScoreCollector {
             return summaryStatistics.getStandardDeviation();
         }
     }
+    @Override
+    public String getPrimaryStatisticName() {
+        return getName()+"_"+MEAN;
+    }
 }
