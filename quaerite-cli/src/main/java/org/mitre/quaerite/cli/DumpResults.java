@@ -33,6 +33,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.mitre.quaerite.core.ExperimentConfig;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
 import org.mitre.quaerite.db.ExperimentDB;
 
@@ -74,7 +75,7 @@ public class DumpResults extends AbstractExperimentRunner {
     }
 
     public DumpResults() {
-        super(1);
+        super(new ExperimentConfig());
     }
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;

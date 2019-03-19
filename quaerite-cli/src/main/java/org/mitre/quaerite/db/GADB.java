@@ -107,8 +107,8 @@ public class GADB extends ExperimentDB {
             }
         }
         JudgmentList allJudgments = getJudgments();
-        JudgmentList test = new JudgmentList(allJudgments.getIdField());
-        JudgmentList train = new JudgmentList(allJudgments.getIdField());
+        JudgmentList test = new JudgmentList();
+        JudgmentList train = new JudgmentList();
         for (Judgments judgments : allJudgments.getJudgmentsList()) {
             if (testNames.contains(judgments.getQuery())) {
                 test.addJudgments(judgments);

@@ -41,6 +41,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.Experiment;
+import org.mitre.quaerite.core.ExperimentConfig;
 import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
@@ -55,8 +56,6 @@ public class ExperimentDB implements Closeable {
     static Logger LOG = Logger.getLogger(ExperimentDB.class);
     static Object[] INSERT_SCORE_LOCK = new Object[0];
 
-    private static final String ID_FIELD = "ID_FIELD";
-
     final Connection connection;
     private final PreparedStatement selectExperiments;
     private final PreparedStatement insertExperiments;
@@ -65,9 +64,6 @@ public class ExperimentDB implements Closeable {
     private final PreparedStatement selectAllJudgments;
     private final PreparedStatement selectJudgments;
     private final PreparedStatement insertJudgments;
-
-    private final PreparedStatement setJudgmentIdField;
-    private final PreparedStatement getJudgmentIdField;
 
     private final PreparedStatement getQuerySets;
 
@@ -133,16 +129,6 @@ public class ExperimentDB implements Closeable {
                 "insert into judgments (query_set, query, query_count, json) values (?,?,?,?)"
         );
 
-        //this is the id field to use in Solr/elastic for the id
-        setJudgmentIdField = connection.prepareStatement(
-                "merge into judgments_metadata KEY(KEY) values (?,?)"
-        );
-
-        //this is the id field to use in Solr/elastic for the id
-        getJudgmentIdField = connection.prepareStatement(
-                "select value from judgments_metadata where key=?"
-        );
-
         selectScoreCollectors = connection.prepareStatement(
             "select name, json from SCORERS"
         );
@@ -201,12 +187,6 @@ public class ExperimentDB implements Closeable {
                 " ADD CONSTRAINT IF NOT EXISTS " +
                 " UQ_JUDGMENTS UNIQUE(QUERY_SET, QUERY);";
         executeSQL(connection, sql);
-
-        sql = "CREATE TABLE IF NOT EXISTS " +
-                "JUDGMENTS_METADATA ("+
-                "KEY VARCHAR(256) PRIMARY KEY, VALUE VARCHAR(256));";
-
-        executeSQL(connection, sql);
     }
 
 
@@ -237,7 +217,11 @@ public class ExperimentDB implements Closeable {
     }
 
     public ExperimentSet getExperiments() throws SQLException {
-        ExperimentSet experimentSet = new ExperimentSet();
+        return getExperiments(new ExperimentConfig());
+    }
+
+    public ExperimentSet getExperiments(ExperimentConfig experimentConfig) throws SQLException {
+        ExperimentSet experimentSet = new ExperimentSet(experimentConfig);
         try (ResultSet resultSet = selectExperiments.executeQuery()) {
             while (resultSet.next()) {
                 String name = resultSet.getString(1);
@@ -256,29 +240,6 @@ public class ExperimentDB implements Closeable {
             }
         }
         return experimentSet;
-    }
-
-    public void setIdField(String idField) throws SQLException {
-        setJudgmentIdField.clearParameters();
-        setJudgmentIdField.setString(1, ID_FIELD);
-        setJudgmentIdField.setString(2, idField);
-        setJudgmentIdField.execute();
-    }
-
-    /**
-     *
-     * @return id field or null if it doesn't exist
-     * @throws SQLException
-     */
-    public String getIdField() throws SQLException {
-        getJudgmentIdField.clearParameters();
-        getJudgmentIdField.setString(1, ID_FIELD);
-        try (ResultSet rs = getJudgmentIdField.executeQuery()) {
-            if (rs.next()) {
-                return rs.getString(1);
-            }
-        }
-        return null;
     }
 
     public void addJudgment(Judgments judgments)
@@ -313,7 +274,7 @@ public class ExperimentDB implements Closeable {
 
     public JudgmentList getJudgments() throws SQLException {
         ResultSet rs = selectAllJudgments.executeQuery();
-        JudgmentList list = new JudgmentList(getIdField());
+        JudgmentList list = new JudgmentList();
         while (rs.next()) {
             String json = rs.getString(1);
             list.addJudgments(Judgments.fromJson(json));
@@ -344,8 +305,6 @@ public class ExperimentDB implements Closeable {
 
     public void clearJudgments() throws SQLException {
         String sql = "DROP TABLE JUDGMENTS";
-        executeSQL(connection, sql);
-        sql = "DROP TABLE JUDGMENTS_METADATA";
         executeSQL(connection, sql);
         initJudgments();
     }

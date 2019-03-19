@@ -29,6 +29,8 @@ import org.mitre.quaerite.core.serializers.FeatureFactorySerializer;
 public class ExperimentFactory {
 
 
+    private GAConfig gaConfig = new GAConfig();
+
     List<ScoreCollector> scoreCollectors;
     FeatureFactories featureFactories;
 
@@ -96,5 +98,9 @@ public class ExperimentFactory {
             }
         }
         return testScoreCollector;
+    }
+
+    public GAConfig getGAConfig() {
+        return gaConfig;
     }
 }

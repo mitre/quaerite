@@ -16,19 +16,19 @@
  */
 package org.mitre.quaerite.core;
 
-import java.util.ArrayList;
-import java.util.List;
+public class ExperimentConfig {
 
-public class JudgmentList {
+    public static final int DEFAULT_NUM_THREADS = 6;
+    public static final String DEFAULT_SEARCH_SERVER_ID_FIELD = "id";
 
-    private final List<Judgments> judgmentsList = new ArrayList<>();
+    private int numThreads = DEFAULT_NUM_THREADS;
+    private String idField = DEFAULT_SEARCH_SERVER_ID_FIELD;
 
-    public void addJudgments(Judgments judgments) {
-        judgmentsList.add(judgments);
+    public int getNumThreads() {
+        return numThreads;
     }
 
-    public List<Judgments> getJudgmentsList() {
-        return judgmentsList;
+    public String getIdField() {
+        return idField;
     }
-
 }

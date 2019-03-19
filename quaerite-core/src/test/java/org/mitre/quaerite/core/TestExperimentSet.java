@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +74,25 @@ public class TestExperimentSet {
                 assertFalse(scoreCollector.getUseForTest());
             }
         }
+    }
+
+    @Test
+    public void testLoadingExperimentConfig() throws Exception {
+        ExperimentSet experimentSet = null;
+        try (Reader reader =
+                     new BufferedReader(new InputStreamReader(
+                             getClass().getResourceAsStream("/test-documents/experiments2.json"),
+                             StandardCharsets.UTF_8))) {
+            experimentSet = ExperimentSet.fromJson(reader);
+        }
+        assertEquals(20, experimentSet.getExperimentConfig().getNumThreads());
+        assertEquals("customIdField", experimentSet.getExperimentConfig().getIdField());
+
+        String json = experimentSet.toJson();
+        ExperimentSet revivified = ExperimentSet.fromJson(new StringReader(json));
+        assertEquals(20, revivified.getExperimentConfig().getNumThreads());
+        assertEquals("customIdField", revivified.getExperimentConfig().getIdField());
+
     }
 
 }

@@ -93,11 +93,9 @@ public class TestExperimentDB {
         judgments.addJugment("id5", 6.0);
 
         db.addJudgment(judgments);
-        db.setIdField("id");
         db.close();
 
         db = ExperimentDB.open(DB_DIR);
-        assertEquals("id", db.getIdField());
         JudgmentList judgmentsList = db.getJudgments();
         assertEquals(1, judgmentsList.getJudgmentsList().size());
 

@@ -1,4 +1,13 @@
 {
+  "gaConfig" : {
+    "numThreads" : 20,
+    "idField" : "customIdField",
+    "population" : 50,
+    "generations" : 100,
+    "mutationProbability" : 0.8,
+    "mutationAmplitude" : 0.001,
+    "nFolds" : 2
+  },
   "scoreCollectors": [
     {
       "class": "NDCGCollector",

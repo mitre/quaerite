@@ -38,6 +38,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.stat.inference.ChiSquareTest;
+import org.mitre.quaerite.core.ExperimentConfig;
+import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
@@ -113,22 +115,25 @@ public class FindFeatures extends AbstractCLI {
         ExperimentDB db = ExperimentDB.open(dbDir);
         if (judgmentsFile != null) {
             String idField = getString(commandLine, "id", RunExperiments.DEFAULT_ID_FIELD);
-            loadJudgments(db, judgmentsFile, idField, true);
+            loadJudgments(db, judgmentsFile, true);
         }
         SearchClient searchClient = SearchClientFactory.getClient(searchServerUrl);
         String[] fields = commandLine.getOptionValue("f").split(",");
+        String idField = getString(commandLine, "id",
+                ExperimentConfig.DEFAULT_SEARCH_SERVER_ID_FIELD);
         String filterQuery = null;
         if (commandLine.hasOption("fq")) {
             filterQuery = commandLine.getOptionValue("fq");
         }
         FindFeatures findFeatures = new FindFeatures();
-        findFeatures.execute(db, searchClient, fields, filterQuery);
+        findFeatures.execute(db, searchClient, idField, fields, filterQuery);
     }
 
-    private void execute(ExperimentDB db, SearchClient searchClient, String[] fields,
+    private void execute(ExperimentDB db, SearchClient searchClient, String idField,
+                         String[] fields,
                          String filterQuery) throws Exception {
         JudgmentList judgmentList = db.getJudgments();
-        String idField = judgmentList.getIdField();
+
         List<Judgments> judgments = judgmentList.getJudgmentsList();
         Set<String> ids = new HashSet<>();
         for (Judgments j : judgments) {

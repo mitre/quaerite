@@ -83,7 +83,7 @@ public abstract class AbstractCLI {
     }
 
 
-    static void addExperiments(ExperimentDB experimentDB, Path experimentsJson, boolean merge, boolean freshStart) throws SQLException, IOException {
+    static ExperimentSet addExperiments(ExperimentDB experimentDB, Path experimentsJson, boolean merge, boolean freshStart) throws SQLException, IOException {
         if (freshStart) {
             experimentDB.clearExperiments();
             experimentDB.clearScorers();
@@ -106,13 +106,13 @@ public abstract class AbstractCLI {
             }
         }
 
+        return experiments;
     }
 
-    public static void loadJudgments(ExperimentDB experimentDB, Path file, String idField, boolean freshStart) throws IOException, SQLException {
+    public static void loadJudgments(ExperimentDB experimentDB, Path file, boolean freshStart) throws IOException, SQLException {
         if (freshStart) {
             experimentDB.clearJudgments();
         }
-        experimentDB.setIdField(idField);
         Map<String, Map<String, Judgments>> queries = new HashMap<>();
         try (InputStream is = Files.newInputStream(file)) {
             try (Reader reader = new InputStreamReader(new BOMInputStream(is), "UTF-8")) {

@@ -1,0 +1,94 @@
+{
+  "experimentConfig" :
+  {
+    "numThreads": 20,
+    "idField": "customIdField"
+  },
+  "scoreCollectors": [
+    {
+      "class": "HadAtLeastOneHitAtKCollector",
+      "params": {
+        "atK": 1
+      }
+    },
+    {
+      "class": "HadAtLeastOneHitAtKCollector",
+      "params": {
+        "atK": 3
+      }
+    },
+    {
+      "class": "HadAtLeastOneHitAtKCollector",
+      "params": {
+        "atK": 5
+      }
+    },
+    {
+      "class": "HadAtLeastOneHitAtKCollector",
+      "params": {
+        "atK": 10
+      }
+    },
+    {
+      "class": "HadAtLeastOneHitAtKCollector",
+      "params": {
+        "atK": 30
+      }
+    },
+    {
+      "class": "NDCGCollector",
+      "params": {
+        "atK": 10,
+        "useForTrain": true,
+        "exportPMatrix": true
+      }
+    },
+    {
+      "class": "TotalDocsReturnedCollector"
+    },
+    {
+      "class": "TotalElapsedTimeCollector"
+    }
+  ],
+  "experiments": {
+    "title": {
+      "name": "title",
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "params": {
+        "qf": [
+          "title"
+        ]
+      }
+    },
+    "overview": {
+      "name": "overview",
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "params": {
+        "qf": [
+          "overview"
+        ],
+        "bq": []
+      },
+      "filterQueries": []
+    },
+    "people": {
+      "name": "people",
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "params": {
+        "qf": [
+          "people"
+        ]
+      }
+    },
+    "people_title": {
+      "name": "people_title",
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "params": {
+        "qf": [
+          "people",
+          "title"
+        ]
+      }
+    }
+  }
+}

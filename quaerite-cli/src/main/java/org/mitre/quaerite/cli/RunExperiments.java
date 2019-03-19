@@ -30,6 +30,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.Experiment;
+import org.mitre.quaerite.core.ExperimentConfig;
 import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.db.ExperimentDB;
 
@@ -71,12 +72,6 @@ public class RunExperiments extends AbstractExperimentRunner {
                         .required(false)
                         .desc("judgment .csv file (optional as long as judgements have been loaded earlier!)").build()
         );
-        OPTIONS.addOption(
-                Option.builder("id")
-                        .hasArg()
-                        .required(false)
-                        .desc("field name for id field for judgments file (optional; default: 'id')").build()
-        );
 
         OPTIONS.addOption(
                 Option.builder("freshStart")
@@ -102,13 +97,6 @@ public class RunExperiments extends AbstractExperimentRunner {
         );
 
         OPTIONS.addOption(
-                Option.builder("n")
-                        .longOpt("numThreads")
-                        .hasArg(true)
-                        .required(false)
-                        .desc("number of threads to use in running experiments").build()
-        );
-        OPTIONS.addOption(
                 Option.builder("test")
                         .hasArg(false)
                         .required(false)
@@ -119,8 +107,12 @@ public class RunExperiments extends AbstractExperimentRunner {
 
     long batchStart = -1l;
 
-    public RunExperiments(int numThreads) {
-        super(numThreads);
+    public RunExperiments() {
+        super(new ExperimentConfig());
+    }
+
+    public RunExperiments(ExperimentConfig experimentConfig) {
+        super(experimentConfig);
     }
 
     public static void main(String[] args) throws Exception {
@@ -140,26 +132,27 @@ public class RunExperiments extends AbstractExperimentRunner {
         boolean freshStart = getBoolean(commandLine, "freshStart");
         boolean latest = getBoolean(commandLine, "latest");
         boolean isTest = getBoolean(commandLine, "test");
-        int numThreads = getInt(commandLine, "n", DEFAULT_NUM_THREADS);
 
         Path judgments = getPath(commandLine, "j", false);
         Path experiments = getPath(commandLine, "e", false);
         Path reportDir = getPath(commandLine, "r", false);
         reportDir = (reportDir == null) ? Paths.get(DumpResults.DEFAULT_REPORT_DIR) : reportDir;
-        String idField = getString(commandLine, "id", DEFAULT_ID_FIELD);
-        RunExperiments runExperiments = new RunExperiments(numThreads);
+        RunExperiments runExperiments = new RunExperiments();
 
         try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
             if (judgments != null && experiments != null) {
-                loadJudgments(experimentDB, judgments, idField, true);
-                addExperiments(experimentDB, experiments, false, true);
+                loadJudgments(experimentDB, judgments, true);
+                ExperimentSet experimentSet = addExperiments(experimentDB, experiments, false, true);
+                runExperiments = new RunExperiments(experimentSet.getExperimentConfig());
                 freshStart = false;
             } else if (judgments != null) {
-                loadJudgments(experimentDB, judgments, idField, true);
+                loadJudgments(experimentDB, judgments, true);
             } else if (experiments != null) {
-                addExperiments(experimentDB, experiments, true, freshStart);
+                ExperimentSet experimentSet = addExperiments(experimentDB, experiments, true, freshStart);
+                runExperiments = new RunExperiments(experimentSet.getExperimentConfig());
             }
             runExperiments.run(experimentDB, experimentName, freshStart, latest);
+
 
             LOG.info("starting to write reports to: "+reportDir);
             dumpResults(experimentDB, experimentDB.getQuerySets(),

@@ -41,6 +41,17 @@ public class ExperimentSet {
     private Map<String, Experiment> experiments = new LinkedHashMap<>();
     private transient ScoreCollector trainScoreCollector;
     private transient ScoreCollector testScoreCollector;
+    private ExperimentConfig experimentConfig;
+
+    public ExperimentSet() {
+        experimentConfig = new ExperimentConfig();
+    }
+
+    public ExperimentSet(ExperimentConfig experimentConfig) {
+        this.experimentConfig = experimentConfig;
+    }
+
+
     public void addExperiment(String name, Experiment experiment) {
         experiments.put(name, experiment);
     }
@@ -63,6 +74,9 @@ public class ExperimentSet {
         return experiments;
     }
 
+    public ExperimentConfig getExperimentConfig() {
+        return experimentConfig;
+    }
     public String toJson() {
         return GSON.toJson(this);
     }

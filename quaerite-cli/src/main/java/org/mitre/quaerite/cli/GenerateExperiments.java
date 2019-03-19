@@ -56,7 +56,7 @@ public class GenerateExperiments extends AbstractCLI {
     static {
         OPTIONS.addOption(
                 Option.builder("f")
-                        .longOpt("features")
+                        .longOpt("experimentFactories")
                         .hasArg()
                         .desc("experiment featuresets json file")
                         .required().build()

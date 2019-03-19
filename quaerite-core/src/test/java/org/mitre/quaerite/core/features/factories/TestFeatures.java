@@ -31,6 +31,7 @@ import com.google.gson.Gson;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.ExperimentFactory;
+import org.mitre.quaerite.core.GAConfig;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.FloatFeature;
 import org.mitre.quaerite.core.features.QF;
@@ -138,6 +139,23 @@ public class TestFeatures {
             System.out.println(feature);
         }
     }
+
+    @Test
+    public void testGAConfigSerialization() throws Exception {
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features3.json")
+        );
+        GAConfig gaConfig = experimentFactory.getGAConfig();
+        assertEquals(20, gaConfig.getNumThreads());
+        assertEquals("customIdField", gaConfig.getIdField());
+        assertEquals(100, gaConfig.getGenerations());
+        assertEquals(2, gaConfig.getNFolds());
+        assertEquals(50, gaConfig.getPopulation());
+        assertEquals(0.001f, gaConfig.getMutationAmplitude(), 0.00001);
+        assertEquals(0.8f, gaConfig.getMutationProbability(), 0.00001);
+
+    }
+
     private Reader newReader(String path) {
         return new BufferedReader(
                 new InputStreamReader(

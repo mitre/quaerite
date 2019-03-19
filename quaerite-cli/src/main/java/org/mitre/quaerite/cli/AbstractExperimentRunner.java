@@ -50,6 +50,7 @@ import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientException;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.core.Experiment;
+import org.mitre.quaerite.core.ExperimentConfig;
 import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
@@ -74,11 +75,11 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     //per search server url
     Map<String, JudgmentList> searchServerValidatedMap = new HashMap<>();
 
-    private final int numThreads;
+    private final ExperimentConfig experimentConfig;
     NumberFormat threePlaces = new DecimalFormat(".000",
             DecimalFormatSymbols.getInstance(Locale.US));
-    public AbstractExperimentRunner(int numThreads) {
-        this.numThreads = numThreads;
+    public AbstractExperimentRunner(ExperimentConfig experimentConfig) {
+        this.experimentConfig = experimentConfig;
     }
 
 
@@ -99,24 +100,24 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             validated = validate(searchClient, judgmentList);
             searchServerValidatedMap.put(ex.getSearchServerUrl()+"_"+judgmentListId, validated);
         }
-        ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
+        ExecutorService executorService = Executors.newFixedThreadPool(experimentConfig.getNumThreads());
         ExecutorCompletionService<Integer> executorCompletionService = new ExecutorCompletionService<>(executorService);
         ArrayBlockingQueue<Judgments> queue = new ArrayBlockingQueue<>(
-                validated.getJudgmentsList().size() + numThreads);
+                validated.getJudgmentsList().size() + experimentConfig.getNumThreads());
 
         queue.addAll(validated.getJudgmentsList());
-        for (int i = 0; i < numThreads; i++) {
+        for (int i = 0; i < experimentConfig.getNumThreads(); i++) {
             queue.add(POISON);
         }
 
-        for (int i = 0; i < numThreads; i++) {
+        for (int i = 0; i < experimentConfig.getNumThreads(); i++) {
             executorCompletionService.submit(
-                    new QueryRunner(validated.getIdField(), experimentDB.getExperiments().getMaxRows(),
+                    new QueryRunner(experimentConfig.getIdField(), experimentDB.getExperiments().getMaxRows(),
                             queue, ex, experimentDB, scoreCollectors));
         }
 
         int completed = 0;
-        while (completed < numThreads) {
+        while (completed < experimentConfig.getNumThreads()) {
             try {
                 Future<Integer> future = executorCompletionService.take();
                 future.get();
@@ -205,7 +206,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
      * @param judgmentList
      * @return
      */
-    private static JudgmentList validate(SearchClient searchClient, JudgmentList judgmentList) {
+    private JudgmentList validate(SearchClient searchClient, JudgmentList judgmentList) {
 
         Set<String> judgmentIds = new HashSet<>();
         for (Judgments j : judgmentList.getJudgmentsList()) {
@@ -220,14 +221,14 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             if (expected++ > 0) {
                 queryString.append(" OR ");
             }
-            queryString.append(judgmentList.getIdField() + ":\"" + id + "\"");
+            queryString.append(experimentConfig.getIdField() + ":\"" + id + "\"");
             if (queryString.length() > 1000) {
-                addValid(queryString.toString(), judgmentList.getIdField(), searchClient, expected, valid);
+                addValid(queryString.toString(), experimentConfig.getIdField(), searchClient, expected, valid);
                 queryString.setLength(0);
                 expected = 0;
             }
         }
-        addValid(queryString.toString(), judgmentList.getIdField(), searchClient, expected, valid);
+        addValid(queryString.toString(), experimentConfig.getIdField(), searchClient, expected, valid);
 
         if (judgmentIds.size() != valid.size()) {
             for (String id : judgmentIds) {
@@ -238,7 +239,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             }
         }
 
-        JudgmentList retList = new JudgmentList(judgmentList.getIdField());
+        JudgmentList retList = new JudgmentList();
         for (Judgments j : judgmentList.getJudgmentsList()) {
             Judgments winnowedJugments = new Judgments(new QueryInfo(j.getQuerySet(), j.getQuery(), j.getQueryCount()));
             for (Map.Entry<String, Double> e : j.getSortedJudgments().entrySet()) {
