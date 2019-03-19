@@ -64,7 +64,10 @@
         "tss_overview",
 		"people",
 		"tb_people",
-		"tss_people"
+		"tss_people",
+        "text",
+        "tb_text",
+        "tss_text"
       ],
       "defaultWeights": [
         "0.0",
