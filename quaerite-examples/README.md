@@ -158,25 +158,30 @@ median: .594
 stdev:.064
 ```
 
-This suggests that if we run the GA on the full judgment set we should see an 
-improvement from `0.53` from our seed set to roughly `0.62` for the top settings identified by the GA. 
-
 `RunGA` writes the training experiment `.json` files to `ga_experiments`. 
 To find the experiment settings for, say `test_fold_1_gen_9_exp_2`, 
 open `ga_experiments/fold1_gen9_experiments.json` and navigate to 
 this experiment: `train_fold_1_gen_9_exp_2`.
 
+If we run the GA on the full judgment set we should see an 
+improvement from `0.53` from our seed set to roughly `0.62` for 
+the top settings identified by the GA. 
 
+**CAVEATS** 
 
-2. Or run the genetic algorithm from the features specification file with a random seed: 
+a) this performance improvement will only be reflected in a production system to the
+degree that the truth set represents reality.
+
+b) the results on this data set with these fields are disturbingly
+no better than throwing in all the fields with random weights (see below).
+
+1. Now run the genetic algorithm from the features specification file with a random seed: 
 ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_5.json```
 As you can see in the `gaConfig` element in `experiment_features_5.json`, the settings for 
 the `population` size and the `mutationProbability` and `mutationAmplitude` have been modified.
 
-On this data set, with the available features, there is not much improvement over 
+As noted above, on this data set, with the available features, there is not much improvement over 
 random seeding from option 2.  
-However, option 1 should show how the GA is finding better parameter settings over the 
-initial, single field experiments.  
 
 
 
