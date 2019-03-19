@@ -233,7 +233,7 @@ production_companies_facet:
 ```
 
 Slightly more than one percent (1.08%) of the production companies in the truth set are ```dc_comics```, 
-however, in the rest of ```tmdb```, only 23 movies in the rest of ```tmdb``` (0.20%) are ```dc_comics```.
+however, in the rest of ```tmdb```, only 23 movies (0.20%) are ```dc_comics```.
 
 Note, that the contrastive value is irrespective of the directionality.  
 This shows that the truth set has _fewer_ ```drama``` movies than you'd expect.
