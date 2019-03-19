@@ -236,7 +236,7 @@ Slightly more than one percent (1.08%) of the production companies in the truth 
 however, in the rest of ```tmdb```, only 23 movies (0.20%) are ```dc_comics```.
 
 Note, that the contrastive value is irrespective of the directionality.  
-This shows that the truth set has _fewer_ ```drama``` movies than you'd expect.
+The following shows that the truth set has _fewer_ ```drama``` movies than you'd expect given the general population.
 
 ```
 genres_facet:
