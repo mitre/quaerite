@@ -24,7 +24,8 @@
       "defaultWeights": [
         "0.0",
         "1.0"
-      ]
+      ],
+      "maxSetSize": 1
     }
   }
 }

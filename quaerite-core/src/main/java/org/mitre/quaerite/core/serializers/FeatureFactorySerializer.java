@@ -30,6 +30,7 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
@@ -50,6 +51,7 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
     static String FIELDS_KEY = "fields";
     static String VALUES_KEY = "values";
     static String DEFAULT_WEIGHT_KEY = "defaultWeights";
+    static String MAX_SET_SIZE_KEY = "maxSetSize";
 
     @Override
     public FeatureFactories deserialize(JsonElement jsonElement, Type type,
@@ -67,7 +69,8 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         if (WeightableListFeature.class.isAssignableFrom(clazz)) {
             JsonObject featureSetObj = (JsonObject)jsonFeatureFactory;
             return buildWeightableFeatureFactory(paramName, featureSetObj.get(FIELDS_KEY),
-                    featureSetObj.get(DEFAULT_WEIGHT_KEY));
+                    featureSetObj.get(DEFAULT_WEIGHT_KEY),
+                    featureSetObj.get(MAX_SET_SIZE_KEY));
         } else if (FloatFeature.class.isAssignableFrom(clazz)) {
             return buildFloatFeatureFactory(paramName, jsonFeatureFactory);
         } else if (StringFeature.class.isAssignableFrom(clazz)) {
@@ -147,10 +150,16 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
     }
 
     private FeatureFactory buildWeightableFeatureFactory(String paramName,
-                                                         JsonElement fieldsElement, JsonElement defaultWeightsElement) {
+                                                         JsonElement fieldsElement,
+                                                         JsonElement defaultWeightsElement,
+                                                         JsonElement maxSetSize) {
         List<String> fields = toStringList(fieldsElement);
         List<Float> defaultWeights = toFloatList(defaultWeightsElement);
-        return new WeightableListFeatureFactory(paramName, fields, defaultWeights);
+        int sz = -1;
+        if (maxSetSize != null && ! maxSetSize.isJsonNull() && maxSetSize.isJsonPrimitive()) {
+            sz = maxSetSize.getAsInt();
+        }
+        return new WeightableListFeatureFactory(paramName, fields, defaultWeights, sz);
     }
 }
 

@@ -364,6 +364,7 @@ public class ExperimentDB implements Closeable {
     }
 
     public void addScoreCollector(ScoreCollector scoreCollector) throws SQLException {
+        String json = ScoreCollectorListSerializer.toJson(scoreCollector);
         insertScoreCollectors.clearParameters();
         insertScoreCollectors.setString(1, scoreCollector.getName());
         insertScoreCollectors.setString(2, scoreCollector.getName());

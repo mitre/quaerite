@@ -1,29 +1,24 @@
 {
   "scoreCollectors": [
-	{
+    {
       "class": "NDCGCollector",
       "params": {
-        "atK": 10,
-        "useForTrain": true,
-        "useForTest": true,
-        "exportPMatrix": true
+        "atK": 10
       }
     }
   ],
   "featureFactories" : {
-   
-    "url" : [
-      "http://localhost:8983/solr/tmdb"
-    ],
+
     "qf": {
       "fields": [
         "title",
         "overview",
-		"people"
+        "people",
+        "content"
       ],
       "defaultWeights": [
-        "0.0",
-        "1.0"
+        "1.0",
+        "2.0"
       ],
       "maxSetSize": 2
     }

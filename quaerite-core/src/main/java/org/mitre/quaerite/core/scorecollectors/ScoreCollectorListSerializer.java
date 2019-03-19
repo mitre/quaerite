@@ -82,10 +82,22 @@ public class ScoreCollectorListSerializer {
                 clazzName = clazzName.substring(DEFAULT_CLASS_NAME_SPACE.length());
             }
             jsonObject.addProperty(CLASSNAME, clazzName);
-            if (((AbstractScoreCollector)o).getK() > -1) {
-                JsonObject params = new JsonObject();
+            JsonObject params = new JsonObject();
+            AbstractScoreCollector scoreCollector = (AbstractScoreCollector)o;
+            if (scoreCollector.getK() > -1) {
                 params.add("atK",
                         new JsonPrimitive(Integer.toString(((AbstractScoreCollector) o).getK())));
+            }
+            if (scoreCollector.getExportPMatrix()) {
+                params.add("exportPMatrix", new JsonPrimitive(true));
+            }
+            if (scoreCollector.getUseForTest()) {
+                params.add("useForTest", new JsonPrimitive(true));
+            }
+            if (scoreCollector.getUseForTrain()) {
+                params.add("useForTrain", new JsonPrimitive(true));
+            }
+            if (params.size() > 0) {
                 jsonObject.add("params", params);
             }
             return jsonObject;

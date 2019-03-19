@@ -45,16 +45,16 @@ public class TestFeatures {
     @Test
     public void testSimpleQF() throws Exception {
         List<String> fields = new ArrayList<>();
-        fields.add("title");
-        fields.add("author^1");
-        fields.add("content^0.4");
-        fields.add("isbn");
+        fields.add("a");
+        fields.add("b^3.2");
+        fields.add("c^1.6");
+        fields.add("d");
         List<Float> defaultWeights = new ArrayList<>();
         defaultWeights.add(0.0f);
-        defaultWeights.add(5.0f);
-        defaultWeights.add(10.0f);
+        defaultWeights.add(1.0f);
+        defaultWeights.add(2.0f);
 
-        WeightableListFeatureFactory qf = new WeightableListFeatureFactory("qf", fields, defaultWeights);
+        WeightableListFeatureFactory qf = new WeightableListFeatureFactory("qf", fields, defaultWeights, -1);
         //test random
         for (int i = 0; i < 10; i++) {
             boolean foundAuthor = false;
@@ -62,12 +62,12 @@ public class TestFeatures {
             WeightableListFeature list = (WeightableListFeature)qf.random();
             for (int j = 0; j < list.size(); j++) {
                 WeightableField wf = list.get(j);
-                if (wf.getFeature().equals("author")) {
+                if (wf.getFeature().equals("b")) {
                     foundAuthor = true;
-                    assertEquals(1.0f, wf.getWeight(), 0.001);
-                } else if (wf.getFeature().equals("content")) {
+                    assertEquals(3.2f, wf.getWeight(), 0.001);
+                } else if (wf.getFeature().equals("c")) {
                     foundContent = true;
-                    assertEquals(0.4f, wf.getWeight(), 0.001);
+                    assertEquals(1.6f, wf.getWeight(), 0.001);
                 } else {
                     Float weight = wf.getWeight();
                     assertNotNull(weight);
@@ -79,10 +79,37 @@ public class TestFeatures {
         }
 
         List<Feature> permutations = qf.permute(200);
-        assertEquals(9, permutations.size());
+        assertEquals(14, permutations.size());
     }
 
     @Test
+    public void testQFNoFixedWeights() throws Exception {
+        List<String> fields = new ArrayList<>();
+        fields.add("a");
+        fields.add("b");
+        fields.add("c");
+        fields.add("d");
+        List<Float> defaultWeights = new ArrayList<>();
+        defaultWeights.add(0.0f);
+        defaultWeights.add(1.0f);
+
+        WeightableListFeatureFactory<WeightableListFeature> qf =
+                new WeightableListFeatureFactory<>("qf", fields, defaultWeights, -1);
+        for (Feature f : qf.permute(1000)) {
+            System.out.println(f);
+        }
+        assertEquals(15, qf.permute(1000).size());
+        defaultWeights.add(2.0f);
+        qf = new WeightableListFeatureFactory("qf", fields, defaultWeights, -1);
+        assertEquals(80, qf.permute(1000).size());
+
+        qf = new WeightableListFeatureFactory("qf", fields, defaultWeights, 2);
+
+        assertEquals(32, qf.permute(1000).size());
+    }
+
+
+        @Test
     public void testQFDeserialization() throws Exception {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(newReader("/test-documents/experiment_features1.json"));
         FloatFeatureFactory<FloatFeature> featureFactory = (FloatFeatureFactory)experimentFactory.getFeatureFactories().get("tie");
@@ -96,8 +123,20 @@ public class TestFeatures {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             ExperimentFactory.fromJson(newReader("/test-documents/experiment_features2.json")).getTrainScoreCollector();
         });
+    }
 
+    @Test
+    public void testQFDepthSerialization() throws Exception {
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features3.json")
+        );
 
+        FeatureFactories featureFactories = experimentFactory.getFeatureFactories();
+        FeatureFactory qf = featureFactories.get("qf");
+        List<Feature> features = qf.permute(1000);
+        for (Feature feature : features) {
+            System.out.println(feature);
+        }
     }
     private Reader newReader(String path) {
         return new BufferedReader(

@@ -184,7 +184,7 @@ public class RunExperiments extends AbstractExperimentRunner {
             batchStart = System.currentTimeMillis();
             int finished = 0;
             for (String eName : experimentSet.getExperiments().keySet()) {
-                LOG.info("running experiment: '" + experimentName + "'");
+                LOG.info("running experiment: '" + eName + "'");
                 runExperiment(eName, experimentDB, experimentDB.getJudgments(),
                         "train", true);
                 long elapsed = System.currentTimeMillis() - batchStart;

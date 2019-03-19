@@ -53,7 +53,7 @@ public class WeightableField {
 
     @Override
     public String toString() {
-        if (weight != null) {
+        if (weight != null && weight != 1.0f) {
             return feature+"^"+df.format(weight);
         }
         return feature;

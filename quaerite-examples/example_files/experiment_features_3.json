@@ -1,0 +1,69 @@
+{
+    "scoreCollectors": [
+    {
+      "class": "HadAtLeastOneHitAtKCollector",
+      "params": {
+        "atK": "1"
+      }
+    },
+    {
+      "class": "HadAtLeastOneHitAtKCollector",
+      "params": {
+        "atK": "3"
+      }
+    },
+    {
+      "class": "HadAtLeastOneHitAtKCollector",
+      "params": {
+        "atK": "5"
+      }
+    },
+    {
+      "class": "HadAtLeastOneHitAtKCollector",
+      "params": {
+        "atK": "10"
+      }
+    },
+	{
+      "class": "HadAtLeastOneHitAtKCollector",
+      "params": {
+        "atK": "20"
+      }
+    },
+	{
+      "class": "NDCGCollector",
+      "params": {
+        "atK": 10,
+        "useForTrain": true,
+        "useForTest": true,
+        "exportPMatrix": true
+      }
+    }
+  ],
+  "featureFactories" : {
+ 
+    "url" : [
+      "http://localhost:8983/solr/tmdb"
+    ],
+    "qf": {
+      "fields": [
+        "title",
+        "tb_title",
+        "tss_title",
+        "overview",
+        "tb_overview",
+        "tss_overview",
+		"people",
+		"tb_people",
+		"tss_people"
+      ],
+      "defaultWeights": [
+        "0.0",
+        "1.0",
+        "5.0",
+		"10.0"
+      ],
+	  "maxSetSize": 2
+    }
+  }
+}
