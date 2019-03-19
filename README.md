@@ -60,18 +60,18 @@ In the following, I use LTR to refer to this Lucene-ecosystem-specific module an
 In _no_ way do I see this implementation of GA as a competitor to LTR; rather, it is another tool that 
 might help complement LTR and/or other tuning methodologies.
 
-## Similarities
+### Similarities
 * All of the basic requirements for quality search must first be met -- analyzer chains must be well designed for the data, 
     the underlying data in the index should be accurate, well organized and well curated 
 * There must be sufficient, high quality, accurate and representative ground truth judgments for training and testing
 * Machine learning can only do so much -- further tuning and/or adding new methods of enrichment may be required
 
-## Differences
+### Differences
 * In practice, LTR is designed to perform more costly calculations as a re-ranking step...that is, after the search 
 engine has returned the best `n` documents, LTR is typically applied to carry out more costly calculations on 
 this smaller subset of documents to re-rank the results based on the models built offline.  The goal of 
-this implementation of GA and other methods to help tune basic parameters as part of the primary 
-system's ranking, _NOT_ as part of a secondary reranking.
+this implementation of GA (and the other tools in _Quaerite_) is to help tune the parameters used in the initial 
+search system's ranking, _NOT_ as part of a secondary reranking.
 * Bloomberg, OpenSource Connections, Wikimedia and Snagajob have spent quite a bit of time and effort 
 developing and integrating these modules to make them easy to use.  This toolkit has been developed with 
 far fewer resources for use initially by one relevance engineer...there are areas for improvement.
