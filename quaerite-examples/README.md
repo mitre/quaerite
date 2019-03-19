@@ -16,13 +16,13 @@
   specific language governing permissions and limitations
   under the License.
 -->
-Quaerite Examples
+_Quaerite_ Examples
 ===========================
 This module offers examples to get your hands dirty on example data
 with example tasks.
 This set of examples is built around the "TheMovieDB" (_tmdb_).
 The inspiration for the use of this dataset comes from Doug Turnbull and John Berryman's book, [Relevant Search](https://www.manning.com/books/relevant-search)
-and the "Think Like a Relevance Engineer" training offered by Doug and colleagues at [OpenSourceConnections (o19s)](https://opensourceconnections.com).
+and the "Think Like a Relevance Engineer" training offered by Doug and colleagues at [OpenSource Connections (o19s)](https://opensourceconnections.com).
 As you'll see, these examples rely on data kindly made 
 available by Doug and _o19s_ -- the ```tmdb.json``` file is hosted by _o19s_, and the ```movie_judgments.csv``` 
 file is a reformatting of _o19s_'s [judgment-lists](https://github.com/o19s/solr-tmdb/blob/master/ltr/judgment-lists.html).
@@ -53,7 +53,7 @@ Prerequisites
     
 The stage is now set to start searching -- not for documents, but for relevance features.
 
-Quaerite -- The Basics -- Running Experiments (```RunExperiments```)
+_Quaerite_ -- The Basics -- Running Experiments (```RunExperiments```)
 ---------------
 
 You can find the files (such as ```movie_judgments.csv``` and 
@@ -72,7 +72,7 @@ From these reports, we can quickly see that the `title` field yields the best re
 When we look at the p-value matrix (`sig_diffs_ndcg_10.csv`), we can see that `title` is significantly better than  
 `overview`, and `overview` is significantly better than `people`.
 
-Quaerite -- Generating Experiments (```GenerateExperiments```)
+_Quaerite_ -- Generating Experiments (```GenerateExperiments```)
 --------------------------
 It is a bit unwieldy to have to specify a definition for all of the experiments you might want to run.
 You can specify features and ranges and have ```quaerite``` create all the permutations of those experiments for you.
@@ -108,11 +108,15 @@ Genetic Algorithms (GA) (```RunGA```)
 Rather than going through all of the permutations with ```GenerateExperiments```, it would be useful to apply 
 genetic algorithms to learn which combinations of features lead to better results.
 
+The following requires basic knowledge of machine learning train/test methodologies.  
+Please see [LTR's core-concepts](https://elasticsearch-learning-to-rank.readthedocs.io/en/latest/core-concepts.html#testing-is-our-model-any-good)
+as a refresher.
+
 1. Run the genetic algorithm from the features specification file with the original experiments as the seed: 
 ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_4.json -e experiments.json```
 This will run 4-fold cross-validation (`"nFolds" : 4`).  It will load the `experiments.json` file as the training seeds. 
 
-For each fold, `RunGA` will run evaluate the seed experiments on the training portion of the fold:
+For each fold, `RunGA` will evaluate the seed experiments on the training portion of the fold:
 ```
 FOLD 0 TRAINING (SEED)
 experiment 'train_fold_0_seed_exp_0': .529
@@ -185,7 +189,7 @@ random seeding from option 2.
 
 
 
-Quaerite -- Finding Features
+_Quaerite_ -- Finding Features
 -----------------------------
 Elasticsearch made popular the notion of "SignificantTerms" -- that is, given a query
 what facets are statistically interestingly more likely to appear than they would be 
