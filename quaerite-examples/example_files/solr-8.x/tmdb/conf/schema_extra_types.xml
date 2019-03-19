@@ -1,0 +1,29 @@
+<types>
+  <fieldType name="text_basic" class="solr.TextField" positionIncrementGap="100">
+    <analyzer type="index">
+     <charFilter class="solr.HTMLStripCharFilterFactory"/>
+     <!-- maintain email addresses and website addresses -->
+     <tokenizer class="solr.UAX29URLEmailTokenizerFactory"/>
+     <filter class="solr.ICUFoldingFilterFactory"/>
+     <!-- strip final "." from e.g. pay.gov.; uax tokenizer leaves those in -->
+     <filter class="solr.PatternReplaceFilterFactory" pattern="\\.$" replacement=""/>
+    </analyzer>
+  </fieldType>
+  <fieldType name="text_simple_stem" class="solr.TextField" positionIncrementGap="100">
+    <analyzer type="index">
+     <charFilter class="solr.HTMLStripCharFilterFactory"/>
+     <!-- maintain email addresses and websites --> 
+     <tokenizer class="solr.UAX29URLEmailTokenizerFactory"/>
+     <filter class="solr.ICUFoldingFilterFactory"/>
+     <!-- strip final "." from e.g. pay.gov.; uax tokenizer leaves those in -->
+     <filter class="solr.PatternReplaceFilterFactory"
+                           pattern="\\.$"
+                           replacement=""/>
+     <!-- possessive and keywords protection needs to happen before stemmer -->
+     <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt" ignoreCase="false"/>
+     <filter class="solr.EnglishPossessiveFilterFactory"/>
+     <filter class="solr.EnglishMinimalStemFilterFactory"/>
+    </analyzer>
+  </fieldType>
+</types>
+

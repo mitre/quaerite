@@ -33,8 +33,9 @@ Prerequisites
  ```java -version```
 1. Until there is an official release of ```quaerite```, you'll need to build the project to build the jars:     ```mvn clean install```
 
-2. Download the _tmdb_ Solr index config [Solr 7.x-8.x](https://github.com/mitre/quaerite/blob/master/quaerite-examples/example_files/solr-7And8.x.zip)
-   or [Solr 4.x](https://github.com/mitre/quaerite/blob/master/quaerite-examples/example_files/solr-4.x.zip)
+2. Download the _tmdb_ Solr index config [Solr 8.x](https://github.com/mitre/quaerite/blob/master/quaerite-examples/example_files/tmdb-solr-8.x.zip),
+[Solr 7.x](https://github.com/mitre/quaerite/blob/master/quaerite-examples/example_files/tmdb-solr-7.x.zip)
+   or [Solr 4.x](https://github.com/mitre/quaerite/blob/master/quaerite-examples/example_files/tmdb-solr-4.x.zip)
 
 3. Download and unpack Solr 8.0.0 from [here](http://www.apache.org/dyn/closer.lua/lucene/solr/8.0.0/solr-8.0.0.zip).
 
