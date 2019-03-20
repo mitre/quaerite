@@ -89,9 +89,19 @@ Licensed to the Apache Software Foundation (ASF) under one or more contributor l
 
 <http://www.apache.org/licenses/LICENSE-2.0>
 
+Current Status
+----------------
+As of this writing, `Quaerite` allows for experimentation with the following parameters:
+`bq`, `qf`, `pf`, `pf2`, `pf3`, `solr url` (so that you can run experiments against 
+different cores and/or different versions of Solr),
+`customHandler` (so that you can compare different customized handlers), `tie`.
+
+Before the `BETA` release, we'll add:  `q.op`, `mm`, `bf` and a more parameterizable version of `bq`.
+
 Getting Started
 ---------------
 See the ```quaerite-examples``` module and its [README](https://github.com/mitre/quaerite/blob/master/quaerite-examples/README.md).
+
 
 Road Map
 ----------
