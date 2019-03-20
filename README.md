@@ -77,18 +77,6 @@ developing and integrating these modules to make them easy to use.  This toolkit
 far fewer resources for use initially by one relevance engineer...there are areas for improvement.
 
 
-License (see also LICENSE.txt)
-------------------------------
-
-Copyright (c) 2019, The MITRE Corporation. All rights reserved.
-
-Approved for Public Release; Distribution Unlimited. Case Number 18-3138.
-
-
-Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements.  See the NOTICE file distributed with this work for additional information regarding copyright ownership.  The ASF licenses this file to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.  You may obtain a copy of the License at
-
-<http://www.apache.org/licenses/LICENSE-2.0>
-
 Current Status
 ----------------
 As of this writing, `Quaerite` allows for experimentation with the following parameters:
@@ -113,3 +101,16 @@ High priorities
 Planned Releases
 * 1.0.0-ALPHA before March 25, 2019
 * 1.0.0-BETA before April 23, 2019
+
+
+License (see also LICENSE.txt)
+------------------------------
+
+Copyright (c) 2019, The MITRE Corporation. All rights reserved.
+
+Approved for Public Release; Distribution Unlimited. Case Number 18-3138.
+
+
+Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements.  See the NOTICE file distributed with this work for additional information regarding copyright ownership.  The ASF licenses this file to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.  You may obtain a copy of the License at
+
+<http://www.apache.org/licenses/LICENSE-2.0>
