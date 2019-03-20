@@ -106,10 +106,23 @@ public class RunGA extends AbstractExperimentRunner {
                 Option.builder("j")
                         .longOpt("judgments")
                         .hasArg(true)
-                        .required(true)
+                        .required(false)
                         .desc("judgments ('truth') file").build()
         );
-        
+        OPTIONS.addOption(
+                Option.builder("test")
+                        .longOpt("test_judgments")
+                        .hasArg(true)
+                        .required(false)
+                        .desc("testing judgments ('truth') file").build()
+        );
+        OPTIONS.addOption(
+                Option.builder("train")
+                        .longOpt("train_judgments")
+                        .hasArg(true)
+                        .required(false)
+                        .desc("training judgments ('truth') file").build()
+        );
     }
     private final GAConfig gaConfig;
     private final ExperimentFactory experimentFactory;
@@ -136,52 +149,53 @@ public class RunGA extends AbstractExperimentRunner {
         gaPaths.seedExperiments = getPath(commandLine, "e", false);
         gaPaths.outputDir = getPath(commandLine, "o", false);
         gaPaths.judgmentsFile = getPath(commandLine, "j", true);
+        gaPaths.testJudgmentsFile = getPath(commandLine, "test", true);
+        gaPaths.trainJudgmentsFile = getPath(commandLine, "train", true);
         if (gaPaths.outputDir == null) {
             gaPaths.outputDir = Paths.get("ga_experiments");
         }
-        int threads = getInt(commandLine, "n", 8);
         ExperimentFactory experimentFactory = loadExperimentFactory(gaPaths.experimentFactories);
         LOG.debug(experimentFactory.getGAConfig());
+        validateCommandLine(gaPaths);
         validateSettings(experimentFactory);
         RunGA runGA = new RunGA(experimentFactory);
-        runGA.execute(gaPaths);
-    }
-
-    private static void validateSettings(ExperimentFactory experimentFactory) {
-        GAConfig gaConfig = experimentFactory.getGAConfig();
-        double gaOpProbs = gaConfig.getCrossoverProbability()+
-                gaConfig.getMutationProbability()+gaConfig.getReproductionProbability();
-        if (Math.abs(1.0d-gaOpProbs) > 0.001) {
-            throw new IllegalArgumentException("crossoverProbability+mutationProbability+reproductionProbability should = 1.0");
-        }
-        ScoreCollector trainScoreCollector = null;
-        ScoreCollector testScoreCollector = null;
-        for (ScoreCollector scoreCollector : experimentFactory.getScoreCollectors()) {
-            if (scoreCollector.getUseForTrain()) {
-                if (trainScoreCollector != null) {
-                    throw new IllegalArgumentException("Can't have more than one trainScoreCollector:"+
-                            trainScoreCollector + " and "+scoreCollector);
-                }
-                trainScoreCollector = scoreCollector;
-            }
-            if (scoreCollector.getUseForTest()) {
-                if (testScoreCollector != null) {
-                    throw new IllegalArgumentException("Can't have more than one trainScoreCollector:"+
-                            testScoreCollector + " and "+scoreCollector);
-                }
-                testScoreCollector = scoreCollector;
-            }
+        if (gaPaths.judgmentsFile != null) {
+            runGA.executeNFold(gaPaths);
+        } else {
+            runGA.executeTrainTest(gaPaths);
         }
     }
 
-    private static ExperimentFactory loadExperimentFactory(Path experimentFactories) throws IOException {
-        try (Reader reader = Files.newBufferedReader(experimentFactories, StandardCharsets.UTF_8)) {
-            return ExperimentFactory.fromJson(reader);
+    private void executeTrainTest(GAPaths gaPaths) throws IOException, SQLException {
+
+        if (! Files.isDirectory(gaPaths.outputDir)) {
+            Files.createDirectories(gaPaths.outputDir);
         }
+
+        GADB gaDb = GADB.openAndDrop(gaPaths.dbPath);
+        //gaDb = GADB.open(gaPaths.dbPath);
+
+        loadJudgments(gaDb, gaPaths.testJudgmentsFile, true);
+        JudgmentList testJudgments = gaDb.getJudgments();
+        loadJudgments(gaDb, gaPaths.trainJudgmentsFile, false);
+        JudgmentList allJudgments = gaDb.getJudgments();
+        gaDb.initTrainTest(testJudgments, allJudgments);
+
+        if (gaPaths.seedExperiments != null) {
+            loadSeed(gaDb, gaPaths.seedExperiments, gaConfig.getNFolds());
+        }
+
+        if (gaPaths.seedExperiments == null) {
+            //write out the seed generation
+            generateRandomSeeds(experimentFactory.getFeatureFactories(), gaDb);
+        }
+        gaDb.addScoreCollectors(experimentFactory.getScoreCollectors());
+
+        runFold(0, gaDb, experimentFactory, gaPaths);
+        reportFinal(gaDb, experimentFactory, 1);
     }
 
-
-    private void execute(GAPaths gaPaths) throws IOException, SQLException {
+    private void executeNFold(GAPaths gaPaths) throws IOException, SQLException {
 
         if (! Files.isDirectory(gaPaths.outputDir)) {
             Files.createDirectories(gaPaths.outputDir);
@@ -195,7 +209,7 @@ public class RunGA extends AbstractExperimentRunner {
             loadSeed(gaDb, gaPaths.seedExperiments, gaConfig.getNFolds());
         }
 
-        gaDb = GADB.open(gaPaths.dbPath);
+        //gaDb = GADB.open(gaPaths.dbPath);
 
         if (gaPaths.seedExperiments == null) {
             //write out the seed generation
@@ -208,10 +222,15 @@ public class RunGA extends AbstractExperimentRunner {
         for (int i = 0; i < gaConfig.getNFolds(); i++) {
             runFold(i, gaDb, experimentFactory, gaPaths);
         }
+        reportFinal(gaDb, experimentFactory, gaConfig.getNFolds());
+    }
+
+    private void reportFinal(GADB gaDb, ExperimentFactory experimentFactory, int num) throws SQLException{
+
         System.out.println("--------------------------------");
         System.out.println("FINAL RESULTS ON TESTING:");
         List<ExperimentNameScorePair> scores = gaDb.getNBestExperimentNames(
-                TEST_PREFIX, gaConfig.getNFolds(),
+                TEST_PREFIX, num,
                 experimentFactory.getTestScoreCollector().getPrimaryStatisticName());
 
         SummaryStatistics summaryStatistics = new SummaryStatistics();
@@ -223,16 +242,24 @@ public class RunGA extends AbstractExperimentRunner {
             vals[i++] = esp.getScore();
             summaryStatistics.addValue(esp.getScore());
         }
-        Median median = new Median();
-        median.setData(vals);
-        System.out.println("");
+        if (scores.size() > 1) {
+            Median median = new Median();
+            median.setData(vals);
+            System.out.println("");
 
-        System.out.println("mean: "+
-                threePlaces.format(summaryStatistics.getMean()));
-        System.out.println("median: "+
-                threePlaces.format(median.evaluate()));
-        System.out.println("stdev:"+
-                threePlaces.format(summaryStatistics.getStandardDeviation()));
+            System.out.println("mean: " +
+                    threePlaces.format(summaryStatistics.getMean()));
+            System.out.println("median: " +
+                    threePlaces.format(median.evaluate()));
+            System.out.println("stdev:" +
+                    threePlaces.format(summaryStatistics.getStandardDeviation()));
+        }
+    }
+
+    private static ExperimentFactory loadExperimentFactory(Path experimentFactories) throws IOException {
+        try (Reader reader = Files.newBufferedReader(experimentFactories, StandardCharsets.UTF_8)) {
+            return ExperimentFactory.fromJson(reader);
+        }
     }
 
     private void loadSeed(GADB gaDb, Path seedExperiments, int folds) throws SQLException, IOException {
@@ -368,7 +395,7 @@ public class RunGA extends AbstractExperimentRunner {
 
         List<ExperimentScorePair> scorePairs = experimentDB.getNBestExperiments(
                 TRAIN_PREFIX+FOLD_PREFIX+fold+"_"+genString,
-                (int)(gaConfig.getPopulation()*1.25),
+                gaConfig.getPopulation(),
                 experimentFactory.getTrainScoreCollector().getPrimaryStatisticName());
 
         if (scorePairs.size() == 0) {
@@ -500,10 +527,58 @@ public class RunGA extends AbstractExperimentRunner {
 
 
     private static class GAPaths {
+        Path testJudgmentsFile;
+        Path trainJudgmentsFile;
         Path judgmentsFile;
         Path dbPath;
         Path experimentFactories;
         Path seedExperiments;
         Path outputDir;
     }
+
+    private static void validateSettings(ExperimentFactory experimentFactory) {
+        GAConfig gaConfig = experimentFactory.getGAConfig();
+        double gaOpProbs = gaConfig.getCrossoverProbability()+
+                gaConfig.getMutationProbability()+gaConfig.getReproductionProbability();
+        if (Math.abs(1.0d-gaOpProbs) > 0.001) {
+            throw new IllegalArgumentException("crossoverProbability+mutationProbability+reproductionProbability should = 1.0");
+        }
+        ScoreCollector trainScoreCollector = null;
+        ScoreCollector testScoreCollector = null;
+        for (ScoreCollector scoreCollector : experimentFactory.getScoreCollectors()) {
+            if (scoreCollector.getUseForTrain()) {
+                if (trainScoreCollector != null) {
+                    throw new IllegalArgumentException("Can't have more than one trainScoreCollector:"+
+                            trainScoreCollector + " and "+scoreCollector);
+                }
+                trainScoreCollector = scoreCollector;
+            }
+            if (scoreCollector.getUseForTest()) {
+                if (testScoreCollector != null) {
+                    throw new IllegalArgumentException("Can't have more than one trainScoreCollector:"+
+                            testScoreCollector + " and "+scoreCollector);
+                }
+                testScoreCollector = scoreCollector;
+            }
+        }
+    }
+
+    private static void validateCommandLine(GAPaths gaPaths) {
+        if (gaPaths.judgmentsFile != null &&
+                (gaPaths.trainJudgmentsFile != null
+                        || gaPaths.testJudgmentsFile != null)) {
+            throw new IllegalArgumentException("Must either select -j or (-train AND -test). Can't mix two modes.");
+        }
+        if (gaPaths.trainJudgmentsFile != null && gaPaths.testJudgmentsFile == null
+                || gaPaths.trainJudgmentsFile == null && gaPaths.testJudgmentsFile != null) {
+            throw new IllegalArgumentException("Must specify both a -train AND -test if specifying one");
+        }
+
+        if (gaPaths.judgmentsFile == null && gaPaths.trainJudgmentsFile == null &&
+                gaPaths.testJudgmentsFile == null) {
+            throw new IllegalArgumentException("Must either select -j (for nfold cross validation) or (-train AND -test)");
+        }
+    }
+
+
 }

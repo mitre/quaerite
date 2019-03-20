@@ -193,7 +193,10 @@ from `experiment_features_4.json`; these settings are more conservative.
 Now run the `GA` with these different GA parameters: 
 ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_5.json```
 
-
+### Running the GA with custom train/test sets
+Users may want to control the train/test split and turn off the cross-validation.
+To do this, specify `-train train.csv` and `-test test.csv` instead of `-j judgments.csv`, as in:
+```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -train movie_judgments_train.csv -test movie_judgments_test.csv -f experiment_features_5.json```
 
 _Quaerite_ -- Finding Features
 -----------------------------
@@ -213,7 +216,8 @@ What you do with this information with regard to relevance tuning depends on man
 but it can be helpful at least to understand statistical patterns that
 your truth set may reveal or contain.
 
-1. Run FindFeatures and specify which fields are your facetable fields with the ```-f``` flag:
+### Finding Features
+Run FindFeatures and specify which fields are your facetable fields with the ```-f``` flag:
 ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar FindFeatures -db my_db -j movie_judgments.csv -s http://localhost:8983/solr/tmdb -f genres_facet,original_language_facet,production_companies_facet```
 
 For each facet, the results are sorted by the descending order of contrast value. 
@@ -264,3 +268,12 @@ In practice, however, this technique has revealed some very important patterns t
 1. pointing out areas for improvement in supplementing the truth set
 2. tuning the boost weights based on popular categories
 
+_Quaerite_ -- Examining the Database
+-------------------------------------
+_Quaerite_ relies on an in-process H2 database.  To view the contents:
+
+```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar StartDB```
+
+Navigate in a browser to: `http://localhost:8082`
+
+And enter the full path for the `.mv.db` file (without the file suffix): `jdbc:h2:C:/data/my_db/h2_database`

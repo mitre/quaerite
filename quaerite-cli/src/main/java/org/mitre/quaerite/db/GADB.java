@@ -67,16 +67,32 @@ public class GADB extends ExperimentDB {
         super(connection, dropAll);
     }
 
+    public void initTrainTest(JudgmentList test, JudgmentList all) throws SQLException {
+        PreparedStatement insertTrainTest = initTrainTest();
+        Set<String> added = new HashSet<>();
+        int testFold = 0;
+        int trainFold = 1;
+        for (Judgments judgments : test.getJudgmentsList()) {
+            insertTrainTest.clearParameters();
+            insertTrainTest.setString(1, judgments.getQuery());
+            insertTrainTest.setInt(2, testFold);
+            insertTrainTest.execute();
+            added.add(judgments.getQuery());
+        }
+
+        for (Judgments judgments : all.getJudgmentsList()) {
+            if (added.contains(judgments.getQuery())) {
+                continue;
+            }
+            insertTrainTest.clearParameters();
+            insertTrainTest.setString(1, judgments.getQuery());
+            insertTrainTest.setInt(2, trainFold);
+            insertTrainTest.execute();
+        }
+    }
     public void initTrainTest(int nFolds) throws SQLException {
-        String sql = "drop table if exists train_test";
-        executeSQL(connection, sql);
-
-        sql = "create table train_test (query varchar(1024) primary key, fold integer);";
-        executeSQL(connection, sql);
-
+        PreparedStatement insertTrainTest = initTrainTest();
         JudgmentList judgmentList = getJudgments();
-        sql = "insert into train_test values (?,?)";
-        PreparedStatement insertTrainTest = connection.prepareStatement(sql);
 
         List<Integer> foldIds = new ArrayList<>();
         while (foldIds.size() < judgmentList.getJudgmentsList().size()) {
@@ -93,8 +109,20 @@ public class GADB extends ExperimentDB {
             insertTrainTest.execute();
         }
 
+    }
+
+    private PreparedStatement initTrainTest() throws SQLException {
+        String sql = "drop table if exists train_test";
+        executeSQL(connection, sql);
+
+        sql = "create table train_test (query varchar(1024) primary key, fold integer);";
+        executeSQL(connection, sql);
+
         getTestingStatement = connection.prepareStatement(
                 "select query from train_test where fold = ?");
+
+        sql = "insert into train_test values (?,?)";
+        return connection.prepareStatement(sql);
     }
 
     public TrainTestJudmentListPair getTrainTestJudgmentsByFold(int fold) throws SQLException {
