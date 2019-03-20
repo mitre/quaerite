@@ -184,7 +184,7 @@ no better than throwing in all the fields with random weights (see below).
 As before, run the `GA` with `experiment_features_4.json`:
 ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_4.json```
 
-###Running the GA with different GA parameters
+### Running the GA with different GA parameters
 As you can see in the `gaConfig` element in `experiment_features_5.json`, 
 the settings for the `crossoverProbability`, `mutationProbability`, 
 `mutationAmplitude` and `reproductionProbability` have all been modified
