@@ -64,7 +64,7 @@ public abstract class SearchClient implements Closeable {
             }
             httpGet = new HttpGet(get);
         } catch (Exception e) {
-            throw new IllegalArgumentException(e);
+            throw new IllegalArgumentException(url, e);
         }
         //this is required because of connection already bound exceptions
         //on windows. :(
@@ -79,7 +79,7 @@ public abstract class SearchClient implements Closeable {
                 return EntityUtils.toByteArray(httpResponse.getEntity());
             }
          catch (IOException e) {
-            throw new SearchClientException(e);
+            throw new SearchClientException(url, e);
         }
     }
 

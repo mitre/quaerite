@@ -16,6 +16,8 @@
  */
 package org.mitre.quaerite.connectors;
 
+import java.io.IOException;
+
 public class SearchClientException extends Exception {
 
     public SearchClientException(String msg) {
@@ -25,4 +27,9 @@ public class SearchClientException extends Exception {
     public SearchClientException(Exception e) {
         super(e);
     }
+
+    public SearchClientException(String url, IOException e) {
+        super(url, e);
+    }
+
 }
