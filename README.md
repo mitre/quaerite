@@ -96,7 +96,7 @@ Road Map
 High priorities
 * Add other features (e.g. ```bq```, ```bf```) as needed
 * Add a connector for Elasticsearch
-* See the issues on [github](https://github.com/mitre/quaerite/issues)
+* See the issues on [the issue tracker](https://github.com/mitre/quaerite/issues)
 
 Planned Releases
 * 1.0.0-ALPHA before March 25, 2019
