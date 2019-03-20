@@ -45,12 +45,16 @@ import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.GAConfig;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.features.factories.FeatureFactories;
-import org.mitre.quaerite.core.features.factories.FeatureFactory;
-import org.mitre.quaerite.db.ExperimentDB;
-import org.mitre.quaerite.db.ExperimentScorePair;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.ParamsMap;
+import org.mitre.quaerite.core.features.factories.FeatureFactories;
+import org.mitre.quaerite.core.features.factories.FeatureFactory;
+import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
+import org.mitre.quaerite.core.stats.ExperimentNameScorePair;
+import org.mitre.quaerite.core.stats.ExperimentScorePair;
+import org.mitre.quaerite.core.util.GAOperation;
+import org.mitre.quaerite.core.util.MathUtil;
+import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.db.GADB;
 import org.mitre.quaerite.db.TrainTestJudmentListPair;
 
@@ -66,7 +70,6 @@ public class RunGA extends AbstractExperimentRunner {
     private static String FOLD_PREFIX = "fold_";
     private static String SEED_PREFIX = "seed_";
 
-    private static final int DEFAULT_NFOLDS = 5;
 
     static {
         OPTIONS.addOption(
@@ -139,13 +142,39 @@ public class RunGA extends AbstractExperimentRunner {
         int threads = getInt(commandLine, "n", 8);
         ExperimentFactory experimentFactory = loadExperimentFactory(gaPaths.experimentFactories);
         LOG.debug(experimentFactory.getGAConfig());
+        validateSettings(experimentFactory);
         RunGA runGA = new RunGA(experimentFactory);
         runGA.execute(gaPaths);
     }
 
-    private static ExperimentFactory loadExperimentFactory(Path experimentFactories) throws IOException {
-        ExperimentFactory experimentFactory = null;
+    private static void validateSettings(ExperimentFactory experimentFactory) {
+        GAConfig gaConfig = experimentFactory.getGAConfig();
+        double gaOpProbs = gaConfig.getCrossoverProbability()+
+                gaConfig.getMutationProbability()+gaConfig.getReproductionProbability();
+        if (Math.abs(1.0d-gaOpProbs) > 0.001) {
+            throw new IllegalArgumentException("crossoverProbability+mutationProbability+reproductionProbability should = 1.0");
+        }
+        ScoreCollector trainScoreCollector = null;
+        ScoreCollector testScoreCollector = null;
+        for (ScoreCollector scoreCollector : experimentFactory.getScoreCollectors()) {
+            if (scoreCollector.getUseForTrain()) {
+                if (trainScoreCollector != null) {
+                    throw new IllegalArgumentException("Can't have more than one trainScoreCollector:"+
+                            trainScoreCollector + " and "+scoreCollector);
+                }
+                trainScoreCollector = scoreCollector;
+            }
+            if (scoreCollector.getUseForTest()) {
+                if (testScoreCollector != null) {
+                    throw new IllegalArgumentException("Can't have more than one trainScoreCollector:"+
+                            testScoreCollector + " and "+scoreCollector);
+                }
+                testScoreCollector = scoreCollector;
+            }
+        }
+    }
 
+    private static ExperimentFactory loadExperimentFactory(Path experimentFactories) throws IOException {
         try (Reader reader = Files.newBufferedReader(experimentFactories, StandardCharsets.UTF_8)) {
             return ExperimentFactory.fromJson(reader);
         }
@@ -181,14 +210,14 @@ public class RunGA extends AbstractExperimentRunner {
         }
         System.out.println("--------------------------------");
         System.out.println("FINAL RESULTS ON TESTING:");
-        List<ExperimentScorePair> scores = gaDb.getNBestResults(
+        List<ExperimentNameScorePair> scores = gaDb.getNBestExperimentNames(
                 TEST_PREFIX, gaConfig.getNFolds(),
                 experimentFactory.getTestScoreCollector().getPrimaryStatisticName());
 
         SummaryStatistics summaryStatistics = new SummaryStatistics();
         double[] vals = new double[gaConfig.getNFolds()];
         int i = 0;
-        for (ExperimentScorePair esp : scores) {
+        for (ExperimentNameScorePair esp : scores) {
             System.out.println("experiment '"+esp.getExperimentName()+"': "
                     +threePlaces.format(esp.getScore()));
             vals[i++] = esp.getScore();
@@ -243,29 +272,29 @@ public class RunGA extends AbstractExperimentRunner {
         for (int i = 0; i < gaConfig.getGenerations(); i++) {
             runGeneration(fold, i, gaDb, experimentFactory, trainJudgmentList, gaPaths);
         }
-        List<ExperimentScorePair> scores = gaDb.getNBestResults(
+        List<ExperimentNameScorePair> scores = gaDb.getNBestExperimentNames(
                 TRAIN_PREFIX+FOLD_PREFIX+fold+"_*", 10,
                 experimentFactory.getTrainScoreCollector().getPrimaryStatisticName());
         System.out.println("FOLD "+fold+" TRAINING");
-        for (ExperimentScorePair esp : scores) {
+        for (ExperimentNameScorePair esp : scores) {
             System.out.println("experiment '"+esp.getExperimentName()+"': "+threePlaces.format(esp.getScore()));
         }
         System.out.println("");
 
         JudgmentList testingJudgments = trainTestJudmentListPair.getTest();
-        List<Experiment> experiments = gaDb.getNBestExperiments("train_fold_"+fold+"_", 1, "ndcg_10_mean");
-        Experiment bestTrainingExperiment = experiments.get(0);
+        List<ExperimentScorePair> experiments = gaDb.getNBestExperiments("train_fold_"+fold+"_", 1, "ndcg_10_mean");
+        Experiment bestTrainingExperiment = experiments.get(0).getExperiment();
         String testName = getTestExperimentName(bestTrainingExperiment.getName());
 
         bestTrainingExperiment.setName(testName);
         gaDb.addExperiment(bestTrainingExperiment);
         runExperiment(testName,
                 gaDb, testingJudgments, "test_"+fold, false);
-        scores = gaDb.getNBestResults(
+        scores = gaDb.getNBestExperimentNames(
                 TEST_PREFIX+FOLD_PREFIX+fold+"_*", 10,
                 experimentFactory.getTrainScoreCollector().getPrimaryStatisticName());
         System.out.println("FOLD "+fold+" TESTING");
-        for (ExperimentScorePair esp : scores) {
+        for (ExperimentNameScorePair esp : scores) {
             System.out.println("experiment '"+esp.getExperimentName()+"': "+threePlaces.format(esp.getScore()));
         }
         System.out.println("");
@@ -285,11 +314,11 @@ public class RunGA extends AbstractExperimentRunner {
         }
 
         System.out.println("FOLD "+fold + " TRAINING (SEED)");
-        List<ExperimentScorePair> scores = gaDb.getNBestResults(
+        List<ExperimentNameScorePair> scores = gaDb.getNBestExperimentNames(
                 trainFoldSeedPrefix, 10,
                 trainScoreCollectorName);
 
-        for (ExperimentScorePair esp : scores) {
+        for (ExperimentNameScorePair esp : scores) {
             System.out.println("experiment '"+esp.getExperimentName()+"': "
                     +threePlaces.format(esp.getScore()));
         }
@@ -307,7 +336,7 @@ public class RunGA extends AbstractExperimentRunner {
                                ExperimentFactory experimentFactory,
                                JudgmentList judgmentList, GAPaths gaPaths) throws SQLException, IOException {
         List<String> experimentNames = generateNewExperiments(fold, generation,
-                experimentDB, experimentFactory, gaPaths);
+                experimentDB, experimentFactory);
         LOG.info("starting generation "+generation);
         for (String experimentName : experimentNames) {
             runExperiment(experimentName, experimentDB, judgmentList, "foldId_"+fold,
@@ -315,10 +344,10 @@ public class RunGA extends AbstractExperimentRunner {
         }
         if (LOG.isDebugEnabled()) {
             String experimentPrefix = TRAIN_PREFIX+FOLD_PREFIX+fold+"_"+GEN_PREFIX+generation;
-            List<ExperimentScorePair> results = experimentDB.getNBestResults(experimentPrefix, 10,
+            List<ExperimentNameScorePair> results = experimentDB.getNBestExperimentNames(experimentPrefix, 10,
                     experimentFactory.getTrainScoreCollector().getPrimaryStatisticName());
 
-            for (ExperimentScorePair experimentScorePair : results) {
+            for (ExperimentNameScorePair experimentScorePair : results) {
                 LOG.debug(experimentScorePair);
             }
 
@@ -332,69 +361,102 @@ public class RunGA extends AbstractExperimentRunner {
 
     private List<String> generateNewExperiments(int fold, int generation,
                                                 ExperimentDB experimentDB,
-                                                ExperimentFactory experimentFactory,
-                                                GAPaths gaPaths) throws SQLException{
+                                                ExperimentFactory experimentFactory) throws SQLException{
 
-        int listLength = calcListLength(gaConfig.getPopulation());
-        //this prioritizes the more fit in affecting crossover
-        listLength = (int)((double)listLength/1.25f);
-        listLength = (listLength < 2) ? 2 : listLength;
-        //create new experiments
-        //this call includes all previous generations -- intergenerational swapping
-        //        String previousGenerationsNamePattern = (generation == 0) ? "*" : GEN_PREFIX+(generation-1)+"_*";
-        //To limit to the previous generation add the above. to the call to getNBest
-        //TODO: parameterize this?
-        List<Experiment> experiments = experimentDB.getNBestExperiments(
-                TRAIN_PREFIX+FOLD_PREFIX+fold+"_", listLength,
+        //this currently only pulls from the previous generation
+        String genString = (generation == 0) ? "seed" : GEN_PREFIX+(generation-1);
+
+        List<ExperimentScorePair> scorePairs = experimentDB.getNBestExperiments(
+                TRAIN_PREFIX+FOLD_PREFIX+fold+"_"+genString,
+                (int)(gaConfig.getPopulation()*1.25),
                 experimentFactory.getTrainScoreCollector().getPrimaryStatisticName());
-        if (experiments.size() == 0) {
+
+        if (scorePairs.size() == 0) {
             throw new IllegalArgumentException("Need to have some experiments from seed/last generation!");
         }        int expCount = 0;
+
+        List<ExperimentScorePair> fitnessProportions = MathUtil.calcFitnessProportions(scorePairs);
         List<String> nextGenExpNames = new ArrayList<>();
+
         while (nextGenExpNames.size() < gaConfig.getPopulation()) {
-            for (int i = 0; i < experiments.size() - 1; i++) {
-                for (int j = i + 1; j < experiments.size(); j++) {
-                    Pair<ParamsMap, ParamsMap> pair = experiments.get(i).getAllFeatures()
-                            .crossover(experiments.get(j).getAllFeatures());
-
-                    String nameA = getTrainExperimentName(fold, generation, expCount++);
-                    ParamsMap paramsMapA = pair.getLeft();
-                    LOG.trace(experiments.get(i) +
-                            "\n+\n" + experiments.get(j) + "\n->\n"+paramsMapA);
-                    paramsMapA = paramsMapA.mutate(experimentFactory.getFeatureFactories(),
-                            gaConfig.getMutationProbability(),
-                            gaConfig.getMutationAmplitude());
-                    LOG.trace("mutated: "+paramsMapA);
-                    Experiment childA = new Experiment(nameA, paramsMapA);
-
-                    experimentDB.addExperiment(childA);
-                    nextGenExpNames.add(nameA);
-
-                    if (expCount >= gaConfig.getPopulation()) {
-                        return nextGenExpNames;
-                    }
-
-                    String nameB = getTrainExperimentName(fold, generation, expCount++);
-                    ParamsMap paramsMapB = pair.getRight();
-                    LOG.trace(experiments.get(i) +
-                            "\n+\n" + experiments.get(j) + "\n->\n"+paramsMapB);
-                    paramsMapB = paramsMapB.mutate(experimentFactory.getFeatureFactories(),
-                            gaConfig.getMutationProbability(),
-                            gaConfig.getMutationAmplitude());
-                    Experiment childB = new Experiment(nameB, paramsMapB);
-
-                    LOG.trace("mutated: "+paramsMapB);
-
-                    nextGenExpNames.add(nameB);
-                    experimentDB.addExperiment(
-                            childB);
-                    if (expCount >= gaConfig.getPopulation()) {
-                        return nextGenExpNames;
-                    }
-                }
+            GAOperation gaOperation = MathUtil.nextGAOperation(gaConfig);
+            switch (gaOperation) {
+                case CROSSOVER:
+                    crossover(fold, generation, fitnessProportions, nextGenExpNames, experimentDB);
+                    break;
+                case REPRODUCE:
+                    reproduce(fold, generation, fitnessProportions, nextGenExpNames, experimentDB);
+                    break;
+                case MUTATE:
+                    mutate(fold, generation, fitnessProportions, nextGenExpNames, experimentDB);
+                    break;
             }
         }
         return nextGenExpNames;
+    }
+
+    private void mutate(int fold, int generation,
+                        List<ExperimentScorePair> fitnessProportions,
+                        List<String> nextGenExpNames, ExperimentDB experimentDB) throws SQLException {
+        Experiment parent = MathUtil.select(fitnessProportions);
+        LOG.trace("before mutation: " + parent.getAllFeatures());
+        ParamsMap paramsMap = parent.getAllFeatures().mutate(experimentFactory.getFeatureFactories(),
+                gaConfig.getMutationProbability(),
+                gaConfig.getMutationAmplitude());
+        LOG.trace("after mutation: " + paramsMap);
+        String name = getTrainExperimentName(fold, generation, nextGenExpNames.size());
+        nextGenExpNames.add(name);
+        Experiment child = new Experiment(name, paramsMap);
+        experimentDB.addExperiment(child);
+    }
+
+    private void reproduce(int fold, int generation, List<ExperimentScorePair> fitnessProportions,
+                           List<String> nextGenExpNames, ExperimentDB experimentDB) throws SQLException {
+        Experiment parent = MathUtil.select(fitnessProportions);
+        LOG.trace("reproducing: " + parent);
+        String name = getTrainExperimentName(fold, generation, nextGenExpNames.size());
+        Experiment child = new Experiment(name, parent.getAllFeatures());
+        experimentDB.addExperiment(child);
+        nextGenExpNames.add(name);
+    }
+
+    private void crossover(int fold, int generation, List<ExperimentScorePair> fitnessProportions,
+                           List<String> nextGenExpNames, ExperimentDB experimentDB) throws SQLException {
+        Experiment parentA = MathUtil.select(fitnessProportions);
+        Experiment parentB = MathUtil.select(fitnessProportions);
+        int tries = 0;
+        while (parentA.getName().equals(parentB.getName()) && tries++ < 5) {
+            parentA = MathUtil.select(fitnessProportions);
+            parentB = MathUtil.select(fitnessProportions);
+        }
+        if (tries == 5 && parentA.getName().equals(parentB.getName())) {
+            LOG.warn("crossover with self: "+parentA.getName());
+        }
+        Pair<ParamsMap, ParamsMap> pair = parentA.getAllFeatures()
+                .crossover(parentB.getAllFeatures());
+        LOG.trace("crossing over: " + parentA + " : " + parentB);
+
+        String nameA = getTrainExperimentName(fold, generation, nextGenExpNames.size());
+        ParamsMap paramsMapA = pair.getLeft();
+        LOG.trace(parentA +
+                "\n+\n" + parentB + "\n->\n" + paramsMapA);
+        Experiment childA = new Experiment(nameA, paramsMapA);
+        LOG.trace("childA: " + childA);
+        experimentDB.addExperiment(childA);
+        nextGenExpNames.add(nameA);
+
+        if (nextGenExpNames.size() >= gaConfig.getPopulation()) {
+            return;
+        }
+
+        String nameB = getTrainExperimentName(fold, generation, nextGenExpNames.size());
+        ParamsMap paramsMapB = pair.getRight();
+        Experiment childB = new Experiment(nameB, paramsMapB);
+        LOG.trace("childB: " + childB);
+
+        nextGenExpNames.add(nameB);
+        experimentDB.addExperiment(
+                childB);
     }
 
 

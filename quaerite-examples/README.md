@@ -112,7 +112,8 @@ The following requires basic knowledge of machine learning train/test methodolog
 Please see [LTR's core-concepts](https://elasticsearch-learning-to-rank.readthedocs.io/en/latest/core-concepts.html#testing-is-our-model-any-good)
 as a refresher.
 
-1. Run the genetic algorithm from the features specification file with the original experiments as the seed: 
+###Running the GA with a seed file
+Run the genetic algorithm from the features specification file with the original experiments as the seed: 
 ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_4.json -e experiments.json```
 This will run 4-fold cross-validation (`"nFolds" : 4`).  It will load the `experiments.json` file as the training seeds. 
 
@@ -173,19 +174,24 @@ the top settings identified by the GA.
 
 **CAVEATS** 
 
-a) this performance improvement will only be reflected in a production system to the
+a) any apparent performance improvement will only be reflected in a production system to the
 degree that the truth set represents reality.
 
 b) the results on this data set with these fields are disturbingly
 no better than throwing in all the fields with random weights (see below).
 
-1. Now run the genetic algorithm from the features specification file with a random seed: 
-```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_5.json```
-As you can see in the `gaConfig` element in `experiment_features_5.json`, the settings for 
-the `population` size and the `mutationProbability` and `mutationAmplitude` have been modified.
+### Running the GA with a random seed
+As before, run the `GA` with `experiment_features_4.json`:
+```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_4.json```
 
-As noted above, on this data set, with the available features, there is not much improvement over 
-random seeding from option 2.  
+###Running the GA with different GA parameters
+As you can see in the `gaConfig` element in `experiment_features_5.json`, 
+the settings for the `crossoverProbability`, `mutationProbability`, 
+`mutationAmplitude` and `reproductionProbability` have all been modified
+from `experiment_features_4.json`; these settings are more conservative.
+
+Now run the `GA` with these different GA parameters: 
+```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_5.json```
 
 
 
@@ -205,7 +211,7 @@ did not appear to be as interested in the "PDF library" or other document sets.
 
 What you do with this information with regard to relevance tuning depends on many factors,
 but it can be helpful at least to understand statistical patterns that
-your truth set may reveal.
+your truth set may reveal or contain.
 
 1. Run FindFeatures and specify which fields are your facetable fields with the ```-f``` flag:
 ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar FindFeatures -db my_db -j movie_judgments.csv -s http://localhost:8983/solr/tmdb -f genres_facet,original_language_facet,production_companies_facet```

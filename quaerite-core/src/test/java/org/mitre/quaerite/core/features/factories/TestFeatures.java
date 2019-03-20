@@ -96,9 +96,6 @@ public class TestFeatures {
 
         WeightableListFeatureFactory<WeightableListFeature> qf =
                 new WeightableListFeatureFactory<>("qf", fields, defaultWeights, -1);
-        for (Feature f : qf.permute(1000)) {
-            System.out.println(f);
-        }
         assertEquals(15, qf.permute(1000).size());
         defaultWeights.add(2.0f);
         qf = new WeightableListFeatureFactory("qf", fields, defaultWeights, -1);
@@ -135,9 +132,6 @@ public class TestFeatures {
         FeatureFactories featureFactories = experimentFactory.getFeatureFactories();
         FeatureFactory qf = featureFactories.get("qf");
         List<Feature> features = qf.permute(1000);
-        for (Feature feature : features) {
-            System.out.println(feature);
-        }
     }
 
     @Test
@@ -152,8 +146,9 @@ public class TestFeatures {
         assertEquals(2, gaConfig.getNFolds());
         assertEquals(50, gaConfig.getPopulation());
         assertEquals(0.001f, gaConfig.getMutationAmplitude(), 0.00001);
-        assertEquals(0.8f, gaConfig.getMutationProbability(), 0.00001);
-
+        assertEquals(0.2f, gaConfig.getMutationProbability(), 0.00001);
+        assertEquals(0.1f, gaConfig.getCrossoverProbability(), 0.00001);
+        assertEquals(0.7f, gaConfig.getReproductionProbability(), 0.00001);
     }
 
     private Reader newReader(String path) {

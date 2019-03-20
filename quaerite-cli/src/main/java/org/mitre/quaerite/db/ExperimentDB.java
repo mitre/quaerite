@@ -50,6 +50,8 @@ import org.mitre.quaerite.core.scorecollectors.DistributionalScoreCollector;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollectorListSerializer;
 import org.mitre.quaerite.core.scorecollectors.SummingScoreCollector;
+import org.mitre.quaerite.core.stats.ExperimentNameScorePair;
+import org.mitre.quaerite.core.stats.ExperimentScorePair;
 
 public class ExperimentDB implements Closeable {
 
@@ -684,78 +686,75 @@ public class ExperimentDB implements Closeable {
         }
     }
 
-    public List<Experiment> getNBestExperiments(String experimentNamePrefix, int num, String scorerName) throws SQLException {
-
-        if (experimentNamePrefix.endsWith("*")) {
-            experimentNamePrefix = experimentNamePrefix.substring(0, experimentNamePrefix.length()-1);
-        }
-        experimentNamePrefix = experimentNamePrefix+"%";
-        String sql = "select sa.experiment, e.json " +
-                "from scores_aggregated sa " +
-                "join experiments e on sa.experiment=e.name " +
-                "where sa.experiment ilike '"+experimentNamePrefix+"' "+
-                "order by "+scorerName+" desc "+
-                "limit "+num;
-        return getNBestExperiments(sql);
+    public List<ExperimentScorePair> getExperimentScores(String experimentNamePrefix, String scorerName) throws SQLException {
+        return getNBestExperiments(experimentNamePrefix, -1, scorerName);
     }
 
-    private List<Experiment> getNBestExperiments(String sql) throws SQLException {
-        List<Experiment> experiments = new ArrayList<>();
+    public List<ExperimentScorePair> getNBestExperiments(int num, String scorerName) throws SQLException {
+        return getNBestExperiments(StringUtils.EMPTY, num, scorerName);
+    }
+
+    public List<ExperimentScorePair> getNBestExperiments(String experimentNamePrefix, int num, String scorerName) throws SQLException {
+        String prefix = experimentNamePrefix;
+        if (prefix.endsWith("*")) {
+            prefix = prefix.substring(0, prefix.length() - 1);
+        }
+        prefix = prefix + "%";
+        String prefixIlike = StringUtils.isBlank(prefix) ? StringUtils.EMPTY :
+            "where sa.experiment ilike '"+prefix+"' ";
+
+        String limit = (num > -1) ? "limit "+num : StringUtils.EMPTY;
+        String sql = "select sa.experiment, e.json, sa."+scorerName +" "+
+                "from scores_aggregated sa " +
+                "join experiments e on sa.experiment=e.name " +
+                prefixIlike+
+                "order by "+scorerName+" desc "+
+                limit;
+
+        List<ExperimentScorePair> experiments = new ArrayList<>();
         try (Statement st = connection.createStatement()) {
             try (ResultSet resultSet = st.executeQuery(sql)) {
                 while (resultSet.next()) {
                     String name = resultSet.getString(1);
                     String json = resultSet.getString(2);
+                    double score = resultSet.getDouble(3);
                     Experiment ex = Experiment.fromJson(json);
-                    experiments.add(ex);
+                    experiments.add(new ExperimentScorePair(ex, score));
                 }
             }
         }
-
         return experiments;
-
     }
 
-    public List<Experiment> getNBestExperiments(int num, String scorerName) throws SQLException {
-        String sql = "select sa.experiment, e.json " +
+    public List<ExperimentNameScorePair> getNBestExperimentNames(String experimentNamePrefix, int num, String scorerName) throws SQLException {
+        String prefix = experimentNamePrefix;
+        if (prefix.endsWith("*")) {
+            prefix = prefix.substring(0, prefix.length() - 1);
+
+        }
+        prefix = prefix + "%";
+        String prefixIlike = StringUtils.isBlank(prefix) ? StringUtils.EMPTY :
+                "where sa.experiment ilike '"+prefix+"' ";
+
+        String limit = (num > -1) ? "limit "+num : StringUtils.EMPTY;
+        String sql = "select sa.experiment, sa."+scorerName +" "+
                 "from scores_aggregated sa " +
                 "join experiments e on sa.experiment=e.name " +
+                prefixIlike+
                 "order by "+scorerName+" desc "+
-                "limit "+num;
-        return getNBestExperiments(sql);
+                limit;
 
-    }
-
-        public List<ExperimentScorePair> getNBestResults(String experimentNamePrefix, int num, String scorerName) throws SQLException {
-        if (StringUtils.isBlank(scorerName)) {
-            throw new IllegalArgumentException("scorer name must not be null/blank");
-        }
-        if (experimentNamePrefix.endsWith("*")) {
-            experimentNamePrefix = experimentNamePrefix.substring(0, experimentNamePrefix.length()-1);
-        }
-        experimentNamePrefix = experimentNamePrefix+"%";
-
-        String sql = null;
-        if (experimentNamePrefix.equals("%")) {
-            sql = "select experiment, " + scorerName + " from scores_aggregated " +
-                    "order by " + scorerName + " desc limit " + num;
-        } else {
-            sql = "select experiment, " + scorerName + " from scores_aggregated " +
-                    "where experiment ilike '" + experimentNamePrefix + "' " +
-                    "order by " + scorerName + " desc limit " + num;
-        }
-        //System.out.println(sql);
-        List<ExperimentScorePair> results = new ArrayList<>();
+        List<ExperimentNameScorePair> experiments = new ArrayList<>();
         try (Statement st = connection.createStatement()) {
             try (ResultSet resultSet = st.executeQuery(sql)) {
                 while (resultSet.next()) {
                     String name = resultSet.getString(1);
                     double score = resultSet.getDouble(2);
-                    results.add(new ExperimentScorePair(name, score));
+                    experiments.add(new ExperimentNameScorePair(name, score));
                 }
             }
         }
-        return results;
+        return experiments;
     }
 
 }

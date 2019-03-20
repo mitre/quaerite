@@ -14,31 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.mitre.quaerite.core.util;
 
-package org.mitre.quaerite.db;
-
-public class ExperimentScorePair {
-    private final String experimentName;
-    private final double score;
-
-    public ExperimentScorePair(String experimentName, double score) {
-        this.experimentName = experimentName;
-        this.score = score;
-    }
-
-    public String getExperimentName() {
-        return experimentName;
-    }
-
-    public double getScore() {
-        return score;
-    }
-
-    @Override
-    public String toString() {
-        return "ExperimentScorePair{" +
-                "experimentName='" + experimentName + '\'' +
-                ", score=" + score +
-                '}';
-    }
+public enum GAOperation {
+    CROSSOVER,
+    MUTATE,
+    REPRODUCE,
 }

@@ -3,8 +3,10 @@
     "numThreads" : 6,
     "population" : 15,
     "generations" : 10,
-    "mutationProbability" : 0.2,
-    "mutationAmplitude" : 0.8,
+    "crossoverProbability" : 0.1,
+    "mutationProbability" : 0.8,
+    "mutationAmplitude" : 0.1,
+    "reproductionProbability" : 0.1,
     "nFolds" : 4
   },
 

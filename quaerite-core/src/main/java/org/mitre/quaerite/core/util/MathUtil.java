@@ -16,11 +16,22 @@
  */
 package org.mitre.quaerite.core.util;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+
+import org.mitre.quaerite.core.Experiment;
+import org.mitre.quaerite.core.GAConfig;
+import org.mitre.quaerite.core.stats.ExperimentScorePair;
 
 public class MathUtil {
 
     public static ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
+    //used in the fitness proportion calculation
+    //the smaller this value, the less weight goes to the less fit
+    private static final double EPSILON = 0.001;
 
     public static float calcMutatedWeight(Float currentValue, float min, float max, double amplitude) {
         if (amplitude < 0 || amplitude > 1.0) {
@@ -54,4 +65,58 @@ public class MathUtil {
         return min + RANDOM.nextFloat() * (max - min);
     }
 
+    public static List<ExperimentScorePair> calcFitnessProportions(List<ExperimentScorePair> scorePairs) {
+        if (scorePairs == null || scorePairs.size() == 0) {
+            return Collections.EMPTY_LIST;
+        }
+        double min = scorePairs.get(0).getScore();
+        for (ExperimentScorePair p : scorePairs) {
+            if (p.getScore() < 0.0) {
+                throw new IllegalArgumentException("Can't handle negative fitness scores...currently");
+            }
+            if (p.getScore() < min) {
+                min = p.getScore();
+            }
+        }
+
+        double denom = 0.0;
+        for (ExperimentScorePair p : scorePairs) {
+            denom += (p.getScore()-min + EPSILON);
+        }
+        List<ExperimentScorePair> fitnessProportions = new ArrayList<>();
+        for (ExperimentScorePair p : scorePairs) {
+            double fp = (p.getScore()-min+EPSILON)/denom;
+            fitnessProportions.add(new ExperimentScorePair(p.getExperiment(), fp));
+        }
+        return fitnessProportions;
+    }
+
+    public static Experiment select(List<ExperimentScorePair> fitnessProportions) {
+        return select(fitnessProportions, RANDOM);
+    }
+
+    static Experiment select(List<ExperimentScorePair> fitnessProportions, Random random) {
+        double r = random.nextDouble();
+        for (ExperimentScorePair p : fitnessProportions) {
+            if ((r -= p.getScore()) < 0.0) {
+                return p.getExperiment();
+            }
+        }
+        return fitnessProportions.get(0).getExperiment();
+    }
+
+    public static GAOperation nextGAOperation(GAConfig gaConfig) {
+        return nextGAOperation(gaConfig, RANDOM);
+    }
+
+    static GAOperation nextGAOperation(GAConfig gaConfig, Random random) {
+        double r = random.nextDouble();
+        if ((r -= gaConfig.getCrossoverProbability()) < 0.0) {
+            return GAOperation.CROSSOVER;
+        } else if ((r -= gaConfig.getMutationProbability()) < 0.0) {
+            return GAOperation.MUTATE;
+        } else {
+            return GAOperation.REPRODUCE;
+        }
+    }
 }

@@ -4,8 +4,10 @@
     "idField" : "customIdField",
     "population" : 50,
     "generations" : 100,
-    "mutationProbability" : 0.8,
+    "crossoverProbability" : 0.1,
+    "mutationProbability" : 0.2,
     "mutationAmplitude" : 0.001,
+    "reproductionProbability" : 0.7,
     "nFolds" : 2
   },
   "scoreCollectors": [

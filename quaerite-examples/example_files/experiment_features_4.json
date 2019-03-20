@@ -3,8 +3,10 @@
     "numThreads" : 6,
     "population" : 15,
     "generations" : 10,
-    "mutationProbability" : 0.1,
-    "mutationAmplitude" : 0.1,
+    "crossoverProbability" : 0.45,
+    "mutationProbability" : 0.5,
+    "mutationAmplitude" : 0.5,
+    "reproductionProbability" : 0.05,
     "nFolds" : 4
   },
 
@@ -50,7 +52,7 @@
     }
   ],
   "featureFactories" : {
-    "tie": [ 0.0, 0.1, 0.2 ],
+    "tie": [ 0.0, 0.1, 0.2, 0.8 ],
     "url" : [
       "http://localhost:8983/solr/tmdb"
     ],

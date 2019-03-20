@@ -23,12 +23,16 @@ public class GAConfig extends ExperimentConfig {
     public static final int DEFAULT_NFOLDS = 4;
     public static final float DEFAULT_MUTATION_PROBABILITY = 0.1f;
     public static final float DEFAULT_MUTATION_AMPLITUDE = 0.2f;
+    public static final float DEFAULT_CROSSOVER_PROBABILITY = 0.8f;
+    public static final float DEFAULT_REPRODUCTION_PROBABILITY = 0.1f;
 
     int population = DEFAULT_POPULATION;
     int generations = DEFAULT_GENERATIONS;
     int nFolds = DEFAULT_NFOLDS;
     float mutationProbability = DEFAULT_MUTATION_PROBABILITY;
     float mutationAmplitude = DEFAULT_MUTATION_AMPLITUDE;
+    float crossoverProbability = DEFAULT_CROSSOVER_PROBABILITY;
+    float reproductionProbability = DEFAULT_REPRODUCTION_PROBABILITY;
 
     public int getPopulation() {
         return population;
@@ -50,6 +54,18 @@ public class GAConfig extends ExperimentConfig {
         return mutationAmplitude;
     }
 
+    public int getnFolds() {
+        return nFolds;
+    }
+
+    public float getCrossoverProbability() {
+        return crossoverProbability;
+    }
+
+    public float getReproductionProbability() {
+        return reproductionProbability;
+    }
+
     @Override
     public String toString() {
         return "GAConfig{" +
@@ -58,6 +74,8 @@ public class GAConfig extends ExperimentConfig {
                 ", nFolds=" + nFolds +
                 ", mutationProbability=" + mutationProbability +
                 ", mutationAmplitude=" + mutationAmplitude +
+                ", crossoverProbability=" + crossoverProbability +
+                ", reproductionProbability=" + reproductionProbability +
                 '}';
     }
 }

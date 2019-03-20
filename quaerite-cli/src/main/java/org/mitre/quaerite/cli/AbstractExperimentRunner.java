@@ -313,7 +313,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             while (true) {
                 Judgments judgments = queue.poll();
                 if (judgments.equals(POISON)) {
-                    LOG.trace(threadNum + ": scorer thread hit poison. stopping now");
+//                    LOG.trace(threadNum + ": scorer thread hit poison. stopping now");
                     return 1;
                 }
                 executeTest(judgments, scoreCollectors);
