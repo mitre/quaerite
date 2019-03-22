@@ -102,6 +102,11 @@ Planned Releases
 * 1.0.0-ALPHA before March 25, 2019
 * 1.0.0-BETA before April 23, 2019
 
+Related Open Source Projects
+---------------------
+* https://github.com/SeaseLtd/rated-ranking-evaluator
+* http://splainer.io/
+* https://github.com/DiceTechJobs/RelevancyTuning
 
 License (see also LICENSE.txt)
 ------------------------------
