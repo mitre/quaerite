@@ -99,7 +99,7 @@ High priorities
 * See the issues on [the issue tracker](https://github.com/mitre/quaerite/issues)
 
 Planned Releases
-* 1.0.0-ALPHA before March 25, 2019
+* 1.0.0-SNAPSHOT before March 25, 2019
 * 1.0.0-BETA before April 23, 2019
 
 Related Open Source Projects
