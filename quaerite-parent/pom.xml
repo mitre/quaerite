@@ -24,7 +24,7 @@
 
     <groupId>org.mitre.quaerite</groupId>
     <artifactId>quaerite-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0-ALPHA</version>
     <packaging>pom</packaging>
 
     <name>Quaerite parent</name>

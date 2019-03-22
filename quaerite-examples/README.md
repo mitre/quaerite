@@ -46,7 +46,7 @@ Prerequisites
 6. Download _tmdb.json_ from
    [OpenSourceConnections via AWS](http://o19s-public-datasets.s3.amazonaws.com/tmdb.json).
 
-7. Ingest the _tmdb_ data ```java -jar quaerite-examples-1.0.0-SNAPSHOT.jar tmdb.json http://localhost:8983/solr/tmdb```
+7. Ingest the _tmdb_ data ```java -jar quaerite-examples-1.0.0-ALPHA.jar tmdb.json http://localhost:8983/solr/tmdb```
 
 8. Navigate to [here](http://localhost:8983/solr/#/tmdb) to confirm that _tmdb_ was loaded into Solr.
 
@@ -60,7 +60,7 @@ You can find the files (such as ```movie_judgments.csv``` and
 ```experiments.json```) in [this directory](https://github.com/mitre/quaerite/tree/master/quaerite-examples/example_files).
 
 
-Run some experiments: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunExperiments -db my_db -j movie_judgments.csv -e experiments.json```
+Run some experiments: ```java -jar quaerite-cli-1.0.0-ALPHA.jar RunExperiments -db my_db -j movie_judgments.csv -e experiments.json```
 
 You will find the standard reports in the ```reports/``` directory, including:
 * Scores per query -- a score for each query for each experiment
@@ -81,16 +81,16 @@ Be careful:
 * Permutation explosion -- the number of experiments grows factorially with each new parameter
 * Overfitting -- this is something to be wary of throughout
 
-1. Generate experiments from the `experiment_features_1.json` file, which generates one experiment per field: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar GenerateExperiments -f experiment_features_1.json -e experiments_1.json```
-2. Generate experiments from the `experiment_features_2.json` file, which generates experiments with up to two fields: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar GenerateExperiments -f experiment_features_2.json -e experiments_2.json```
+1. Generate experiments from the `experiment_features_1.json` file, which generates one experiment per field: ```java -jar quaerite-cli-1.0.0-ALPHA.jar GenerateExperiments -f experiment_features_1.json -e experiments_1.json```
+2. Generate experiments from the `experiment_features_2.json` file, which generates experiments with up to two fields: ```java -jar quaerite-cli-1.0.0-ALPHA.jar GenerateExperiments -f experiment_features_2.json -e experiments_2.json```
 3. Now, let's say you want to test a wider range of fields that include different analyzer chains for the 
 three fields used so far (`tb_*` and `tss_*`).  Further, you'd like to experiment with different weight settings, e.g. `[0.0, 1.0, 5.0, 10.0]`, but
 you'd still like to see which single field or pair of fields yields the best results on the ground truth set...
-Generate experiments from the `experiment_features_3.json` file: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar GenerateExperiments -f experiment_features_3.json -e experiments_3.json```
+Generate experiments from the `experiment_features_3.json` file: ```java -jar quaerite-cli-1.0.0-ALPHA.jar GenerateExperiments -f experiment_features_3.json -e experiments_3.json```
 4. Finally, let's say you'd like to try all combinations of fields, and you'd like to add in various `tie` values (e.g. `0.0, 0.1, 0.3`), 
-generate experiments from the `experiment_features_4.json` file: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar GenerateExperiments -f experiment_features_4.json -e experiments_4.json```
+generate experiments from the `experiment_features_4.json` file: ```java -jar quaerite-cli-1.0.0-ALPHA.jar GenerateExperiments -f experiment_features_4.json -e experiments_4.json```
 
-You can now run the experiments in any one of these experiment files: ```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunExperiments -db my_db -j movie_judgments.csv -e experiments_3.json```
+You can now run the experiments in any one of these experiment files: ```java -jar quaerite-cli-1.0.0-ALPHA.jar RunExperiments -db my_db -j movie_judgments.csv -e experiments_3.json```
 
 Each time you run the experiments, the results in the ```results/``` directory will be overwritten.
 
@@ -114,7 +114,7 @@ as a refresher.
 
 ### Running the GA with a seed file
 Run the genetic algorithm from the features specification file with the original experiments as the seed: 
-```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_4.json -e experiments.json```
+```java -jar quaerite-cli-1.0.0-ALPHA.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_4.json -e experiments.json```
 This will run 4-fold cross-validation (`"nFolds" : 4`).  It will load the `experiments.json` file as the training seeds. 
 
 For each fold, `RunGA` will evaluate the seed experiments on the training portion of the fold:
@@ -182,7 +182,7 @@ no better than throwing in all the fields with random weights (see below).
 
 ### Running the GA with a random seed
 As before, run the `GA` with `experiment_features_4.json`:
-```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_4.json```
+```java -jar quaerite-cli-1.0.0-ALPHA.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_4.json```
 
 ### Running the GA with different GA parameters
 As you can see in the `gaConfig` element in `experiment_features_5.json`, 
@@ -191,12 +191,12 @@ the settings for the `crossoverProbability`, `mutationProbability`,
 from `experiment_features_4.json`; these settings are more conservative.
 
 Now run the `GA` with these different GA parameters: 
-```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_5.json```
+```java -jar quaerite-cli-1.0.0-ALPHA.jar RunGA -db my_db -j movie_judgments.csv -f experiment_features_5.json```
 
 ### Running the GA with custom train/test sets
 Users may want to control the train/test split and turn off the cross-validation.
 To do this, specify `-train train.csv` and `-test test.csv` instead of `-j judgments.csv`, as in:
-```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar RunGA -db my_db -train movie_judgments_train.csv -test movie_judgments_test.csv -f experiment_features_5.json```
+```java -jar quaerite-cli-1.0.0-ALPHA.jar RunGA -db my_db -train movie_judgments_train.csv -test movie_judgments_test.csv -f experiment_features_5.json```
 
 _Quaerite_ -- Finding Features
 -----------------------------
@@ -218,7 +218,7 @@ your truth set may reveal or contain.
 
 ### Finding Features
 Run FindFeatures and specify which fields are your facetable fields with the ```-f``` flag:
-```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar FindFeatures -db my_db -j movie_judgments.csv -s http://localhost:8983/solr/tmdb -f genres_facet,original_language_facet,production_companies_facet```
+```java -jar quaerite-cli-1.0.0-ALPHA.jar FindFeatures -db my_db -j movie_judgments.csv -s http://localhost:8983/solr/tmdb -f genres_facet,original_language_facet,production_companies_facet```
 
 For each facet, the results are sorted by the descending order of contrast value. 
 For example:
@@ -272,7 +272,7 @@ _Quaerite_ -- Examining the Database
 -------------------------------------
 _Quaerite_ relies on an in-process H2 database.  To view the contents:
 
-```java -jar quaerite-cli-1.0.0-SNAPSHOT.jar StartDB```
+```java -jar quaerite-cli-1.0.0-ALPHA.jar StartDB```
 
 Navigate in a browser to: `http://localhost:8082`
 
