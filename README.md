@@ -90,6 +90,10 @@ Getting Started
 ---------------
 See the ```quaerite-examples``` module and its [README](https://github.com/mitre/quaerite/blob/master/quaerite-examples/README.md).
 
+Releases
+--------------
+* [1.0.0-ALPHA](https://github.com/mitre/quaerite/releases) March 22, 2019
+
 
 Road Map
 ----------
@@ -99,7 +103,6 @@ High priorities
 * See the issues on [the issue tracker](https://github.com/mitre/quaerite/issues)
 
 Planned Releases
-* 1.0.0-SNAPSHOT before March 25, 2019
 * 1.0.0-BETA before April 23, 2019
 
 Related Open Source Projects
