@@ -15,22 +15,21 @@
  * limitations under the License.
  *
  */
-package org.mitre.quaerite.core.scorecollectors;
+package org.mitre.quaerite.core.scoreaggregators;
 
 import java.util.Map;
 
-import org.mitre.quaerite.core.scorers.NormalizedDiscountedCumulativeGain;
-
-public class NDCGCollector extends DistributionalScoreCollector {
-
+import org.mitre.quaerite.core.scorers.AbstractRankScorer;
+import org.mitre.quaerite.core.scorers.TotalQueryTime;
 
 
+public class TotalQueryTimeAggregator extends SummingScoreAggregator {
 
-    public NDCGCollector(Map<String, String> params) {
-        this(extractAtK(params));
+    public TotalQueryTimeAggregator(Map<String, String> params) {
+        this(new TotalQueryTime());
     }
 
-    private NDCGCollector(int k) {
-        super(new NormalizedDiscountedCumulativeGain(k));
+    TotalQueryTimeAggregator(AbstractRankScorer scorer) {
+        super(scorer);
     }
 }

@@ -1,7 +1,7 @@
 {
-  "scoreCollectors": [
+  "scoreAggregators": [
 	{
-      "class": "NDCGCollector",
+      "class": "NDCGAggregator",
       "params": {
         "atK": 10,
         "useForTrain": true,

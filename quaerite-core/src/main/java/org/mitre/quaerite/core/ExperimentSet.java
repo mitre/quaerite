@@ -25,22 +25,22 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.mitre.quaerite.core.features.ParamsMap;
-import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
-import org.mitre.quaerite.core.scorecollectors.ScoreCollectorListSerializer;
+import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
+import org.mitre.quaerite.core.scoreaggregators.ScoreAggregatorListSerializer;
 import org.mitre.quaerite.core.serializers.ParamsSerializer;
 
 public class ExperimentSet {
 
     private static Gson GSON = new GsonBuilder().setPrettyPrinting()
-            .registerTypeAdapter(ScoreCollector.class, new ScoreCollectorListSerializer.ScoreCollectorSerializer())
+            .registerTypeAdapter(ScoreAggregator.class, new ScoreAggregatorListSerializer.ScoreAggregatorSerializer())
             .registerTypeHierarchyAdapter(ParamsMap.class, new ParamsSerializer())
             .create();
 
     private transient int maxRows = -1;
-    private List<ScoreCollector> scoreCollectors = new ArrayList<>();
+    private List<ScoreAggregator> scoreAggregators = new ArrayList<>();
     private Map<String, Experiment> experiments = new LinkedHashMap<>();
-    private transient ScoreCollector trainScoreCollector;
-    private transient ScoreCollector testScoreCollector;
+    private transient ScoreAggregator trainScoreAggregator;
+    private transient ScoreAggregator testScoreAggregator;
     private ExperimentConfig experimentConfig;
 
     public ExperimentSet() {
@@ -56,17 +56,17 @@ public class ExperimentSet {
         experiments.put(name, experiment);
     }
 
-    public void addScoreCollector(ScoreCollector scoreCollector) {
-        int atN = scoreCollector.getK();
+    public void addScoreAggregator(ScoreAggregator scoreAggregator) {
+        int atN = scoreAggregator.getK();
         if (atN > maxRows) {
             maxRows = atN;
         }
-        scoreCollectors.add(scoreCollector);
-        if (scoreCollector.getUseForTrain()) {
-            trainScoreCollector = scoreCollector;
+        scoreAggregators.add(scoreAggregator);
+        if (scoreAggregator.getUseForTrain()) {
+            trainScoreAggregator = scoreAggregator;
         }
-        if (scoreCollector.getUseForTest()) {
-            testScoreCollector = scoreCollector;
+        if (scoreAggregator.getUseForTest()) {
+            testScoreAggregator = scoreAggregator;
         }
     }
 
@@ -83,8 +83,8 @@ public class ExperimentSet {
 
     public String toJson(List<String> experiments) {
         ExperimentSet tmpExperimentSet = new ExperimentSet();
-        for (ScoreCollector scoreCollector : scoreCollectors) {
-            tmpExperimentSet.addScoreCollector(scoreCollector);
+        for (ScoreAggregator scoreAggregator : scoreAggregators) {
+            tmpExperimentSet.addScoreAggregator(scoreAggregator);
         }
         for (String experimentName : experiments) {
             Experiment experiment = getExperiment(experimentName);
@@ -103,13 +103,13 @@ public class ExperimentSet {
         return experiments.get(experimentName);
     }
 
-    public List<ScoreCollector> getScoreCollectors() {
-        return scoreCollectors;
+    public List<ScoreAggregator> getScoreAggregators() {
+        return scoreAggregators;
     }
 
     public int getMaxRows() {
         if (maxRows < 0 ) {
-            for (ScoreCollector scorer : scoreCollectors) {
+            for (ScoreAggregator scorer : scoreAggregators) {
                 int atN = scorer.getK();
                 if (atN > maxRows) {
                     maxRows = atN;
@@ -123,7 +123,7 @@ public class ExperimentSet {
     public String toString() {
         return "ExperimentSet{" +
                 "maxRows=" + maxRows +
-                ", scoreCollectors=" + scoreCollectors +
+                ", scoreAggregators=" + scoreAggregators +
                 ", experiments=" + experiments +
                 '}';
     }

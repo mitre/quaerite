@@ -49,7 +49,7 @@ import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.ParamsMap;
 import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
-import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
+import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 import org.mitre.quaerite.core.stats.ExperimentNameScorePair;
 import org.mitre.quaerite.core.stats.ExperimentScorePair;
 import org.mitre.quaerite.core.util.GAOperation;
@@ -189,7 +189,7 @@ public class RunGA extends AbstractExperimentRunner {
             //write out the seed generation
             generateRandomSeeds(experimentFactory.getFeatureFactories(), gaDb);
         }
-        gaDb.addScoreCollectors(experimentFactory.getScoreCollectors());
+        gaDb.addScoreAggregators(experimentFactory.getScoreAggregators());
 
         runFold(0, gaDb, experimentFactory, gaPaths);
         reportFinal(gaDb, experimentFactory, 1);
@@ -215,7 +215,7 @@ public class RunGA extends AbstractExperimentRunner {
             //write out the seed generation
             generateRandomSeeds(experimentFactory.getFeatureFactories(), gaDb);
         }
-        gaDb.addScoreCollectors(experimentFactory.getScoreCollectors());
+        gaDb.addScoreAggregators(experimentFactory.getScoreAggregators());
 
         gaDb.initTrainTest(gaConfig.getNFolds());
 
@@ -231,7 +231,7 @@ public class RunGA extends AbstractExperimentRunner {
         System.out.println("FINAL RESULTS ON TESTING:");
         List<ExperimentNameScorePair> scores = gaDb.getNBestExperimentNames(
                 TEST_PREFIX, num,
-                experimentFactory.getTestScoreCollector().getPrimaryStatisticName());
+                experimentFactory.getTestScoreAggregator().getPrimaryStatisticName());
 
         SummaryStatistics summaryStatistics = new SummaryStatistics();
         double[] vals = new double[gaConfig.getNFolds()];
@@ -283,7 +283,7 @@ public class RunGA extends AbstractExperimentRunner {
         JudgmentList trainJudgmentList = trainTestJudmentListPair.getTrain();
         LOG.info("scoring training seed for fold: "+fold);
         scoreSeed(fold, gaDb, trainJudgmentList,
-                experimentFactory.getTrainScoreCollector().getPrimaryStatisticName(), gaPaths);
+                experimentFactory.getTrainScoreAggregator().getPrimaryStatisticName(), gaPaths);
         LOG.info("starting training for fold "+fold +"; train set size ("+trainJudgmentList.getJudgmentsList().size()+
                 "), test set size ("+trainTestJudmentListPair.getTest().getJudgmentsList().size()+
                 ")");
@@ -301,7 +301,7 @@ public class RunGA extends AbstractExperimentRunner {
         }
         List<ExperimentNameScorePair> scores = gaDb.getNBestExperimentNames(
                 TRAIN_PREFIX+FOLD_PREFIX+fold+"_*", 10,
-                experimentFactory.getTrainScoreCollector().getPrimaryStatisticName());
+                experimentFactory.getTrainScoreAggregator().getPrimaryStatisticName());
         System.out.println("FOLD "+fold+" TRAINING");
         for (ExperimentNameScorePair esp : scores) {
             System.out.println("experiment '"+esp.getExperimentName()+"': "+threePlaces.format(esp.getScore()));
@@ -319,7 +319,7 @@ public class RunGA extends AbstractExperimentRunner {
                 gaDb, testingJudgments, "test_"+fold, false);
         scores = gaDb.getNBestExperimentNames(
                 TEST_PREFIX+FOLD_PREFIX+fold+"_*", 10,
-                experimentFactory.getTrainScoreCollector().getPrimaryStatisticName());
+                experimentFactory.getTrainScoreAggregator().getPrimaryStatisticName());
         System.out.println("FOLD "+fold+" TESTING");
         for (ExperimentNameScorePair esp : scores) {
             System.out.println("experiment '"+esp.getExperimentName()+"': "+threePlaces.format(esp.getScore()));
@@ -329,7 +329,7 @@ public class RunGA extends AbstractExperimentRunner {
     }
 
     private void scoreSeed(int fold, GADB gaDb, JudgmentList trainJudgmentList,
-                           String trainScoreCollectorName, GAPaths gaPaths) throws SQLException, IOException {
+                           String trainScoreAggregatorName, GAPaths gaPaths) throws SQLException, IOException {
         ExperimentSet experimentSet = gaDb.getExperiments(gaConfig);
 
         String trainFoldSeedPrefix = TRAIN_PREFIX+FOLD_PREFIX+fold+"_"+SEED_PREFIX;
@@ -343,7 +343,7 @@ public class RunGA extends AbstractExperimentRunner {
         System.out.println("FOLD "+fold + " TRAINING (SEED)");
         List<ExperimentNameScorePair> scores = gaDb.getNBestExperimentNames(
                 trainFoldSeedPrefix, 10,
-                trainScoreCollectorName);
+                trainScoreAggregatorName);
 
         for (ExperimentNameScorePair esp : scores) {
             System.out.println("experiment '"+esp.getExperimentName()+"': "
@@ -372,7 +372,7 @@ public class RunGA extends AbstractExperimentRunner {
         if (LOG.isDebugEnabled()) {
             String experimentPrefix = TRAIN_PREFIX+FOLD_PREFIX+fold+"_"+GEN_PREFIX+generation;
             List<ExperimentNameScorePair> results = experimentDB.getNBestExperimentNames(experimentPrefix, 10,
-                    experimentFactory.getTrainScoreCollector().getPrimaryStatisticName());
+                    experimentFactory.getTrainScoreAggregator().getPrimaryStatisticName());
 
             for (ExperimentNameScorePair experimentScorePair : results) {
                 LOG.debug(experimentScorePair);
@@ -396,7 +396,7 @@ public class RunGA extends AbstractExperimentRunner {
         List<ExperimentScorePair> scorePairs = experimentDB.getNBestExperiments(
                 TRAIN_PREFIX+FOLD_PREFIX+fold+"_"+genString,
                 gaConfig.getPopulation(),
-                experimentFactory.getTrainScoreCollector().getPrimaryStatisticName());
+                experimentFactory.getTrainScoreAggregator().getPrimaryStatisticName());
 
         if (scorePairs.size() == 0) {
             throw new IllegalArgumentException("Need to have some experiments from seed/last generation!");
@@ -543,22 +543,22 @@ public class RunGA extends AbstractExperimentRunner {
         if (Math.abs(1.0d-gaOpProbs) > 0.001) {
             throw new IllegalArgumentException("crossoverProbability+mutationProbability+reproductionProbability should = 1.0");
         }
-        ScoreCollector trainScoreCollector = null;
-        ScoreCollector testScoreCollector = null;
-        for (ScoreCollector scoreCollector : experimentFactory.getScoreCollectors()) {
-            if (scoreCollector.getUseForTrain()) {
-                if (trainScoreCollector != null) {
-                    throw new IllegalArgumentException("Can't have more than one trainScoreCollector:"+
-                            trainScoreCollector + " and "+scoreCollector);
+        ScoreAggregator trainScoreAggregator = null;
+        ScoreAggregator testScoreAggregator = null;
+        for (ScoreAggregator scoreAggregator : experimentFactory.getScoreAggregators()) {
+            if (scoreAggregator.getUseForTrain()) {
+                if (trainScoreAggregator != null) {
+                    throw new IllegalArgumentException("Can't have more than one trainScoreAggregator:"+
+                            trainScoreAggregator + " and "+scoreAggregator);
                 }
-                trainScoreCollector = scoreCollector;
+                trainScoreAggregator = scoreAggregator;
             }
-            if (scoreCollector.getUseForTest()) {
-                if (testScoreCollector != null) {
-                    throw new IllegalArgumentException("Can't have more than one trainScoreCollector:"+
-                            testScoreCollector + " and "+scoreCollector);
+            if (scoreAggregator.getUseForTest()) {
+                if (testScoreAggregator != null) {
+                    throw new IllegalArgumentException("Can't have more than one trainScoreAggregator:"+
+                            testScoreAggregator + " and "+scoreAggregator);
                 }
-                testScoreCollector = scoreCollector;
+                testScoreAggregator = scoreAggregator;
             }
         }
     }

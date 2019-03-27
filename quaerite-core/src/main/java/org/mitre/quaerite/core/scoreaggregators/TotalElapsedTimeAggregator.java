@@ -15,20 +15,20 @@
  * limitations under the License.
  *
  */
-package org.mitre.quaerite.core.scorecollectors;
+package org.mitre.quaerite.core.scoreaggregators;
 
 import java.util.Map;
 
 import org.mitre.quaerite.core.scorers.AbstractRankScorer;
 import org.mitre.quaerite.core.scorers.TotalElapsedTime;
 
-public class TotalElapsedTimeCollector extends SummingScoreCollector {
+public class TotalElapsedTimeAggregator extends SummingScoreAggregator {
 
-    public TotalElapsedTimeCollector(Map<String, String> params) {
+    public TotalElapsedTimeAggregator(Map<String, String> params) {
         this(new TotalElapsedTime());
     }
 
-    TotalElapsedTimeCollector(AbstractRankScorer scorer) {
+    TotalElapsedTimeAggregator(AbstractRankScorer scorer) {
         super(scorer);
     }
 }

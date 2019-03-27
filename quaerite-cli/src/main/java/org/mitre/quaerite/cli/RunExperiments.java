@@ -156,7 +156,7 @@ public class RunExperiments extends AbstractExperimentRunner {
 
             LOG.info("starting to write reports to: "+reportDir);
             dumpResults(experimentDB, experimentDB.getQuerySets(),
-                    experimentDB.getExperiments().getScoreCollectors(), reportDir, isTest);
+                    experimentDB.getExperiments().getScoreAggregators(), reportDir, isTest);
         }
         LOG.info("completed running and reporting experiments");
     }

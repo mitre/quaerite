@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  */
-package org.mitre.quaerite.core.scorecollectors;
+package org.mitre.quaerite.core.scoreaggregators;
 
 import java.util.Collection;
 import java.util.List;
@@ -25,7 +25,7 @@ import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.ResultSet;
 
-public interface ScoreCollector {
+public interface ScoreAggregator {
 
     void add(Judgments judgments, ResultSet resultSet);
 
@@ -37,7 +37,7 @@ public interface ScoreCollector {
 
     /**
      *
-     * @return list of statistics used by the collector (e.g. mean, median, stdevp)
+     * @return list of statistics used by the aggregator (e.g. mean, median, stdevp)
      */
     List<String> getStatistics();
 

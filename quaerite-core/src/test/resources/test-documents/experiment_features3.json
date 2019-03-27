@@ -10,9 +10,9 @@
     "reproductionProbability" : 0.7,
     "nFolds" : 2
   },
-  "scoreCollectors": [
+  "scoreAggregators": [
     {
-      "class": "NDCGCollector",
+      "class": "NDCGAggregator",
       "params": {
         "atK": 10
       }

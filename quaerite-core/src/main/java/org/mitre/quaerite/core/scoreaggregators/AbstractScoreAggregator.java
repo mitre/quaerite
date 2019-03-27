@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  */
-package org.mitre.quaerite.core.scorecollectors;
+package org.mitre.quaerite.core.scoreaggregators;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -31,7 +31,7 @@ import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.scorers.AbstractRankScorer;
 
 
-public abstract class AbstractScoreCollector implements ScoreCollector {
+public abstract class AbstractScoreAggregator implements ScoreAggregator {
 
     static int extractAtK(Map<String, String> params) {
         String atK = params.get("atK");
@@ -53,7 +53,7 @@ public abstract class AbstractScoreCollector implements ScoreCollector {
     //key is the queryset, the set contains the queryInfos that are in that querySet
     ConcurrentHashMap<String, Set<QueryInfo>> querySets = new ConcurrentHashMap<>();
 
-    public AbstractScoreCollector(AbstractRankScorer scorer) {
+    public AbstractScoreAggregator(AbstractRankScorer scorer) {
         this.scorer = scorer;
     }
 

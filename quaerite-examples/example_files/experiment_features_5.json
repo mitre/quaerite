@@ -10,39 +10,39 @@
     "nFolds" : 4
   },
 
-  "scoreCollectors": [
+  "scoreAggregators": [
     {
-      "class": "HadAtLeastOneHitAtKCollector",
+      "class": "HadAtLeastOneHitAtKAggregator",
       "params": {
         "atK": "1"
       }
     },
     {
-      "class": "HadAtLeastOneHitAtKCollector",
+      "class": "HadAtLeastOneHitAtKAggregator",
       "params": {
         "atK": "3"
       }
     },
     {
-      "class": "HadAtLeastOneHitAtKCollector",
+      "class": "HadAtLeastOneHitAtKAggregator",
       "params": {
         "atK": "5"
       }
     },
     {
-      "class": "HadAtLeastOneHitAtKCollector",
+      "class": "HadAtLeastOneHitAtKAggregator",
       "params": {
         "atK": "10"
       }
     },
 	{
-      "class": "HadAtLeastOneHitAtKCollector",
+      "class": "HadAtLeastOneHitAtKAggregator",
       "params": {
         "atK": "20"
       }
     },
 	{
-      "class": "NDCGCollector",
+      "class": "NDCGAggregator",
       "params": {
         "atK": 10,
         "useForTrain": true,

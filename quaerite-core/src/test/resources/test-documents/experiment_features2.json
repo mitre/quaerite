@@ -1,14 +1,14 @@
 {
-  "scoreCollectors": [
+  "scoreAggregators": [
     {
-      "class": "HadAtLeastOneHitAtKCollector",
+      "class": "HadAtLeastOneHitAtKAggregator",
       "params": {
         "atK": 30,
         "useForTrain": true
       }
     },
     {
-      "class": "NDCGCollector",
+      "class": "NDCGAggregator",
       "params": {
         "atK": 10,
         "useForTrain": true

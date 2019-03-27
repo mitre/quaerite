@@ -34,8 +34,8 @@ import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
-import org.mitre.quaerite.core.scorecollectors.NDCGCollector;
-import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
+import org.mitre.quaerite.core.scoreaggregators.NDCGAggregator;
+import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 
 public class TestExperimentSet {
 
@@ -51,7 +51,7 @@ public class TestExperimentSet {
             experimentSet = ExperimentSet.fromJson(reader);
 
         }
-        assertEquals(8, experimentSet.getScoreCollectors().size());
+        assertEquals(8, experimentSet.getScoreAggregators().size());
         Map<String, Experiment> map = experimentSet.getExperiments();
         Experiment peopleTitle = map.get("people_title");
         Map<String, Feature> features = peopleTitle.getParams();
@@ -62,16 +62,16 @@ public class TestExperimentSet {
         assertEquals("people", fields.get(0).getFeature());
         assertEquals("title", fields.get(1).getFeature());
 
-        List<ScoreCollector> scoreCollectors = experimentSet.getScoreCollectors();
-        for (ScoreCollector scoreCollector : scoreCollectors) {
-            if (scoreCollector instanceof NDCGCollector) {
-                assertTrue(scoreCollector.getExportPMatrix());
-                assertTrue(scoreCollector.getUseForTrain());
-                assertFalse(scoreCollector.getUseForTest());
+        List<ScoreAggregator> scoreAggregators = experimentSet.getScoreAggregators();
+        for (ScoreAggregator scoreAggregator : scoreAggregators) {
+            if (scoreAggregator instanceof NDCGAggregator) {
+                assertTrue(scoreAggregator.getExportPMatrix());
+                assertTrue(scoreAggregator.getUseForTrain());
+                assertFalse(scoreAggregator.getUseForTest());
             } else {
-                assertFalse(scoreCollector.getExportPMatrix());
-                assertFalse(scoreCollector.getUseForTrain());
-                assertFalse(scoreCollector.getUseForTest());
+                assertFalse(scoreAggregator.getExportPMatrix());
+                assertFalse(scoreAggregator.getUseForTrain());
+                assertFalse(scoreAggregator.getUseForTest());
             }
         }
     }

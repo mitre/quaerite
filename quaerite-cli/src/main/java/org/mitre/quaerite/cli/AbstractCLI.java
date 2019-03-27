@@ -38,7 +38,7 @@ import org.mitre.quaerite.core.Experiment;
 import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
-import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
+import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 import org.mitre.quaerite.db.ExperimentDB;
 
 public abstract class AbstractCLI {
@@ -98,11 +98,11 @@ public abstract class AbstractCLI {
             experimentDB.addExperiment(experiment, merge);
         }
 
-        List<ScoreCollector> scoreCollectors = experiments.getScoreCollectors();
-        if (scoreCollectors != null && scoreCollectors.size() > 0) {
+        List<ScoreAggregator> scoreAggregators = experiments.getScoreAggregators();
+        if (scoreAggregators != null && scoreAggregators.size() > 0) {
             experimentDB.clearScorers();
-            for (ScoreCollector scoreCollector : scoreCollectors) {
-                experimentDB.addScoreCollector(scoreCollector);
+            for (ScoreAggregator scoreAggregator : scoreAggregators) {
+                experimentDB.addScoreAggregator(scoreAggregator);
             }
         }
 

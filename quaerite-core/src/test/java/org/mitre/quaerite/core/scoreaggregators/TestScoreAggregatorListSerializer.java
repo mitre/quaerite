@@ -14,22 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.scorecollectors;
+package org.mitre.quaerite.core.scoreaggregators;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class TestScoreCollectorListSerializer {
+public class TestScoreAggregatorListSerializer {
 
     @Test
     public void testBasic() {
-        ScoreCollector scoreCollector = new HadAtLeastOneHitAtKCollector(2);
-        String json = ScoreCollectorListSerializer.toJson(scoreCollector);
-        ScoreCollector revivified = ScoreCollectorListSerializer.fromJson(json);
+        ScoreAggregator scoreAggregator = new HadAtLeastOneHitAtKAggregator(2);
+        String json = ScoreAggregatorListSerializer.toJson(scoreAggregator);
+        ScoreAggregator revivified = ScoreAggregatorListSerializer.fromJson(json);
         assertEquals(revivified.getClass().getCanonicalName(), revivified.getClass().getCanonicalName());
-        assertEquals(scoreCollector.getK(),
-                ((AbstractScoreCollector)revivified).getK());
+        assertEquals(scoreAggregator.getK(),
+                ((AbstractScoreAggregator)revivified).getK());
     }
 
 }

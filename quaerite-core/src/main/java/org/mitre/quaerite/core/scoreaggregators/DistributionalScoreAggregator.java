@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  */
-package org.mitre.quaerite.core.scorecollectors;
+package org.mitre.quaerite.core.scoreaggregators;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +30,7 @@ import org.apache.commons.math3.util.ResizableDoubleArray;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.scorers.AbstractRankScorer;
 
-public class DistributionalScoreCollector extends AbstractScoreCollector {
+public class DistributionalScoreAggregator extends AbstractScoreAggregator {
 
     public static String MEAN = "mean";
     public static String MEDIAN = "median";
@@ -39,7 +39,7 @@ public class DistributionalScoreCollector extends AbstractScoreCollector {
     private static final List<String> STATISTICS =
             Collections.unmodifiableList(Arrays.asList(new String[]{MEAN, MEDIAN, STDEV}));
 
-    public DistributionalScoreCollector(AbstractRankScorer scorer) {
+    public DistributionalScoreAggregator(AbstractRankScorer scorer) {
         super(scorer);
     }
 

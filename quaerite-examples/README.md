@@ -66,7 +66,7 @@ You will find the standard reports in the ```reports/``` directory, including:
 * Scores per query -- a score for each query for each experiment
 * Scores aggregated by experiment -- a score for each experiment and query set
 * A table showing the pairwise statistical significance tests (``paired t-test``) for each pair of experiments
-  as scored by any ScoreCollector with a ```exportPMatrix=true```.
+  as scored by any `ScoreAggregator` with a ```exportPMatrix=true```.
 
 From these reports, we can quickly see that the `title` field yields the best results for this ground truth judgment set.
 When we look at the p-value matrix (`sig_diffs_ndcg_10.csv`), we can see that `title` is significantly better than  

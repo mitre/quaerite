@@ -15,20 +15,20 @@
  * limitations under the License.
  *
  */
-package org.mitre.quaerite.core.scorecollectors;
+package org.mitre.quaerite.core.scoreaggregators;
 
 import java.util.Map;
 
 import org.mitre.quaerite.core.scorers.AbstractRankScorer;
 import org.mitre.quaerite.core.scorers.TotalDocsReturned;
 
-public class TotalDocsReturnedCollector extends SummingScoreCollector {
+public class TotalDocsReturnedAggregator extends SummingScoreAggregator {
 
-    public TotalDocsReturnedCollector(Map<String, String> params) {
+    public TotalDocsReturnedAggregator(Map<String, String> params) {
         this(new TotalDocsReturned());
     }
 
-    TotalDocsReturnedCollector(AbstractRankScorer scorer) {
+    TotalDocsReturnedAggregator(AbstractRankScorer scorer) {
         super(scorer);
     }
 }

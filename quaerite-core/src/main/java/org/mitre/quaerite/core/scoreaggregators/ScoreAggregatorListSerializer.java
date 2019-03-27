@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  */
-package org.mitre.quaerite.core.scorecollectors;
+package org.mitre.quaerite.core.scoreaggregators;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
@@ -37,17 +37,17 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 
-public class ScoreCollectorListSerializer {
+public class ScoreAggregatorListSerializer {
 
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().
-            registerTypeHierarchyAdapter(ScoreCollector.class, new ScoreCollectorSerializer()).create();
+            registerTypeHierarchyAdapter(ScoreAggregator.class, new ScoreAggregatorSerializer()).create();
 
-    static Type SCORE_COLLECTOR_TYPE = new TypeToken<ArrayList<ScoreCollector>>(){}.getType();
+    static Type SCORE_AGGREGATOR_TYPE = new TypeToken<ArrayList<ScoreAggregator>>(){}.getType();
 
     static Map<String, Class> CLASSES = new ConcurrentHashMap<>();
-    private static String DEFAULT_CLASS_NAME_SPACE = "org.mitre.quaerite.core.scorecollectors.";
+    private static String DEFAULT_CLASS_NAME_SPACE = "org.mitre.quaerite.core.scoreaggregators.";
 
-    public static class ScoreCollectorSerializer<T> implements JsonSerializer, JsonDeserializer {
+    public static class ScoreAggregatorSerializer<T> implements JsonSerializer, JsonDeserializer {
 
         private static final String CLASSNAME = "class";
         private static final String PARAMS = "params";
@@ -60,7 +60,7 @@ public class ScoreCollectorListSerializer {
             JsonPrimitive prim = (JsonPrimitive) jsonObject.get(CLASSNAME);
             String className = prim.getAsString();
             JsonObject params = jsonObject.getAsJsonObject(PARAMS);
-            return buildScoreCollector(className, mapify(params));
+            return buildScoreAggregator(className, mapify(params));
         }
 
         private Map<String, String> mapify(JsonObject params) {
@@ -83,18 +83,18 @@ public class ScoreCollectorListSerializer {
             }
             jsonObject.addProperty(CLASSNAME, clazzName);
             JsonObject params = new JsonObject();
-            AbstractScoreCollector scoreCollector = (AbstractScoreCollector)o;
-            if (scoreCollector.getK() > -1) {
+            AbstractScoreAggregator scoreAggregator = (AbstractScoreAggregator)o;
+            if (scoreAggregator.getK() > -1) {
                 params.add("atK",
-                        new JsonPrimitive(Integer.toString(((AbstractScoreCollector) o).getK())));
+                        new JsonPrimitive(Integer.toString(((AbstractScoreAggregator) o).getK())));
             }
-            if (scoreCollector.getExportPMatrix()) {
+            if (scoreAggregator.getExportPMatrix()) {
                 params.add("exportPMatrix", new JsonPrimitive(true));
             }
-            if (scoreCollector.getUseForTest()) {
+            if (scoreAggregator.getUseForTest()) {
                 params.add("useForTest", new JsonPrimitive(true));
             }
-            if (scoreCollector.getUseForTrain()) {
+            if (scoreAggregator.getUseForTrain()) {
                 params.add("useForTrain", new JsonPrimitive(true));
             }
             if (params.size() > 0) {
@@ -103,57 +103,57 @@ public class ScoreCollectorListSerializer {
             return jsonObject;
         }
         /****** Helper method to get the className of the object to be deserialized *****/
-        public T buildScoreCollector(String clazzName, Map<String, String> params) {
+        public T buildScoreAggregator(String clazzName, Map<String, String> params) {
             if (! clazzName.contains(".")) {
                 clazzName = DEFAULT_CLASS_NAME_SPACE+clazzName;
             }
             try {
                 Class cl = Class.forName(clazzName);
-                if (! (ScoreCollector.class.isAssignableFrom(cl))) {
-                    throw new IllegalArgumentException(clazzName + " must be assignable from AbstractScoreCollector");
+                if (! (ScoreAggregator.class.isAssignableFrom(cl))) {
+                    throw new IllegalArgumentException(clazzName + " must be assignable from AbstractScoreAggregator");
                 }
                 Constructor con = cl.getConstructor(Map.class);
-                ScoreCollector scoreCollector = (ScoreCollector)con.newInstance(params);
+                ScoreAggregator scoreAggregator = (ScoreAggregator)con.newInstance(params);
                 if (params != null) {
                     if (params.containsKey("useForTest")) {
                         String val = params.get("useForTest");
                         if (val.equalsIgnoreCase("true")) {
-                            scoreCollector.setUseForTest();
+                            scoreAggregator.setUseForTest();
                         }
                     }
                     if (params.containsKey("useForTrain")) {
                         String val = params.get("useForTrain");
                         if (val.equalsIgnoreCase("true")) {
-                            scoreCollector.setUseForTrain();
+                            scoreAggregator.setUseForTrain();
                         }
                     }
                     if (params.containsKey("exportPMatrix")) {
                         String val = params.get("exportPMatrix");
                         if (val.equalsIgnoreCase("true")) {
-                            scoreCollector.setExportPMatrix();
+                            scoreAggregator.setExportPMatrix();
                         }
                     }
                 }
-                return (T)scoreCollector;
+                return (T)scoreAggregator;
             } catch (Exception e) {
                 throw new JsonParseException(e.getMessage());
             }
         }
     }
 
-    public static String toJson(List<ScoreCollector> scoreCollectors) {
-        return GSON.toJson(scoreCollectors);
+    public static String toJson(List<ScoreAggregator> scoreAggregators) {
+        return GSON.toJson(scoreAggregators);
     }
 
-    public static List<ScoreCollector> fromJsonList(String json) {
-        return GSON.fromJson(json, SCORE_COLLECTOR_TYPE);
+    public static List<ScoreAggregator> fromJsonList(String json) {
+        return GSON.fromJson(json, SCORE_AGGREGATOR_TYPE);
     }
 
-    public static String toJson(ScoreCollector scoreCollector) {
-        return GSON.toJson(scoreCollector);
+    public static String toJson(ScoreAggregator scoreAggregator) {
+        return GSON.toJson(scoreAggregator);
     }
 
-    public static ScoreCollector fromJson(String json) {
-        return GSON.fromJson(json, ScoreCollector.class);
+    public static ScoreAggregator fromJson(String json) {
+        return GSON.fromJson(json, ScoreAggregator.class);
     }
 }

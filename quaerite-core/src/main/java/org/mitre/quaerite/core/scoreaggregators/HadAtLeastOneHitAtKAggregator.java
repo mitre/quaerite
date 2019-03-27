@@ -15,21 +15,20 @@
  * limitations under the License.
  *
  */
-package org.mitre.quaerite.core.scorecollectors;
+package org.mitre.quaerite.core.scoreaggregators;
 
 import java.util.Map;
 
-import org.mitre.quaerite.core.scorers.AbstractRankScorer;
-import org.mitre.quaerite.core.scorers.TotalQueryTime;
+import org.mitre.quaerite.core.scorers.HadAtLeastOneHitAtK;
 
 
-public class TotalQueryTimeCollector extends SummingScoreCollector {
+public class HadAtLeastOneHitAtKAggregator extends SummingScoreAggregator {
 
-    public TotalQueryTimeCollector(Map<String, String> params) {
-        this(new TotalQueryTime());
+    public HadAtLeastOneHitAtKAggregator(Map<String, String> params) {
+        this(extractAtK(params));
     }
 
-    TotalQueryTimeCollector(AbstractRankScorer scorer) {
-        super(scorer);
+    public HadAtLeastOneHitAtKAggregator(int k) {
+        super(new HadAtLeastOneHitAtK(k));
     }
 }

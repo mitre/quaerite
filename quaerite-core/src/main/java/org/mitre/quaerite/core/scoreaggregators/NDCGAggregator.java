@@ -15,20 +15,19 @@
  * limitations under the License.
  *
  */
-package org.mitre.quaerite.core.scorecollectors;
+package org.mitre.quaerite.core.scoreaggregators;
 
 import java.util.Map;
 
-import org.mitre.quaerite.core.scorers.HadAtLeastOneHitAtK;
+import org.mitre.quaerite.core.scorers.NormalizedDiscountedCumulativeGain;
 
+public class NDCGAggregator extends DistributionalScoreAggregator {
 
-public class HadAtLeastOneHitAtKCollector extends SummingScoreCollector {
-
-    public HadAtLeastOneHitAtKCollector(Map<String, String> params) {
+    public NDCGAggregator(Map<String, String> params) {
         this(extractAtK(params));
     }
 
-    public HadAtLeastOneHitAtKCollector(int k) {
-        super(new HadAtLeastOneHitAtK(k));
+    private NDCGAggregator(int k) {
+        super(new NormalizedDiscountedCumulativeGain(k));
     }
 }

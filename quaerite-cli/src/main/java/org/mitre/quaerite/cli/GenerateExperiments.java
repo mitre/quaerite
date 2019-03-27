@@ -40,7 +40,7 @@ import org.mitre.quaerite.core.features.Feature;
 
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
 import org.mitre.quaerite.core.features.factories.FeatureFactories;
-import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
+import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 
 public class GenerateExperiments extends AbstractCLI {
 
@@ -127,8 +127,8 @@ public class GenerateExperiments extends AbstractCLI {
              experimentFactory = ExperimentFactory.fromJson(reader);
         }
         ExperimentSet experimentSet = new ExperimentSet();
-        for (ScoreCollector scoreCollector : experimentFactory.getScoreCollectors()) {
-            experimentSet.addScoreCollector(scoreCollector);
+        for (ScoreAggregator scoreAggregator : experimentFactory.getScoreAggregators()) {
+            experimentSet.addScoreAggregator(scoreAggregator);
         }
         if (generateConfig.mode == MODE.PERMUTE) {
             FeatureFactories featureFactories = experimentFactory.getFeatureFactories();
