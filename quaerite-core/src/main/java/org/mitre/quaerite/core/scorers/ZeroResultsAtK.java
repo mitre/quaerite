@@ -43,6 +43,6 @@ public class ZeroResultsAtK extends AbstractRankScorer {
                 hits++;
             }
         }
-        return (hits == 0) ? 0 : 1;
+        return (hits == 0) ? 1 : 0;
     }
 }
