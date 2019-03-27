@@ -32,7 +32,7 @@ public class ZeroResultsAtK extends AbstractRankScorer {
 
     @Override
     String _getName() {
-        return "r";
+        return "zeroResultsAtK";
     }
 
     @Override
