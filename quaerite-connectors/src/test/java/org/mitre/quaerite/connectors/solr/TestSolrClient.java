@@ -38,7 +38,7 @@ public class TestSolrClient {
     @Test
     public void testCopyFields() throws Exception {
         SolrClient client = new SolrClient(TMDB_URL);
-        Set<String> copyFieldDests = client.getCopyFieldDests();
+        Set<String> copyFieldDests = client.getCopyFields();
         assertTrue(copyFieldDests.contains("tsss_directors"));
         assertTrue(copyFieldDests.contains("tsss_cast"));
         assertEquals(19, copyFieldDests.size());

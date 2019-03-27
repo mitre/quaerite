@@ -282,8 +282,8 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         if (expected == 0) {
             return;
         }
-        QueryRequest q = new QueryRequest(queryString,
-                null, idField);
+        QueryRequest q = new QueryRequest(queryString, null, idField);
+        q.addField(idField);
         q.setNumResults(expected * 2);
         ResultSet resultSet;
         try {
@@ -343,7 +343,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
         private void scoreEach(Judgments judgments, List<ScoreAggregator> scoreAggregators) {
             QueryRequest queryRequest = new QueryRequest(judgments.getQuery(), experiment.getCustomHandler(), idField);
-
+            queryRequest.addField(idField);
             for (Map.Entry<String, Feature> e : experiment.getParams().entrySet()) {
                 if (e.getValue() instanceof WeightableListFeature) {
                     WeightableListFeature list = (WeightableListFeature) e.getValue();

@@ -23,7 +23,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
@@ -121,4 +124,19 @@ public abstract class SearchClient implements Closeable {
     }
 
     public abstract void addDocuments(List<StoredDocument> buildDocuments) throws IOException;
+
+    public abstract List<StoredDocument> getDocs(String idField, Set<String> ids,
+                                                 Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException;
+
+    /**
+     * if not supported, this should return an empty collection
+     * @return
+     */
+    public abstract Collection<? extends String> getCopyFields() throws IOException, SearchClientException;
+
+    public abstract String getIdField() throws IOException, SearchClientException;
+
+    public abstract void startLoadingIds(ArrayBlockingQueue<Set<String>> ids, int batchSize, int copierThreads, Set<String> filterQueries) throws SearchClientException, IOException;
+
+    public abstract void deleteAll() throws SearchClientException;
 }

@@ -57,4 +57,11 @@ public class StoredDocument {
     public Map<String, Object> getFields() {
         return fields;
     }
+
+    @Override
+    public String toString() {
+        return "StoredDocument{" +
+                "fields=" + fields +
+                '}';
+    }
 }

@@ -114,7 +114,6 @@ public class FindFeatures extends AbstractCLI {
         Path judgmentsFile = getPath(commandLine, "j", false);
         ExperimentDB db = ExperimentDB.open(dbDir);
         if (judgmentsFile != null) {
-            String idField = getString(commandLine, "id", RunExperiments.DEFAULT_ID_FIELD);
             loadJudgments(db, judgmentsFile, true);
         }
         SearchClient searchClient = SearchClientFactory.getClient(searchServerUrl);
@@ -126,10 +125,10 @@ public class FindFeatures extends AbstractCLI {
             filterQuery = commandLine.getOptionValue("fq");
         }
         FindFeatures findFeatures = new FindFeatures();
-        findFeatures.execute(db, searchClient, idField, fields, filterQuery);
+        findFeatures.execute(db, searchClient, fields, filterQuery);
     }
 
-    private void execute(ExperimentDB db, SearchClient searchClient, String idField,
+    private void execute(ExperimentDB db, SearchClient searchClient,
                          String[] fields,
                          String filterQuery) throws Exception {
         JudgmentList judgmentList = db.getJudgments();
@@ -140,9 +139,11 @@ public class FindFeatures extends AbstractCLI {
             Set<String> localIds = j.getSortedJudgments().keySet();
             ids.addAll(localIds);
         }
+        String idField = searchClient.getIdField();
         for (String f : fields) {
             FacetResult targetCounts = getFacets(f, idField, ids, filterQuery, searchClient);
             QueryRequest sq = new QueryRequest("*:*");
+            sq.addField(idField);
             if (filterQuery != null) {
                 sq.addParameter("fq", filterQuery);
             }
@@ -166,6 +167,7 @@ public class FindFeatures extends AbstractCLI {
             sb.append(idField).append(":").append(id);
             if (sb.length() > 1000) {
                 QueryRequest qr = new QueryRequest(sb.toString());
+                qr.addField(id);
                 if (filterQuery != null) {
                     qr.addParameter("fq", filterQuery);
                 }
@@ -176,6 +178,7 @@ public class FindFeatures extends AbstractCLI {
         }
         if (sb.length() > 0) {
             QueryRequest qr = new QueryRequest(sb.toString());
+            qr.addField(idField);
             if (filterQuery != null) {
                 qr.addParameter("fq", filterQuery);
             }

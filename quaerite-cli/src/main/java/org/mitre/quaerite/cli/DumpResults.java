@@ -41,7 +41,6 @@ public class DumpResults extends AbstractExperimentRunner {
 
     public static final String DEFAULT_REPORT_DIR = "reports";
     static Options OPTIONS = new Options();
-    private static final String DEFAULT_SCORER = "ndcg_10";
 
 
     static {

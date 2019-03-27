@@ -25,6 +25,7 @@ public class QueryRequest {
 
     private Map<String, List<String>> parameters = new HashMap<>();
     private List<String> facetFields = new ArrayList<>();
+    private List<String> fields = new ArrayList<>();
     private int facetLimit = 10;
     private final String query;
     private final String customHandler;
@@ -105,5 +106,13 @@ public class QueryRequest {
                 ", idField='" + idField + '\'' +
                 ", numResults=" + numResults +
                 '}';
+    }
+
+    public void addField(String field) {
+        fields.add(field);
+    }
+
+    public List<String> getFields() {
+        return fields;
     }
 }
