@@ -47,7 +47,6 @@ public class Experiment {
     private final String searchServerUrl;
     private final String customHandler;
     ParamsMap params = new ParamsMap();
-    Set<String> filterQueries = new HashSet<>();
 
     public Experiment(String name, String searchServerUrl) {
         this(name, searchServerUrl, null);
@@ -85,24 +84,7 @@ public class Experiment {
         if (key.equals("q")) {
             throw new IllegalArgumentException("query is specified during initialization, not as a standard param!");
         }
-//        if (key.equals("fq")) {
-  //          throw new IllegalArgumentException("set fqs specially: setFilterQuery(fq)");
-    //    }
         params.put(key, feature);
-    }
-
-    public void addFilterQuery(String fq) {
-        if (filterQueries == null) {
-            filterQueries = new HashSet<>();
-        }
-        filterQueries.add(fq);
-    }
-
-    public Collection<String> getFilterQueries() {
-        if (filterQueries == null) {
-            filterQueries = new HashSet<>();
-        }
-        return Collections.unmodifiableCollection(filterQueries);
     }
 
     public String toJson() {
@@ -160,7 +142,6 @@ public class Experiment {
                 ", searchServerUrl='" + searchServerUrl + '\'' +
                 ", customHandler='" + customHandler + '\'' +
                 ", params=" + params +
-                ", filterQueries=" + filterQueries +
                 '}';
     }
 

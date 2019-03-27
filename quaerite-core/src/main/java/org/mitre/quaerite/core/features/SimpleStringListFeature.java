@@ -14,34 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.scorers;
+package org.mitre.quaerite.core.features;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.mitre.quaerite.core.util.MathUtil;
+
+public class SimpleStringListFeature extends StringListFeature<SimpleStringListFeature> {
 
 
-import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.ResultSet;
-
-/**
- * Returns 1 if there was any hit in the results; 0 otherwise.
- */
-public class HadAtLeastOneHitAtK extends AbstractRankScorer {
-
-    public HadAtLeastOneHitAtK(int atN) {
-        super(atN);
+    public SimpleStringListFeature(String name, List<String> features, int minSetSize, int maxSetSize) {
+        super(name, features, minSetSize, maxSetSize);
     }
 
-    @Override
-    public double score(Judgments judgments, ResultSet resultSet) {
-
-        for (int i = 0; i < atN && i < resultSet.size(); i++) {
-            if (judgments.containsJudgment(resultSet.get(i))) {
-                return 1;
-            }
-        }
-        return 0.0;
+    SimpleStringListFeature build(List<String> strings, int minSetSize, int maxSetSize) {
+        return new SimpleStringListFeature(getName(), getAll(), minSetSize, maxSetSize);
     }
 
-    @Override
-    String _getName() {
-        return "HadAtLeastOneHitAtK";
-    }
 }

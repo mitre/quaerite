@@ -21,7 +21,8 @@ package org.mitre.quaerite.core.features;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.util.MathUtil;
 
-public abstract class StringFeature extends AbstractFeature<StringFeature> {
+public abstract class StringFeature<T extends StringFeature>
+        extends AbstractFeature<T> {
 
     private String feature;
 
@@ -40,12 +41,12 @@ public abstract class StringFeature extends AbstractFeature<StringFeature> {
     }
 
     @Override
-    public Pair<StringFeature, StringFeature> crossover(StringFeature parentB) {
+    public Pair<T, T> crossover(T parentB) {
         //order shouldn't matter
         if (MathUtil.RANDOM.nextFloat() > 0.5) {
-            return Pair.of(this, parentB);
+            return Pair.of(this.deepCopy(), parentB);
         } else {
-            return Pair.of(parentB, this);
+            return Pair.of(parentB, this.deepCopy());
         }
     }
 

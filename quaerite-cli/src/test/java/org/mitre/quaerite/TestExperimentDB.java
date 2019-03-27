@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
@@ -31,9 +32,12 @@ import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.features.FQ;
+import org.mitre.quaerite.core.features.SimpleStringFeature;
+import org.mitre.quaerite.core.features.SimpleStringListFeature;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
-import org.mitre.quaerite.core.scoreaggregators.HadAtLeastOneHitAtKAggregator;
+import org.mitre.quaerite.core.scoreaggregators.AtLeastOneHitAtKAggregator;
 import org.mitre.quaerite.db.ExperimentDB;
 
 public class TestExperimentDB {
@@ -59,13 +63,13 @@ public class TestExperimentDB {
         weightableListFeature.add(new WeightableField("f3^10"));
 
         experiment.addParam("qf", weightableListFeature);
-        experiment.addFilterQuery("fq1");
-        experiment.addFilterQuery("fq2");
+        experiment.addParam("fq", new SimpleStringListFeature("fq",
+                Arrays.asList("fq1", "fq2"), 0, 2));
         db.addExperiment(experiment);
-        db.addScoreAggregator(new HadAtLeastOneHitAtKAggregator(1));
-        db.addScoreAggregator(new HadAtLeastOneHitAtKAggregator(3));
-        db.addScoreAggregator(new HadAtLeastOneHitAtKAggregator(5));
-        db.addScoreAggregator(new HadAtLeastOneHitAtKAggregator(10));
+        db.addScoreAggregator(new AtLeastOneHitAtKAggregator(1));
+        db.addScoreAggregator(new AtLeastOneHitAtKAggregator(3));
+        db.addScoreAggregator(new AtLeastOneHitAtKAggregator(5));
+        db.addScoreAggregator(new AtLeastOneHitAtKAggregator(10));
         db.close();
 
         db = ExperimentDB.open(DB_DIR);
@@ -81,7 +85,7 @@ public class TestExperimentDB {
         assertEquals("test1", revivified.getName());
         assertEquals("http://solr", revivified.getSearchServerUrl());
         assertEquals(3, ((WeightableListFeature)revivified.getParams("qf")).size());
-        assertEquals(2, revivified.getFilterQueries().size());
+        assertEquals(2, ((FQ)revivified.getParams("fq")).size());
         db.close();
 
         db = ExperimentDB.open(DB_DIR);

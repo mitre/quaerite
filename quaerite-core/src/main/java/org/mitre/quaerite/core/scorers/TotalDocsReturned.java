@@ -30,7 +30,7 @@ public class TotalDocsReturned extends AbstractRankScorer {
 
     @Override
     public String _getName() {
-        return "totalDocsReturned";
+        return "TotalDocsReturned";
     }
 
 

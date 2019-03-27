@@ -13,22 +13,35 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-package org.mitre.quaerite.core.scoreaggregators;
-
-import java.util.Map;
-
-import org.mitre.quaerite.core.scorers.HadAtLeastOneHitAtK;
+package org.mitre.quaerite.core.scorers;
 
 
-public class HadAtLeastOneHitAtKAggregator extends SummingScoreAggregator {
+import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.ResultSet;
 
-    public HadAtLeastOneHitAtKAggregator(Map<String, String> params) {
-        this(extractAtK(params));
+/**
+ * Returns 1 if there was any hit in the results; 0 otherwise.
+ */
+public class AtLeastOneHitAtK extends AbstractRankScorer {
+
+    public AtLeastOneHitAtK(int atN) {
+        super(atN);
     }
 
-    public HadAtLeastOneHitAtKAggregator(int k) {
-        super(new HadAtLeastOneHitAtK(k));
+    @Override
+    public double score(Judgments judgments, ResultSet resultSet) {
+
+        for (int i = 0; i < atN && i < resultSet.size(); i++) {
+            if (judgments.containsJudgment(resultSet.get(i))) {
+                return 1;
+            }
+        }
+        return 0.0;
+    }
+
+    @Override
+    String _getName() {
+        return "AtLeastOneHitAtK";
     }
 }

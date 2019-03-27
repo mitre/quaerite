@@ -14,22 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.scoreaggregators;
+package org.mitre.quaerite.core.features;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.jupiter.api.Test;
 
-public class TestScoreAggregatorListSerializer {
+import org.apache.commons.lang3.tuple.Pair;
+import org.mitre.quaerite.core.util.MathUtil;
 
-    @Test
-    public void testBasic() {
-        ScoreAggregator scoreAggregator = new AtLeastOneHitAtKAggregator(2);
-        String json = ScoreAggregatorListSerializer.toJson(scoreAggregator);
-        ScoreAggregator revivified = ScoreAggregatorListSerializer.fromJson(json);
-        assertEquals(revivified.getClass().getCanonicalName(), revivified.getClass().getCanonicalName());
-        assertEquals(scoreAggregator.getK(),
-                ((AbstractScoreAggregator)revivified).getK());
+public class SimpleStringFeature extends StringFeature<SimpleStringFeature> {
+
+    public SimpleStringFeature(String name, String feature) {
+        super(name, feature);
+    }
+    @Override
+    public Pair<SimpleStringFeature, SimpleStringFeature> crossover(SimpleStringFeature parentB) {
+        //order shouldn't matter
+        if (MathUtil.RANDOM.nextFloat() > 0.5) {
+            return Pair.of(this, parentB);
+        } else {
+            return Pair.of(parentB, this);
+        }
     }
 
+    @Override
+    public SimpleStringFeature deepCopy() {
+        return new SimpleStringFeature(getName(), getFeature());
+    }
 }

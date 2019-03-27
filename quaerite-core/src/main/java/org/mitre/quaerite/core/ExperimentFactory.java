@@ -18,6 +18,7 @@ package org.mitre.quaerite.core;
 
 import java.io.Reader;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -31,6 +32,7 @@ public class ExperimentFactory {
 
     private GAConfig gaConfig = new GAConfig();
 
+    Map<String, List<String>> fixedParameters;
     List<ScoreAggregator> scoreAggregators;
     FeatureFactories featureFactories;
 
@@ -51,8 +53,12 @@ public class ExperimentFactory {
     @Override
     public String toString() {
         return "ExperimentFactory{" +
-                "scoreAggregators=" + scoreAggregators +
+                "gaConfig=" + gaConfig +
+                ", fixedParameters=" + fixedParameters +
+                ", scoreAggregators=" + scoreAggregators +
                 ", featureFactories=" + featureFactories +
+                ", trainScoreAggregator=" + trainScoreAggregator +
+                ", testScoreAggregator=" + testScoreAggregator +
                 '}';
     }
 
@@ -102,5 +108,9 @@ public class ExperimentFactory {
 
     public GAConfig getGAConfig() {
         return gaConfig;
+    }
+
+    public Map<String, List<String>> getFixedParameters() {
+        return fixedParameters;
     }
 }

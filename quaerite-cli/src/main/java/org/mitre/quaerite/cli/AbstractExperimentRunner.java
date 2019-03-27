@@ -362,10 +362,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             }
             List<String> results = new ArrayList<>();
             queryRequest.setNumResults(maxRows);
-            for (String filterQuery : experiment.getFilterQueries()) {
-                //solr specific -- clean up
-                queryRequest.addParameter("fq", filterQuery);
-            }
+
             ResultSet resultSet = null;
             try {
                 resultSet = searchClient.search(queryRequest);

@@ -30,7 +30,7 @@ public class TotalQueryTime extends AbstractRankScorer {
 
     @Override
     public String _getName() {
-        return "totalElapsedTime";
+        return "TotalQueryTime";
     }
 
 

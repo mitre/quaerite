@@ -1,31 +1,31 @@
 {
   "scoreAggregators": [
     {
-      "class": "HadAtLeastOneHitAtKAggregator",
+      "class": "AtLeastOneHitAtKAggregator",
       "params": {
         "atK": 1
       }
     },
     {
-      "class": "HadAtLeastOneHitAtKAggregator",
+      "class": "AtLeastOneHitAtKAggregator",
       "params": {
         "atK": 3
       }
     },
 	{
-      "class": "HadAtLeastOneHitAtKAggregator",
+      "class": "AtLeastOneHitAtKAggregator",
       "params": {
         "atK": 5
       }
     },
 	{
-      "class": "HadAtLeastOneHitAtKAggregator",
+      "class": "AtLeastOneHitAtKAggregator",
       "params": {
         "atK": 10
       }
     },
 	{
-      "class": "HadAtLeastOneHitAtKAggregator",
+      "class": "AtLeastOneHitAtKAggregator",
       "params": {
         "atK": 30
       }

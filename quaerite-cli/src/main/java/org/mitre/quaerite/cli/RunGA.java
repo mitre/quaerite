@@ -47,7 +47,8 @@ import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.ParamsMap;
-import org.mitre.quaerite.core.features.factories.FeatureFactories;
+import org.mitre.quaerite.core.features.SimpleStringFeature;
+import org.mitre.quaerite.core.features.SimpleStringListFeature;
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 import org.mitre.quaerite.core.stats.ExperimentNameScorePair;
@@ -145,7 +146,7 @@ public class RunGA extends AbstractExperimentRunner {
         }
         GAPaths gaPaths = new GAPaths();
         gaPaths.dbPath = getPath(commandLine, "db", false);
-        gaPaths.experimentFactories = getPath(commandLine, "f", true);
+        gaPaths.experimentFactory = getPath(commandLine, "f", true);
         gaPaths.seedExperiments = getPath(commandLine, "e", false);
         gaPaths.outputDir = getPath(commandLine, "o", false);
         gaPaths.judgmentsFile = getPath(commandLine, "j", true);
@@ -154,7 +155,7 @@ public class RunGA extends AbstractExperimentRunner {
         if (gaPaths.outputDir == null) {
             gaPaths.outputDir = Paths.get("ga_experiments");
         }
-        ExperimentFactory experimentFactory = loadExperimentFactory(gaPaths.experimentFactories);
+        ExperimentFactory experimentFactory = loadExperimentFactory(gaPaths.experimentFactory);
         LOG.debug(experimentFactory.getGAConfig());
         validateCommandLine(gaPaths);
         validateSettings(experimentFactory);
@@ -187,7 +188,7 @@ public class RunGA extends AbstractExperimentRunner {
 
         if (gaPaths.seedExperiments == null) {
             //write out the seed generation
-            generateRandomSeeds(experimentFactory.getFeatureFactories(), gaDb);
+            generateRandomSeeds(experimentFactory, gaDb);
         }
         gaDb.addScoreAggregators(experimentFactory.getScoreAggregators());
 
@@ -213,7 +214,7 @@ public class RunGA extends AbstractExperimentRunner {
 
         if (gaPaths.seedExperiments == null) {
             //write out the seed generation
-            generateRandomSeeds(experimentFactory.getFeatureFactories(), gaDb);
+            generateRandomSeeds(experimentFactory, gaDb);
         }
         gaDb.addScoreAggregators(experimentFactory.getScoreAggregators());
 
@@ -364,7 +365,7 @@ public class RunGA extends AbstractExperimentRunner {
                                JudgmentList judgmentList, GAPaths gaPaths) throws SQLException, IOException {
         List<String> experimentNames = generateNewExperiments(fold, generation,
                 experimentDB, experimentFactory);
-        LOG.info("starting generation "+generation);
+        LOG.info("starting generation "+generation + " for fold "+fold);
         for (String experimentName : experimentNames) {
             runExperiment(experimentName, experimentDB, judgmentList, "foldId_"+fold,
                     false);
@@ -433,6 +434,11 @@ public class RunGA extends AbstractExperimentRunner {
         LOG.trace("after mutation: " + paramsMap);
         String name = getTrainExperimentName(fold, generation, nextGenExpNames.size());
         nextGenExpNames.add(name);
+        for (Map.Entry<String, List<String>> constants : experimentFactory.getFixedParameters().entrySet()) {
+            paramsMap.put(constants.getKey(), new SimpleStringListFeature(
+                    constants.getKey(), constants.getValue(), 0, constants.getValue().size()
+            ));
+        }
         Experiment child = new Experiment(name, paramsMap);
         experimentDB.addExperiment(child);
     }
@@ -465,6 +471,12 @@ public class RunGA extends AbstractExperimentRunner {
 
         String nameA = getTrainExperimentName(fold, generation, nextGenExpNames.size());
         ParamsMap paramsMapA = pair.getLeft();
+        for (Map.Entry<String, List<String>> constants : experimentFactory.getFixedParameters().entrySet()) {
+            paramsMapA.put(constants.getKey(), new SimpleStringListFeature(
+                    constants.getKey(), constants.getValue(), 0, constants.getValue().size()
+            ));
+        }
+
         LOG.trace(parentA +
                 "\n+\n" + parentB + "\n->\n" + paramsMapA);
         Experiment childA = new Experiment(nameA, paramsMapA);
@@ -478,6 +490,11 @@ public class RunGA extends AbstractExperimentRunner {
 
         String nameB = getTrainExperimentName(fold, generation, nextGenExpNames.size());
         ParamsMap paramsMapB = pair.getRight();
+        for (Map.Entry<String, List<String>> constants : experimentFactory.getFixedParameters().entrySet()) {
+            paramsMapB.put(constants.getKey(), new SimpleStringListFeature(
+                    constants.getKey(), constants.getValue(), 0, constants.getValue().size()
+            ));
+        }
         Experiment childB = new Experiment(nameB, paramsMapB);
         LOG.trace("childB: " + childB);
 
@@ -505,13 +522,16 @@ public class RunGA extends AbstractExperimentRunner {
         return TRAIN_PREFIX+FOLD_PREFIX+fold+"_"+GEN_PREFIX+generation+"_exp_"+i;
     }
 
-    private void generateRandomSeeds(FeatureFactories featureFactories, GADB gadb) throws SQLException {
+    private void generateRandomSeeds(ExperimentFactory experimentFactory, GADB gadb) throws SQLException {
         List<Experiment> experiments = new ArrayList<>();
         for (int i = 0; i < gaConfig.getPopulation(); i++) {
             Map<String, Feature> instanceFeatures = new HashMap<>();
-            for (String featureKey : featureFactories.keySet()) {
-                FeatureFactory featureFactory = featureFactories.get(featureKey);
+            for (String featureKey : experimentFactory.getFeatureFactories().keySet()) {
+                FeatureFactory featureFactory = experimentFactory.getFeatureFactories().get(featureKey);
                 instanceFeatures.put(featureKey, featureFactory.random());
+            }
+            for (Map.Entry<String, List<String>> e : experimentFactory.getFixedParameters().entrySet()) {
+                instanceFeatures.put(e.getKey(), new SimpleStringListFeature(e.getKey(), e.getValue(), 0, e.getValue().size()));
             }
             String name = "seed_"+i;
             experiments.add(new Experiment(name, instanceFeatures));
@@ -531,7 +551,7 @@ public class RunGA extends AbstractExperimentRunner {
         Path trainJudgmentsFile;
         Path judgmentsFile;
         Path dbPath;
-        Path experimentFactories;
+        Path experimentFactory;
         Path seedExperiments;
         Path outputDir;
     }

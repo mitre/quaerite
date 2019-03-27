@@ -38,6 +38,8 @@ import org.mitre.quaerite.core.ExperimentFactory;
 import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.features.Feature;
 
+import org.mitre.quaerite.core.features.SimpleStringFeature;
+import org.mitre.quaerite.core.features.SimpleStringListFeature;
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
 import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
@@ -56,9 +58,9 @@ public class GenerateExperiments extends AbstractCLI {
     static {
         OPTIONS.addOption(
                 Option.builder("f")
-                        .longOpt("experimentFactories")
+                        .longOpt("experimentFactory")
                         .hasArg()
-                        .desc("experiment featuresets json file")
+                        .desc("experiment factory json file")
                         .required().build()
         );
         OPTIONS.addOption(
@@ -79,14 +81,15 @@ public class GenerateExperiments extends AbstractCLI {
                 Option.builder("r")
                         .longOpt("random")
                         .hasArg(true)
-                        .desc("generate x random experiments based on featuresets")
+                        .desc("generate x random experiments based on the experiment factory")
                         .required(false).build()
         );
         OPTIONS.addOption(
                 Option.builder("m")
                         .longOpt("max")
                         .hasArg(true)
-                        .desc("maximum number of experiments to generate (default is 1000)")
+                        .desc("maximum number of experiments to generate (default is "
+                                +DEFAULT_MAX+")")
                         .required(false).build()
         );
     }
@@ -135,9 +138,9 @@ public class GenerateExperiments extends AbstractCLI {
             Set<String> featureKeySet = featureFactories.keySet();
             List<String> featureKeys = new ArrayList<>(featureKeySet);
             Map<String, Feature> instanceFeatures = new HashMap<>();
-            recurse(0, featureKeys, featureFactories, instanceFeatures, experimentSet, generateConfig.max);
+            recurse(0, featureKeys, experimentFactory, instanceFeatures, experimentSet, generateConfig.max);
         } else {
-            generateRandom(experimentFactory.getFeatureFactories(),
+            generateRandom(experimentFactory,
                     experimentSet, generateConfig.max);
         }
 
@@ -147,44 +150,45 @@ public class GenerateExperiments extends AbstractCLI {
         }
     }
 
-    private void generateRandom(FeatureFactories featureFactories, ExperimentSet experimentSet, int max) {
+    private void generateRandom(ExperimentFactory experimentFactory, ExperimentSet experimentSet, int max) {
+        FeatureFactories featureFactories = experimentFactory.getFeatureFactories();
         for (int i = 0; i < max; i++) {
             Map<String, Feature> instanceFeatures = new HashMap<>();
             for (String featureKey : featureFactories.keySet()) {
                 FeatureFactory featureFactory = featureFactories.get(featureKey);
                 instanceFeatures.put(featureKey, featureFactory.random());
             }
-            addExperiments(instanceFeatures, experimentSet);
+            addExperiments(instanceFeatures, experimentFactory.getFixedParameters(), experimentSet);
         }
     }
 
     private void recurse(int i, List<String> featureKeys,
-                         FeatureFactories featureFactories,
+                         ExperimentFactory experimentFactory,
                          Map<String, Feature> instanceFeatures,
                          ExperimentSet experimentSet, int max) {
         if (i >= featureKeys.size()) {
-            addExperiments(instanceFeatures, experimentSet);
+            addExperiments(instanceFeatures, experimentFactory.getFixedParameters(), experimentSet);
             return;
         }
         if (experimentSet.getExperiments().size() >= max) {
             return;
         }
         String featureName = featureKeys.get(i);
-        FeatureFactory featureFactory = featureFactories.get(featureName);
+        FeatureFactory featureFactory = experimentFactory.getFeatureFactories().get(featureName);
         boolean hadContents = false;
         List<Feature> permutations = featureFactory.permute(1000);
         for (Feature feature : permutations) {
             instanceFeatures.put(featureName, feature);
-            recurse(i+1, featureKeys, featureFactories, instanceFeatures, experimentSet, max);
+            recurse(i+1, featureKeys, experimentFactory, instanceFeatures, experimentSet, max);
             hadContents = true;
         }
         if (! hadContents) {
-            recurse(i+1, featureKeys, featureFactories, instanceFeatures, experimentSet, max);
+            recurse(i+1, featureKeys, experimentFactory, instanceFeatures, experimentSet, max);
         }
     }
 
     private void addExperiments(Map<String, Feature> features,
-                                ExperimentSet experimentSet) {
+                                Map<String, List<String>> fixedParameters, ExperimentSet experimentSet) {
         String experimentName = "experiment_"+experimentCount++;
         String searchServerUrl = features.get(Experiment.URL_KEY).toString();
 
@@ -201,6 +205,14 @@ public class GenerateExperiments extends AbstractCLI {
                     && !e.getKey().equals(Experiment.CUSTOM_HANDLER_KEY)) {
                 experiment.addParam(e.getKey(), e.getValue());
             }
+        }
+        for (Map.Entry<String, List<String>> e : fixedParameters.entrySet()) {
+            if (experiment.getParams(e.getKey()) != null) {
+                throw new IllegalArgumentException("Can't overwrite dynamic params as of now: "+e.getKey());
+            }
+
+            experiment.addParam(e.getKey(), new SimpleStringListFeature(e.getKey(), e.getValue(), 0, e.getValue().size()));
+
         }
         experimentSet.addExperiment(experimentName, experiment);
     }

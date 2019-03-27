@@ -41,6 +41,6 @@ public class CumulativeGain extends AbstractRankScorer {
 
     @Override
     String _getName() {
-        return "CumGain";
+        return "CumulativeGain";
     }
 }

@@ -13,23 +13,22 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 package org.mitre.quaerite.core.scoreaggregators;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.Map;
 
-import org.junit.jupiter.api.Test;
+import org.mitre.quaerite.core.scorers.AtLeastOneHitAtK;
 
-public class TestScoreAggregatorListSerializer {
 
-    @Test
-    public void testBasic() {
-        ScoreAggregator scoreAggregator = new AtLeastOneHitAtKAggregator(2);
-        String json = ScoreAggregatorListSerializer.toJson(scoreAggregator);
-        ScoreAggregator revivified = ScoreAggregatorListSerializer.fromJson(json);
-        assertEquals(revivified.getClass().getCanonicalName(), revivified.getClass().getCanonicalName());
-        assertEquals(scoreAggregator.getK(),
-                ((AbstractScoreAggregator)revivified).getK());
+public class AtLeastOneHitAtKAggregator extends SummingScoreAggregator {
+
+    public AtLeastOneHitAtKAggregator(Map<String, String> params) {
+        this(extractAtK(params));
     }
 
+    public AtLeastOneHitAtKAggregator(int k) {
+        super(new AtLeastOneHitAtK(k));
+    }
 }
