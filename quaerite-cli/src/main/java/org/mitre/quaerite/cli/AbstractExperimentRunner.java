@@ -57,6 +57,7 @@ import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.features.Feature;
+import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.scorecollectors.DistributionalScoreCollector;
 import org.mitre.quaerite.core.scorecollectors.ScoreCollector;
@@ -230,32 +231,48 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
         addValid(queryString.toString(), experimentConfig.getIdField(), searchClient, expected, valid);
 
+        int validIds = 0;
+        int invalidIds = 0;
         if (judgmentIds.size() != valid.size()) {
             for (String id : judgmentIds) {
                 if (!valid.contains(id)) {
+                    invalidIds++;
                     LOG.warn("I regret that I could not find: " + id + " in the index. " +
                             "I'll remove this from the judgments before scoring.");
+                } else {
+                    validIds++;
                 }
             }
         }
-
+        if (invalidIds > 0) {
+            LOG.warn("There were "+validIds +" unique valid ids and " +
+                    invalidIds + " unique invalid ids");
+        }
+        int validQueries = 0;
+        int invalidQueries = 0;
         JudgmentList retList = new JudgmentList();
         for (Judgments j : judgmentList.getJudgmentsList()) {
             Judgments winnowedJugments = new Judgments(new QueryInfo(j.getQuerySet(), j.getQuery(), j.getQueryCount()));
             for (Map.Entry<String, Double> e : j.getSortedJudgments().entrySet()) {
                 if (valid.contains(e.getKey())) {
-                    winnowedJugments.addJugment(e.getKey(), e.getValue());
+                    winnowedJugments.addJudgment(e.getKey(), e.getValue());
                 } else {
                     LOG.warn("Could not find " + e.getKey() + " in the index!");
                 }
             }
             if (winnowedJugments.getSortedJudgments().size() > 0) {
                 retList.addJudgments(winnowedJugments);
+                validQueries++;
             } else {
                 LOG.warn(
                         "After removing invalid jugments, there were 0 judgments for query: " +
                                 j.getQuery());
+                invalidQueries++;
             }
+        }
+        if (validQueries > 0) {
+            LOG.warn("I had to remove "+invalidQueries+" queries because there were no judgments for them. "+
+                    " There were " + validQueries + " valid queries.");
         }
         return retList;
 
@@ -333,6 +350,12 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
                     for (int i = 0; i < list.size(); i++) {
                         queryRequest.addParameter(e.getKey(), list.get(i).toString());
                     }
+                } else if (e.getValue() instanceof StringListFeature){
+                    StringListFeature list = (StringListFeature) e.getValue();
+                    for (int i = 0; i < list.size(); i++) {
+                        queryRequest.addParameter(e.getKey(), list.get(i));
+                    }
+
                 } else {
                     queryRequest.addParameter(e.getKey(), e.getValue().toString());
                 }

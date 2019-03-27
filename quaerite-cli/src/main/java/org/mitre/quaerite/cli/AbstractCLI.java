@@ -135,7 +135,7 @@ public abstract class AbstractCLI {
                     if (judgments == null) {
                         judgments = new Judgments(new QueryInfo(querySet, query, count));
                     }
-                    judgments.addJugment(id, relevanceScore);
+                    judgments.addJudgment(id, relevanceScore);
                     querySetMap.put(query, judgments);
                     queries.put(querySet, querySetMap);
                 }

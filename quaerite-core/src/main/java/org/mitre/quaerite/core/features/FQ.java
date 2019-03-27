@@ -18,17 +18,15 @@ package org.mitre.quaerite.core.features;
 
 import java.util.List;
 
-public class BQ extends StringListFeature<BQ> {
+public class FQ extends StringListFeature<FQ> {
+    private static final String NAME = "fq";
 
-
-    private static final String NAME = "bq";
-
-    public BQ(List<String> features, int minSetSize, int maxSetSize) {
+    public FQ(List<String> features, int minSetSize, int maxSetSize) {
         super(NAME, features, minSetSize, maxSetSize);
     }
 
     @Override
-    BQ build(List<String> strings, int minSetSize, int maxSetSize) {
-        return new BQ(strings, minSetSize, maxSetSize);
+    FQ build(List<String> strings, int minSetSize, int maxSetSize) {
+        return new FQ(strings, minSetSize, maxSetSize);
     }
 }

@@ -109,7 +109,7 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
             List<WeightableField> tmp = new ArrayList<>();
             tmp.addAll(features.getWeightableFields());
             Collections.shuffle(tmp, MathUtil.RANDOM);
-            for (int i = 0; i < maxSetSize; i++) {
+            for (int i = 0; i < maxSetSize && i < tmp.size(); i++) {
                 WeightableField field = tmp.get(i);
                 if (field.hasWeight()) {
                     ret.add(field);

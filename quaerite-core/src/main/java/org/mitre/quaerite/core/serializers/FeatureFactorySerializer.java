@@ -16,9 +16,7 @@
  */
 package org.mitre.quaerite.core.serializers;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -30,16 +28,17 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import org.mitre.quaerite.core.features.FloatFeature;
+import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
 import org.mitre.quaerite.core.features.factories.FloatFeatureFactory;
+import org.mitre.quaerite.core.features.factories.StringListFeatureFactory;
 import org.mitre.quaerite.core.features.factories.StringFeatureFactory;
 import org.mitre.quaerite.core.features.factories.WeightableListFeatureFactory;
 
@@ -51,6 +50,7 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
     static String FIELDS_KEY = "fields";
     static String VALUES_KEY = "values";
     static String DEFAULT_WEIGHT_KEY = "defaultWeights";
+    static String MIN_SET_SIZE_KEY = "minSetSize";
     static String MAX_SET_SIZE_KEY = "maxSetSize";
 
     @Override
@@ -75,10 +75,46 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             return buildFloatFeatureFactory(paramName, jsonFeatureFactory);
         } else if (StringFeature.class.isAssignableFrom(clazz)) {
             return buildStringFeatureFactory(paramName, jsonFeatureFactory);
+        } else if (StringListFeature.class.isAssignableFrom(clazz)) {
+            return buildStringListFeature(paramName, jsonFeatureFactory);
         } else {
             throw new IllegalArgumentException("Sorry, I can't yet handle: "+paramName);
         }
 
+    }
+
+    private FeatureFactory buildStringListFeature(String paramName, JsonElement jsonFeatureFactory) {
+        List<String> fields = null;
+        int minSetSize = -1;
+        int maxSetSize = -1;
+        if (jsonFeatureFactory.isJsonArray()) {
+            fields = toStringList(jsonFeatureFactory);
+        } else {
+            if (! jsonFeatureFactory.isJsonObject()) {
+                throw new IllegalArgumentException("Expected array or json object for: "+paramName);
+            }
+            JsonObject obj = (JsonObject)jsonFeatureFactory;
+            if (obj.has(MIN_SET_SIZE_KEY)) {
+                minSetSize = obj.get(MIN_SET_SIZE_KEY).getAsInt();
+            }
+
+            if (obj.has(MAX_SET_SIZE_KEY)) {
+                maxSetSize = obj.get(MAX_SET_SIZE_KEY).getAsInt();
+            }
+
+            if (obj.has(VALUES_KEY)) {
+                fields = toStringList(obj.get(VALUES_KEY));
+            } else {
+                throw new IllegalArgumentException(paramName +" param requires a '"+
+                        VALUES_KEY+"'");
+            }
+        }
+        try {
+            return new StringListFeatureFactory(paramName,
+                    Class.forName(getClassName(paramName)), fields, minSetSize, maxSetSize);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     private FeatureFactory buildFloatFeatureFactory(String name, JsonElement floatArr) {

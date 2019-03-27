@@ -16,9 +16,13 @@
  */
 package org.mitre.quaerite.core.serializers;
 
+import static org.mitre.quaerite.core.serializers.FeatureFactorySerializer.MAX_SET_SIZE_KEY;
+import static org.mitre.quaerite.core.serializers.FeatureFactorySerializer.MIN_SET_SIZE_KEY;
+import static org.mitre.quaerite.core.serializers.FeatureFactorySerializer.VALUES_KEY;
+
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -33,19 +37,21 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.FloatFeature;
+import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.ParamsMap;
 import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
-import org.mitre.quaerite.core.features.factories.FloatFeatureFactory;
-import org.mitre.quaerite.core.features.factories.StringFeatureFactory;
 import org.mitre.quaerite.core.features.factories.WeightableListFeatureFactory;
 
 public class ParamsSerializer extends AbstractFeatureSerializer
         implements JsonSerializer<ParamsMap>, JsonDeserializer<ParamsMap> {
+
+    static Logger LOG = Logger.getLogger(ParamsSerializer.class);
 
     @Override
     public ParamsMap deserialize(JsonElement jsonElement, Type type,
@@ -75,8 +81,45 @@ public class ParamsSerializer extends AbstractFeatureSerializer
             return buildStringFeature(parameterName, element);
         } else if (FloatFeature.class.isAssignableFrom(paramClass)) {
             return buildFloatFeature(parameterName, element);
+        } else if (StringListFeature.class.isAssignableFrom(paramClass)) {
+            return buildStringListFeature(parameterName, element);
         } else {
             throw new IllegalArgumentException("I regret I don't know how to build: "+parameterName);
+        }
+    }
+
+    private Feature buildStringListFeature(String name, JsonElement element) {
+        try {
+            Class clazz = Class.forName(getClassName(name));
+            if (!(StringListFeature.class.isAssignableFrom(clazz))) {
+                throw new IllegalArgumentException(getClassName(name) + " must be assignable from WeightableListFeatureFactory");
+            }
+            int minSetSize = 0;
+            int maxSetSize = 0;
+            List<String> strings = new ArrayList<>();
+            if (element.isJsonObject()) {
+                JsonObject obj = (JsonObject)element;
+                if (obj.has(FeatureFactorySerializer.MIN_SET_SIZE_KEY)) {
+                    minSetSize = obj.get(FeatureFactorySerializer.MIN_SET_SIZE_KEY).getAsInt();
+                }
+                if (obj.has(FeatureFactorySerializer.MAX_SET_SIZE_KEY)) {
+                    maxSetSize = obj.get(FeatureFactorySerializer.MAX_SET_SIZE_KEY).getAsInt();
+                }
+                if (!obj.has(VALUES_KEY)) {
+                    throw new IllegalArgumentException(name + " must have a "+VALUES_KEY);
+                }
+                strings = toStringList(obj.get(VALUES_KEY));
+            } else {
+                strings = toStringList(element);
+                minSetSize = 0;
+                maxSetSize = strings.size();
+            }
+            Constructor constructor = null;
+
+            constructor = clazz.getConstructor(List.class, int.class, int.class);
+            return (StringListFeature)constructor.newInstance(strings, minSetSize, maxSetSize);
+        } catch (Exception e) {
+            throw new JsonParseException(e.getMessage());
         }
     }
 
@@ -121,12 +164,14 @@ public class ParamsSerializer extends AbstractFeatureSerializer
             throw new JsonParseException(e.getMessage());
         }
 
-
-
         if (element.isJsonPrimitive()) {
             weightableListFeature.add(new WeightableField(element.getAsString()));
         } else if (element.isJsonArray()) {
             for (JsonElement e : (JsonArray)element) {
+                if (e.isJsonNull()) {
+                    LOG.warn("Json null in list for: "+name+" ?! Skipping.");
+                    continue;
+                }
                 weightableListFeature.add(new WeightableField(e.getAsString()));
             }
         }
@@ -170,6 +215,31 @@ public class ParamsSerializer extends AbstractFeatureSerializer
         } else if (feature instanceof FloatFeature ||
             feature instanceof StringFeature) {
                 return new JsonPrimitive(feature.toString());
+
+        } else if (feature instanceof StringListFeature) {
+            StringListFeature stringListFeature = (StringListFeature)feature;
+            List<String> strings = stringListFeature.getAll();
+            JsonElement valuesElement;
+            if (strings.size() == 0) {
+                valuesElement = JsonNull.INSTANCE;
+            } else if (strings.size() == 1) {
+                valuesElement = new JsonPrimitive(strings.get(0));
+            } else {
+                valuesElement = new JsonArray();
+                for (String s : strings) {
+                    ((JsonArray)valuesElement).add(s);
+                }
+            }
+            if (stringListFeature.getMinSetSize() == 0 &&
+                    stringListFeature.getMaxSetSize() == strings.size()) {
+                return valuesElement;
+            } else {
+                JsonObject obj = new JsonObject();
+                obj.add(MIN_SET_SIZE_KEY, new JsonPrimitive(stringListFeature.getMinSetSize()));
+                obj.add(MAX_SET_SIZE_KEY, new JsonPrimitive(stringListFeature.getMaxSetSize()));
+                obj.add(VALUES_KEY, valuesElement);
+                return obj;
+            }
 
         } else {
             throw new IllegalArgumentException("not yet implemented: "+feature);

@@ -141,19 +141,19 @@ public class FindFeatures extends AbstractCLI {
             ids.addAll(localIds);
         }
         for (String f : fields) {
-            FacetResult truthCounts = getFacets(f, idField, ids, searchClient);
+            FacetResult targetCounts = getFacets(f, idField, ids, filterQuery, searchClient);
             QueryRequest sq = new QueryRequest("*:*");
             if (filterQuery != null) {
                 sq.addParameter("fq", filterQuery);
             }
             FacetResult backgroundCounts = getFacets(f, sq, searchClient);
-            List<ContrastResult> chis = getChis(truthCounts, backgroundCounts);
+            List<ContrastResult> chis = getChis(targetCounts, backgroundCounts);
             reportResult(f, chis);
         }
     }
 
     private FacetResult getFacets(String f, String idField, Set<String> ids,
-                                  SearchClient searchClient) throws Exception {
+                                  String filterQuery, SearchClient searchClient) throws Exception {
         Map<String, Long> ret = new HashMap<>();
         List<String> cache = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
@@ -165,13 +165,21 @@ public class FindFeatures extends AbstractCLI {
             }
             sb.append(idField).append(":").append(id);
             if (sb.length() > 1000) {
-                addAll(getFacets(f, new QueryRequest(sb.toString()), searchClient).getFacetCounts(), ret);
+                QueryRequest qr = new QueryRequest(sb.toString());
+                if (filterQuery != null) {
+                    qr.addParameter("fq", filterQuery);
+                }
+                addAll(getFacets(f, qr, searchClient).getFacetCounts(), ret);
                 sb.setLength(0);
                 cnt = 0;
             }
         }
         if (sb.length() > 0) {
-            addAll(getFacets(f, new QueryRequest(sb.toString()), searchClient).getFacetCounts(), ret);
+            QueryRequest qr = new QueryRequest(sb.toString());
+            if (filterQuery != null) {
+                qr.addParameter("fq", filterQuery);
+            }
+            addAll(getFacets(f, qr, searchClient).getFacetCounts(), ret);
         }
         return new FacetResult(ids.size(), ret);
     }
@@ -214,7 +222,7 @@ public class FindFeatures extends AbstractCLI {
     private List<ContrastResult> getChis(FacetResult foreground, FacetResult background) {
         Map<String, Long> tmpB = new HashMap<>();
         tmpB.putAll(background.getFacetCounts());
-        //discount those in the foreground set
+/*        //discount those in the foreground set
         for (Map.Entry<String, Long> e : foreground.getFacetCounts().entrySet()) {
             Long backgroundCnt = tmpB.get(e.getKey());
             if (backgroundCnt != null) {
@@ -222,12 +230,12 @@ public class FindFeatures extends AbstractCLI {
                 tmpB.put(e.getKey(), backgroundCnt);
             }
         }
-
-        long totalDocs = background.getTotalDocs() - foreground.getTotalDocs();
+*/
+        long totalDocs = background.getTotalDocs();
         List<ContrastResult> ret = new ArrayList<>();
         for (Map.Entry<String, Long> e : foreground.getFacetCounts().entrySet()) {
             long a = e.getValue();
-            Long b = tmpB.get(e.getKey());
+            Long b = background.getFacetCounts().get(e.getKey());
             b = (b == null) ? 0 : b;
             long c = foreground.getTotalDocs() - a;
             long d = totalDocs - b;

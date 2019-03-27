@@ -35,13 +35,13 @@ public class TestNDCG {
     @BeforeAll
     public static void setUp() {
 
-        JUDGMENTS.addJugment("1", 3);
-        JUDGMENTS.addJugment("2", 2);
-        JUDGMENTS.addJugment("3", 3);
-        JUDGMENTS.addJugment("5", 1);
-        JUDGMENTS.addJugment("6", 2);
-        JUDGMENTS.addJugment("7", 3);
-        JUDGMENTS.addJugment("8", 2);
+        JUDGMENTS.addJudgment("1", 3);
+        JUDGMENTS.addJudgment("2", 2);
+        JUDGMENTS.addJudgment("3", 3);
+        JUDGMENTS.addJudgment("5", 1);
+        JUDGMENTS.addJudgment("6", 2);
+        JUDGMENTS.addJudgment("7", 3);
+        JUDGMENTS.addJudgment("8", 2);
         List<String> ids = new ArrayList<>();
         for (int i = 1; i <= 6; i++) {
             ids.add(Integer.toString(i));

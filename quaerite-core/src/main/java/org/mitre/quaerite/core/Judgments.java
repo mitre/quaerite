@@ -47,7 +47,7 @@ public class Judgments {
         this.queryInfo = queryInfo;
     }
 
-    public void addJugment(String id, double relevance) {
+    public void addJudgment(String id, double relevance) {
         judgments.put(id, relevance);
         synchronized (lock) {
             updated = true;

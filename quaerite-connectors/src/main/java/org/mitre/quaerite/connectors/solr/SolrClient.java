@@ -107,11 +107,12 @@ public class SolrClient extends SearchClient {
         sb.append("?");
 
         try {
+        /* TODO: make this configurable; turn off for now
             if (!StringUtils.isBlank(query.getCustomHandler())) {
                 sb.append("qq=");
-            } else {
+            } else { */
                 sb.append("q=");
-            }
+
             sb.append(URLEncoder.encode(query.getQuery(), StandardCharsets.UTF_8.name()));
             sb.append("&defType=edismax");
             sb.append("&fl=")

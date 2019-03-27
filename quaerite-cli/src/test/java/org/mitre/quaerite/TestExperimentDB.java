@@ -88,9 +88,9 @@ public class TestExperimentDB {
 
         Judgments judgments = new Judgments(new QueryInfo("", "q1", 1));
 
-        judgments.addJugment("id1", 2.0);
-        judgments.addJugment("id2", 4.0);
-        judgments.addJugment("id5", 6.0);
+        judgments.addJudgment("id1", 2.0);
+        judgments.addJudgment("id2", 4.0);
+        judgments.addJudgment("id5", 6.0);
 
         db.addJudgment(judgments);
         db.close();

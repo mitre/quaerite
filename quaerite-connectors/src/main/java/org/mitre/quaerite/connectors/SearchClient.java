@@ -74,7 +74,8 @@ public abstract class SearchClient implements Closeable {
             try(CloseableHttpResponse httpResponse = httpClient.execute(target, httpGet)) {
                 if (httpResponse.getStatusLine().getStatusCode() != 200) {
                     EntityUtils.consumeQuietly(httpResponse.getEntity());
-                    throw new SearchClientException("Bad status code: "+httpResponse.getStatusLine().getStatusCode());
+                    throw new SearchClientException("Bad status code: "+httpResponse.getStatusLine().getStatusCode()
+                    + "for url: "+url);
                 }
                 return EntityUtils.toByteArray(httpResponse.getEntity());
             }
