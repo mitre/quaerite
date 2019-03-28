@@ -13,36 +13,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
-package org.mitre.quaerite.core.scorers;
+package org.mitre.quaerite.core.scoreaggregators;
+
+import java.util.Map;
+
+import org.mitre.quaerite.core.scorers.AbstractRankScorer;
+import org.mitre.quaerite.core.scorers.ZeroResults;
 
 
-import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.ResultSet;
+public class ZeroResultsAggregator extends SummingScoreAggregator {
 
-/**
- * How many queries had 0 results returned
- */
-public class ZeroResultsAtK extends AbstractRankScorer {
-
-
-    public ZeroResultsAtK(int atK) {
-        super(atK);
+    public ZeroResultsAggregator(Map<String, String> params) {
+        this(new ZeroResults());
     }
 
-    @Override
-    String _getName() {
-        return "ZeroResultsAtK";
-    }
-
-    @Override
-    public double score(Judgments judgments, ResultSet resultSet) {
-        int hits = 0;
-        for (int i = 0; i < atN && i < resultSet.size(); i++) {
-            if (judgments.containsJudgment(resultSet.get(i))) {
-                hits++;
-            }
-        }
-        return (hits == 0) ? 1 : 0;
+    ZeroResultsAggregator(AbstractRankScorer scorer) {
+        super(scorer);
     }
 }
