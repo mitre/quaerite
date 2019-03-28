@@ -37,11 +37,11 @@ import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.connectors.StoredDocument;
 
-public class TMDBJsonToSolr {
+public class IndexTMDB {
 
     public static void main(String[] args) throws Exception {
         if (args.length != 2) {
-            System.err.println("java -jar o.m.q.examples.TMDBToSolr tmdb.json http://localhost:8983/solr/tmdb");
+            System.err.println("java -jar o.m.q.examples.IndexTMDB tmdb.json http://localhost:8983/solr/tmdb");
             System.exit(0);
         }
         Path p = Paths.get(args[0]);
@@ -49,6 +49,7 @@ public class TMDBJsonToSolr {
         int cnt = 0;
         long start = System.currentTimeMillis();
         List<Movie> movies = new ArrayList<>();
+        String idField = searchClient.getIdField();
         try (Reader reader = Files.newBufferedReader(p, StandardCharsets.UTF_8)) {
             JsonReader jsonReader = new JsonReader(reader);
             jsonReader.beginObject();
@@ -57,7 +58,7 @@ public class TMDBJsonToSolr {
                 movies.add(movie);
                 cnt++;
                 if (movies.size() >= 1000) {
-                    searchClient.addDocuments(buildDocuments(movies));
+                    searchClient.addDocuments(buildDocuments(idField, movies));
                     movies.clear();
                     System.out.println("indexed "+cnt + " in "+
                             (System.currentTimeMillis()-start) + " ms");
@@ -65,22 +66,22 @@ public class TMDBJsonToSolr {
             }
             jsonReader.endObject();
         }
-        searchClient.addDocuments(buildDocuments(movies));
+        searchClient.addDocuments(buildDocuments(idField, movies));
         System.out.println("finished indexing "+cnt + " in "+
                 (System.currentTimeMillis()-start) + " ms");
     }
 
-    private static List<StoredDocument> buildDocuments(List<Movie> movies) {
+    private static List<StoredDocument> buildDocuments(String idField, List<Movie> movies) {
         List<StoredDocument> docs = new ArrayList<>();
         for (Movie movie : movies) {
-            docs.add(buildDocument(movie));
+            docs.add(buildDocument(idField, movie));
         }
         return docs;
     }
 
-    private static StoredDocument buildDocument(Movie movie) {
+    private static StoredDocument buildDocument(String idField, Movie movie) {
         StoredDocument storedDocument = new StoredDocument();
-        storedDocument.addNonBlankField("id", movie.id);
+        storedDocument.addNonBlankField(idField, movie.id);
         storedDocument.addNonBlankField("original_language", movie.originalLanguage);
         storedDocument.addNonBlankField("original_title", movie.originalTitle);
         storedDocument.addNonBlankField("title", movie.title);

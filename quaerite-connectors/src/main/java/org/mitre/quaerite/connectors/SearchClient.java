@@ -36,9 +36,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -97,18 +101,17 @@ public abstract class SearchClient implements Closeable {
     }
 
     protected JsonResponse postJson(String url, String json) throws IOException {
-        HttpPost httpPost = new HttpPost(url);
+        HttpPost httpRequest = new HttpPost(url);
         ByteArrayEntity entity = new ByteArrayEntity(json.getBytes(StandardCharsets.UTF_8));
-
-        httpPost.setEntity(entity);
-
-        httpPost.setHeader("Accept", "application/json");
-        httpPost.setHeader("Content-type", "application/json; charset=utf-8");
+        httpRequest.setEntity(entity);
+        httpRequest.setHeader("Accept", "application/json");
+        httpRequest.setHeader("Content-type", "application/json; charset=utf-8");
         //this was required because of connection already bound exceptions on windows :(
         //httpPost.setHeader("Connection", "close");
 
         //try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-        try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+
+        try (CloseableHttpResponse response = httpClient.execute(httpRequest)) {
             int status = response.getStatusLine().getStatusCode();
             if (status == 200) {
                 try (Reader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8))) {
@@ -119,7 +122,7 @@ public abstract class SearchClient implements Closeable {
                 return new JsonResponse(status, new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8));
             }
         } finally {
-            httpPost.releaseConnection();
+            httpRequest.releaseConnection();
         }
     }
 
@@ -131,8 +134,6 @@ public abstract class SearchClient implements Closeable {
             throw new IllegalArgumentException(e);
         }
     }
-
-    public abstract void addDocument(StoredDocument buildDocument) throws IOException;
 
     public void close() throws IOException {
         httpClient.close();

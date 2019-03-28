@@ -47,4 +47,13 @@ public class JsonResponse {
     public JsonElement getJson() {
         return root;
     }
+
+    @Override
+    public String toString() {
+        return "JsonResponse{" +
+                "status=" + status +
+                ", msg='" + msg + '\'' +
+                ", root=" + root +
+                '}';
+    }
 }

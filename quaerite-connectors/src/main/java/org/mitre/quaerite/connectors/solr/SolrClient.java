@@ -118,7 +118,9 @@ public class SolrClient extends SearchClient {
             sb.append("q=");
 
             sb.append(URLEncoder.encode(query.getQuery(), StandardCharsets.UTF_8.name()));
-            sb.append("&defType=edismax");
+            if (!query.getParameters().containsKey("defType")) {
+                sb.append("&defType=edismax");
+            }
             if (query.getFields().size() > 0) {
                 sb.append("&fl=").append(StringUtils.join(query.getFields(), ','));
             }
@@ -146,14 +148,12 @@ public class SolrClient extends SearchClient {
         solrQuery.setFacetLimit(10000);
          */
 
-        if (query.getFacetFields().size() > 0) {
+        if (query.getFacetField() != null) {
             sb.append("&facet=true");
             //TODO: parameterize
             sb.append("&facet.missing=true");
             sb.append("&facet.limit=100000");
-            for (String field : query.getFacetFields()) {
-                sb.append("&facet.field=").append(encode(field));
-            }
+            sb.append("&facet.field=").append(encode(query.getFacetField()));
         }
         sb.append(JSON_RESPONSE);
         return sb.toString();
@@ -174,8 +174,8 @@ public class SolrClient extends SearchClient {
         long totalDocs = response.get("numFound").getAsLong();
         JsonObject facetCounts = (JsonObject) ((JsonObject) root).get("facet_counts");
         JsonObject facetFields = (JsonObject) facetCounts.get("facet_fields");
-        //TODO: hardcoded to expect only 1
-        String facetField = query.getFacetFields().get(0);
+        //TODO: expand to a list in the future
+        String facetField = query.getFacetField();
         JsonArray arr = (JsonArray) facetFields.get(facetField);
 
         Map<String, Long> counts = new HashMap<>();
@@ -191,12 +191,6 @@ public class SolrClient extends SearchClient {
             counts.put(value, count);
         }
         return new FacetResult(totalDocs, counts);
-    }
-
-    @Override
-    public void addDocument(StoredDocument buildDocument) throws IOException {
-        String json = GSON.toJson(buildDocument.getFields());
-        postJson(url + "/update/json?commitWithin=10000", json);
     }
 
     @Override

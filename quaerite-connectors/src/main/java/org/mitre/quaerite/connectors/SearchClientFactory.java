@@ -16,11 +16,18 @@
  */
 package org.mitre.quaerite.connectors;
 
+import org.mitre.quaerite.connectors.es.ESClient;
 import org.mitre.quaerite.connectors.solr.SolrClient;
 
 public class SearchClientFactory {
 
     public static SearchClient getClient(String url) {
-        return new SolrClient(url);
+        //TODO: remove collection/core name and actually
+        //run something like http://yoursolrhost:8983/solr/admin/info/system?wt=json
+        if (url.contains("solr")) {
+            return new SolrClient(url);
+        } else {
+            return new ESClient(url);
+        }
     }
 }

@@ -39,7 +39,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import org.mitre.quaerite.core.ExperimentConfig;
-import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
@@ -264,7 +263,7 @@ public class FindFeatures extends AbstractCLI {
 
     private FacetResult getFacets(String facetFieldName, QueryRequest queryRequest,
                                   SearchClient searchClient) throws Exception {
-        queryRequest.addFacetField(facetFieldName);
+        queryRequest.setFacetField(facetFieldName);
         queryRequest.setFacetLimit(10000);
         queryRequest.setNumResults(0);
         return searchClient.facet(queryRequest);

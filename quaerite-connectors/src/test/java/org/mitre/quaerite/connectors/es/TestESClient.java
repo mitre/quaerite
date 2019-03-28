@@ -14,17 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.connectors.solr;
+package org.mitre.quaerite.connectors.es;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import javax.accessibility.AccessibleHyperlink;
+
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -32,31 +37,39 @@ import org.mitre.quaerite.connectors.QueryRequest;
 import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.connectors.StoredDocument;
+import org.mitre.quaerite.connectors.solr.SolrClient;
 import org.mitre.quaerite.core.FacetResult;
+import org.mitre.quaerite.core.ResultSet;
 
-@Disabled("need to have Solr tmdb instance running")
-public class TestSolrClient {
+@Disabled("need to have ES tmdb instance running")
+public class TestESClient {
 
     private static String ALL_DOCS = "*:*";
-    private static String TMDB_URL = "http://localhost:8983/solr/tmdb";
+    private static String TMDB_URL = "http://localhost:9200/tmdb";
+
+    @Test
+    public void testInit() throws Exception {
+        ESClient client = new ESClient("http://localhost:9200/tmdb");
+        assertEquals("http://localhost:9200/", client.getESBase());
+        assertEquals("http://localhost:9200/tmdb/", client.getUrl());
+        assertEquals("tmdb", client.getESCollection());
+    }
 
     @Test
     public void testCopyFields() throws Exception {
-        SolrClient client = new SolrClient(TMDB_URL);
-        Set<String> copyFieldDests = client.getCopyFields();
-        assertTrue(copyFieldDests.contains("tsss_directors"));
-        assertTrue(copyFieldDests.contains("tsss_cast"));
-        assertEquals(19, copyFieldDests.size());
+        ESClient client = new ESClient("http://localhost:9200/tmdb");
+        Collection copyFields = client.getCopyFields();
+        Set<String> set = new HashSet<>(copyFields);
+        assertTrue(set.contains("people"));
     }
 
 
     @Test
     public void testFacets() throws Exception {
-        SolrClient client = new SolrClient(TMDB_URL);
+        SearchClient client = SearchClientFactory.getClient(TMDB_URL);
         QueryRequest queryRequest = new QueryRequest(ALL_DOCS);
-        queryRequest.setFacetField("genres_facet");
-        queryRequest.setFacetLimit(20000);
-
+        queryRequest.setFacetField("genres.facet");
+        queryRequest.setFacetLimit(10000);
         FacetResult result = client.facet(queryRequest);
         Map<String, Long> counts = result.getFacetCounts();
         assertEquals(21, counts.size());
@@ -65,10 +78,11 @@ public class TestSolrClient {
 
 
         queryRequest = new QueryRequest(ALL_DOCS);
-        queryRequest.setFacetField("production_companies_facet");
-        queryRequest.setFacetLimit(20000);
+        queryRequest.setFacetField("production_companies.facet");
+        queryRequest.setFacetLimit(100000);
         result = client.facet(queryRequest);
         counts = result.getFacetCounts();
+        //TODO: figure out why this # is different from Solr's
         assertEquals(15905, counts.size());
         assertEquals(1, counts.get("haile gerima"));
         assertEquals(90, counts.get("dreamworks skg"));
@@ -76,7 +90,7 @@ public class TestSolrClient {
         queryRequest = new QueryRequest("red");
         queryRequest.setFacetLimit(20000);
         queryRequest.addParameter("qf", "title");
-        queryRequest.setFacetField("production_companies_facet");
+        queryRequest.setFacetField("production_companies.facet");
         result = client.facet(queryRequest);
         counts = result.getFacetCounts();
         assertEquals(15905, counts.size());
@@ -87,8 +101,16 @@ public class TestSolrClient {
     @Test
     public void testQuery() throws Exception {
         SearchClient client = SearchClientFactory.getClient(TMDB_URL);
-        QueryRequest queryRequest = new QueryRequest("title:psycho", null, "id");
-        System.out.println(client.search(queryRequest));
+        QueryRequest queryRequest = new QueryRequest("psycho", null, client.getIdField());
+        queryRequest.addParameter("qf", "title");
+        ResultSet result = client.search(queryRequest);
+        Set<String> hits = new HashSet<>();
+        for (int i = 0; i < result.size(); i++) {
+            hits.add(result.get(i));
+        }
+        assertEquals(8, hits.size());
+        assertTrue(hits.contains("539"));
+        assertTrue(hits.contains("35683"));
     }
 
     @Test
@@ -96,7 +118,7 @@ public class TestSolrClient {
         Set<String> ids = new HashSet<>();
         ids.addAll(Arrays.asList("539 11252 1359 10576 12662".split(" ")));
         SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
-        List<StoredDocument> docs = searchClient.getDocs("id", ids, Collections.EMPTY_SET, Collections.EMPTY_SET);
+        List<StoredDocument> docs = searchClient.getDocs("_id", ids, Collections.EMPTY_SET, Collections.EMPTY_SET);
         assertEquals(5, docs.size());
         StoredDocument doc1359 = null;
         for (int i = 0; i < docs.size(); i++) {
@@ -121,8 +143,7 @@ public class TestSolrClient {
         SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
         Set<String> whiteListFields = new HashSet<>();
         whiteListFields.add("original_title");
-        whiteListFields.add("id");
-        List<StoredDocument> docs = searchClient.getDocs("id", ids, whiteListFields, Collections.EMPTY_SET);
+        List<StoredDocument> docs = searchClient.getDocs("_id", ids, whiteListFields, Collections.EMPTY_SET);
         assertEquals(5, docs.size());
         StoredDocument doc1359 = null;
         for (int i = 0; i < docs.size(); i++) {
@@ -134,5 +155,38 @@ public class TestSolrClient {
         }
         String title = (String)doc1359.getFields().get("original_title");
         assertEquals("American Psycho", title);
+    }
+
+    @Test
+    public void testIDGrabbing() throws Exception {
+        SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
+        ArrayBlockingQueue<Set<String>> ids = new ArrayBlockingQueue<>(10);
+        searchClient.startLoadingIds(ids,
+                1000, 10, Collections.EMPTY_SET);
+        new Thread() {
+            @Override
+            public void run() {
+                Set<String> id = null;
+                while (true) {
+                    try {
+                        id = ids.poll(1, TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    if (id != null) {
+                        if (id.size() == 0) {
+                            return;
+                        }
+                        System.out.println(id.size());
+                    }
+                }
+            }
+        }.run();
+    }
+
+    @Disabled
+    public void testDeleteAll() throws Exception {
+        SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
+        searchClient.deleteAll();
     }
 }

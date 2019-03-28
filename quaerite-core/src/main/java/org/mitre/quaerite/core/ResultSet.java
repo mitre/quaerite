@@ -16,6 +16,7 @@
  */
 package org.mitre.quaerite.core;
 
+import java.util.Collection;
 import java.util.List;
 
 public class ResultSet {
@@ -59,5 +60,9 @@ public class ResultSet {
                 ", elapsedTime=" + elapsedTime +
                 ", ids=" + ids +
                 '}';
+    }
+
+    public Collection<? extends String> getIds() {
+        return ids;
     }
 }

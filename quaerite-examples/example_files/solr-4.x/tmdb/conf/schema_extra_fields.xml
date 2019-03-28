@@ -10,9 +10,9 @@
   <field name="directors" type="text_en" stored="true" multiValued="true"/>
   <field name="people" type="text_en" stored="true" multiValued="true"/>
 
-  <field name="original_language_facet" type="lowercase" stored="true"/>
-  <field name="genres_facet" type="lowercase" stored="true" multiValued="true"/>
-  <field name="production_companies_facet" type="lowercase" stored="true" multiValued="true"/>
+  <field name="original_language_facet" type="icu_lowercase" stored="true"/>
+  <field name="genres_facet" type="icu_lowercase" stored="true" multiValued="true"/>
+  <field name="production_companies_facet" type="icu_lowercase" stored="true" multiValued="true"/>
 
 
   <field name="budget" type="tdouble" stored="true"/>

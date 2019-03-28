@@ -1,0 +1,139 @@
+{
+  "template": "tmdb",
+  "index_patterns": [
+    "tmdb"
+  ],
+  "mappings": {
+    "_doc": {
+      "_meta": {
+        "version": "6.7.0"
+      },
+      "dynamic": "false",
+      "_all": {
+        "enabled": false
+      },
+      "properties": {
+        "@timestamp": {
+          "type": "date"
+        },
+        "text": {
+          "type": "text",
+          "analyzer": "text_en"
+        },
+        "original_language": {
+          "type": "text",
+          "analyzer": "text_en",
+          "fields": {
+            "facet": {
+              "type": "keyword",
+              "normalizer": "lc_normalizer"
+            }
+          }
+        },
+        "original_title": {
+          "type": "text",
+          "analyzer": "text_en"
+        },
+        "title": {
+          "type": "text",
+          "analyzer": "text_en"
+        },
+        "overview": {
+          "type": "text",
+          "analyzer": "text_en"
+        },
+        "genres": {
+          "type": "text",
+          "analyzer": "text_en",
+          "fields": {
+            "facet": {
+              "type": "keyword",
+              "normalizer": "lc_normalizer"
+            }
+          }
+        },
+        "production_companies": {
+          "type": "text",
+          "analyzer": "text_en",
+          "fields": {
+            "facet": {
+              "type": "keyword",
+              "normalizer": "lc_normalizer"
+            }
+          }
+        },
+        "cast": {
+          "type": "text",
+          "analyzer": "text_en",
+          "copy_to": "people"
+        },
+        "directors": {
+          "type": "text",
+          "analyzer": "text_en",
+          "copy_to": "people"
+        },
+        "people": {
+          "type": "text",
+          "analyzer": "text_en"
+        },
+        "budget": {
+          "type": "double"
+        },
+        "revenue": {
+          "type": "double"
+        },
+        "popularity": {
+          "type": "double"
+        },
+        "vote_average": {
+          "type": "double"
+        },
+        "vote_count": {
+          "type": "integer"
+        },
+        "release_date": {
+          "type": "date"
+        }
+      }
+    }
+  },
+  "settings": {
+    "index": {
+      "analysis": {
+        "normalizer": {
+          "lc_normalizer": {
+            "type": "custom",
+            "char_filter": [],
+            "filter": [
+              "lowercase",
+              "asciifolding"
+            ]
+          }
+        },
+        "filter": {
+          "trim_final_period": {
+            "type": "pattern_replace",
+            "pattern": "\\.$",
+            "replacement": ""
+          }
+        },
+        "analyzer": {
+          "text_en": {
+            "tokenizer": "uax_url_email",
+            "filter": [
+              "lowercase",
+              "asciifolding",
+              "trim_final_period"
+            ],
+            "type": "custom"
+          }
+        }
+      },
+      "number_of_replicas": "1",
+      "number_of_shards": "1"
+    }
+  }
+}
+
+
+

@@ -24,7 +24,7 @@ import java.util.Map;
 public class QueryRequest {
 
     private Map<String, List<String>> parameters = new HashMap<>();
-    private List<String> facetFields = new ArrayList<>();
+    private String facetField = null;
     private List<String> fields = new ArrayList<>();
     private int facetLimit = 10;
     private final String query;
@@ -56,7 +56,9 @@ public class QueryRequest {
     }
 
     public Map<String, List<String>> getParameters() {
-        return parameters;
+        //defensively copy
+        Map<String, List<String>> ret = new HashMap<>(parameters);
+        return ret;
     }
 
     public String getQuery() {
@@ -79,16 +81,17 @@ public class QueryRequest {
         return customHandler;
     }
 
-    public void addFacetField(String field) {
-        facetFields.add(field);
+    //TODO: make this multivalued at somepoint
+    public void setFacetField(String field) {
+        facetField = field;
     }
 
     public void setFacetLimit(int limit) {
         this.facetLimit = limit;
     }
 
-    public List<String> getFacetFields() {
-        return facetFields;
+    public String getFacetField() {
+        return facetField;
     }
 
     public int getFacetLimit() {
@@ -99,7 +102,7 @@ public class QueryRequest {
     public String toString() {
         return "QueryRequest{" +
                 "parameters=" + parameters +
-                ", facetFields=" + facetFields +
+                ", facetField=" + facetField +
                 ", facetLimit=" + facetLimit +
                 ", query='" + query + '\'' +
                 ", customHandler='" + customHandler + '\'' +
