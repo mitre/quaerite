@@ -47,6 +47,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.mitre.quaerite.connectors.JsonResponse;
 import org.mitre.quaerite.connectors.QueryRequest;
 import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientException;
@@ -63,7 +64,6 @@ public class SolrClient extends SearchClient {
     private static final Gson GSON = new Gson();
 
     private final String url;
-    private final JsonParser parser = new JsonParser();
 
     /**
      * @param url url to Solr including /collection
@@ -196,17 +196,20 @@ public class SolrClient extends SearchClient {
     @Override
     public void addDocument(StoredDocument buildDocument) throws IOException {
         String json = GSON.toJson(buildDocument.getFields());
-        postJson(url + "/update/json?commitWithin=1000", json);
+        postJson(url + "/update/json?commitWithin=10000", json);
     }
 
     @Override
-    public void addDocuments(List<StoredDocument> buildDocuments) throws IOException {
+    public void addDocuments(List<StoredDocument> buildDocuments) throws IOException, SearchClientException {
         List<Map<String, Object>> data = new ArrayList<>();
         for (StoredDocument d : buildDocuments) {
             data.add(d.getFields());
         }
         String json = GSON.toJson(data);
-        int response = postJson(url + "/update/json?commitWithin=1000", json);
+        JsonResponse response = postJson(url + "/update/json?commitWithin=10000", json);
+        if (response.getStatus() != 200) {
+            throw new SearchClientException(response.getMsg());
+        }
     }
 
     @Override
@@ -214,25 +217,32 @@ public class SolrClient extends SearchClient {
                                         Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
         StringBuilder sb = new StringBuilder();
         int i = 0;
-        sb.append(idField+":(");
+        sb.append(idField + ":(");
         for (String id : ids) {
             if (i++ > 0) {
                 sb.append(" OR ");
             }
-            sb.append("\""+id+"\"");
+            sb.append("\"" + id + "\"");
         }
+
         sb.append(")");
-        QueryRequest request = new QueryRequest(sb.toString());
-        for (String fl : whiteListFields) {
-            request.addField(fl);
+        Map<String, String> qRequest = new HashMap<>();
+        qRequest.put("query", sb.toString());
+        qRequest.put("limit", Integer.toString(i+10));
+        if (whiteListFields.size() > 0) {
+            String fields = StringUtils.join(whiteListFields, ",");
+            qRequest.put("fields", fields);
         }
-        request.setNumResults(ids.size());
-        String url = generateRequestURL(request);
-        //try to
-        JsonElement root = getJson(url);
-        JsonObject response = (JsonObject) ((JsonObject) root).get("response");
-        long totalHits = response.get("numFound").getAsLong();
+        String json = GSON.toJson(qRequest);
+        JsonResponse fullResponse = postJson(url+"/select", json);
+        if (fullResponse.getStatus() != 200) {
+            LOG.warn("problem with "+url+" and "+json);
+            return Collections.EMPTY_LIST;
+        }
         List<StoredDocument> documents = new ArrayList<>();
+        JsonElement root = fullResponse.getJson();
+        JsonObject response = (JsonObject)((JsonObject)root).get("response");
+        long totalHits = response.get("numFound").getAsLong();
         if (response.has("docs")) {
             JsonArray docs = (JsonArray) response.get("docs");
             for (JsonElement docElement : docs) {
@@ -312,11 +322,9 @@ public class SolrClient extends SearchClient {
     }
 
     @Override
-    public void deleteAll() throws SearchClientException {
-        String u = url+
-                "/update?stream.body="+
-                encode("<delete><query>*:*</query></delete>")+"&commit=true";
-        get(u);
+    public void deleteAll() throws SearchClientException, IOException {
+        String json = "{ \"delete\": {\"query\":\"*:*\"} }";
+        postJson(url+"/update?&commitWithin=10000", json);
     }
 
     private class IdLoader implements Callable<Integer> {
@@ -400,11 +408,6 @@ public class SolrClient extends SearchClient {
         }
     }
 
-    JsonElement getJson(String url) throws IOException, SearchClientException {
-        byte[] bytes = get(url);
-        try (Reader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8))) {
-            return parser.parse(reader);
-        }
-    }
+
 
 }

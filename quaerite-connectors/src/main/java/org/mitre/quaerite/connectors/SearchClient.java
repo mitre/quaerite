@@ -16,8 +16,12 @@
  */
 package org.mitre.quaerite.connectors;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,6 +32,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -37,6 +43,8 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
+import org.mitre.quaerite.connectors.solr.SolrClient;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 
@@ -44,8 +52,10 @@ public abstract class SearchClient implements Closeable {
 
     public abstract ResultSet search(QueryRequest query) throws SearchClientException, IOException;
     public abstract FacetResult facet(QueryRequest query) throws SearchClientException, IOException;
+    static Logger LOG = Logger.getLogger(SearchClient.class);
 
     private final CloseableHttpClient httpClient;
+    private final JsonParser parser = new JsonParser();
 
     public SearchClient() {
         httpClient = HttpClients.createDefault();
@@ -76,7 +86,6 @@ public abstract class SearchClient implements Closeable {
         //try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             try(CloseableHttpResponse httpResponse = httpClient.execute(target, httpGet)) {
                 if (httpResponse.getStatusLine().getStatusCode() != 200) {
-                    EntityUtils.consumeQuietly(httpResponse.getEntity());
                     throw new SearchClientException("Bad status code: "+httpResponse.getStatusLine().getStatusCode()
                     + "for url: "+url);
                 }
@@ -87,7 +96,7 @@ public abstract class SearchClient implements Closeable {
         }
     }
 
-    protected int postJson(String url, String json) throws IOException {
+    protected JsonResponse postJson(String url, String json) throws IOException {
         HttpPost httpPost = new HttpPost(url);
         ByteArrayEntity entity = new ByteArrayEntity(json.getBytes(StandardCharsets.UTF_8));
 
@@ -99,14 +108,21 @@ public abstract class SearchClient implements Closeable {
         //httpPost.setHeader("Connection", "close");
 
         //try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                EntityUtils.consume(response.getEntity());
-                return response.getStatusLine().getStatusCode();
-          //  }
+        try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+            int status = response.getStatusLine().getStatusCode();
+            if (status == 200) {
+                try (Reader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8))) {
+                    JsonElement element =  parser.parse(reader);
+                    return new JsonResponse(200, element);
+                }
+            } else {
+                return new JsonResponse(status, new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8));
+            }
         } finally {
             httpPost.releaseConnection();
         }
     }
+
 
     protected static String encode(String s) throws IllegalArgumentException {
         try {
@@ -119,11 +135,10 @@ public abstract class SearchClient implements Closeable {
     public abstract void addDocument(StoredDocument buildDocument) throws IOException;
 
     public void close() throws IOException {
-        //no-op
         httpClient.close();
     }
 
-    public abstract void addDocuments(List<StoredDocument> buildDocuments) throws IOException;
+    public abstract void addDocuments(List<StoredDocument> buildDocuments) throws IOException, SearchClientException;
 
     public abstract List<StoredDocument> getDocs(String idField, Set<String> ids,
                                                  Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException;
@@ -138,5 +153,12 @@ public abstract class SearchClient implements Closeable {
 
     public abstract void startLoadingIds(ArrayBlockingQueue<Set<String>> ids, int batchSize, int copierThreads, Set<String> filterQueries) throws SearchClientException, IOException;
 
-    public abstract void deleteAll() throws SearchClientException;
+    public abstract void deleteAll() throws SearchClientException, IOException;
+
+    protected JsonElement getJson(String url) throws IOException, SearchClientException {
+        byte[] bytes = get(url);
+        try (Reader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8))) {
+            return parser.parse(reader);
+        }
+    }
 }

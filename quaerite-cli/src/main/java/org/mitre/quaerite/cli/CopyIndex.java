@@ -54,14 +54,14 @@ public class CopyIndex extends AbstractCLI {
     static {
         OPTIONS.addOption(
                 Option.builder("src")
-                        .hasArg().required().desc("source searcher url").build()
+                        .hasArg().required().desc("source index url").build()
         );
 
         OPTIONS.addOption(
-                Option.builder("targ")
+                Option.builder("dest")
                         .hasArg()
                         .required()
-                        .desc("target searcher url").build()
+                        .desc("destination index url").build()
         );
         OPTIONS.addOption(
                 Option.builder("whiteListFields")
@@ -86,21 +86,21 @@ public class CopyIndex extends AbstractCLI {
                 Option.builder("clean")
                         .hasArg(false)
                         .required(false)
-                        .desc("clean (DELETE) the target index before copying").build()
+                        .desc("clean (DELETE) the destination index before copying").build()
         );
         OPTIONS.addOption(
                 Option.builder("b")
                         .longOpt("batchSize")
                         .hasArg(true)
                         .required(false)
-                        .desc("batch size; default: "+BATCH_SIZE).build()
+                        .desc("batch size; default: " + BATCH_SIZE).build()
         );
         OPTIONS.addOption(
                 Option.builder("n")
                         .longOpt("numThreads")
                         .hasArg(true)
                         .required(false)
-                        .desc("num copier threads; default: "+NUM_THREADS).build()
+                        .desc("num copier threads; default: " + NUM_THREADS).build()
         );
     }
 
@@ -120,7 +120,7 @@ public class CopyIndex extends AbstractCLI {
             return;
         }
         SearchClient srcClient = SearchClientFactory.getClient(commandLine.getOptionValue("src"));
-        SearchClient targClient = SearchClientFactory.getClient(commandLine.getOptionValue("targ"));
+        SearchClient destClient = SearchClientFactory.getClient(commandLine.getOptionValue("dest"));
         Set<String> whiteListFields = splitComma(
                 getString(commandLine, "whiteListFields", StringUtils.EMPTY));
         Set<String> blackListFields = splitComma(
@@ -132,15 +132,15 @@ public class CopyIndex extends AbstractCLI {
 
         LOG.debug("whiteListFields:" + whiteListFields);
         LOG.debug("blackListFields:" + blackListFields);
-        LOG.debug("filterQueries:"+filterQueries);
+        LOG.debug("filterQueries:" + filterQueries);
         CopyIndex copyIndex = new CopyIndex();
         if (commandLine.hasOption("clean")) {
-            targClient.deleteAll();
+            destClient.deleteAll();
         }
         copyIndex.setNumThreads(getInt(commandLine, "numThreads", NUM_THREADS));
         copyIndex.setBatchSize(getInt(commandLine, "b", BATCH_SIZE));
 
-        copyIndex.execute(srcClient, targClient, filterQueries, whiteListFields, blackListFields);
+        copyIndex.execute(srcClient, destClient, filterQueries, whiteListFields, blackListFields);
     }
 
     private static Set<String> updateBlackList(SearchClient srcClient, Set<String> blackListFields) throws IOException, SearchClientException {
@@ -171,16 +171,17 @@ public class CopyIndex extends AbstractCLI {
         return ret;
     }
 
-    private void execute(SearchClient srcClient, SearchClient targClient, Set<String> filterQueries, Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
+    private void execute(SearchClient srcClient, SearchClient destClient, Set<String> filterQueries, Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
         ArrayBlockingQueue<Set<String>> ids = new ArrayBlockingQueue<>(100);
         srcClient.startLoadingIds(ids, batchSize, numThreads, filterQueries);
 
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
         ExecutorCompletionService<Integer> executorCompletionService = new ExecutorCompletionService<>(executorService);
-        String idField = srcClient.getIdField();
+        String srcIdField = srcClient.getIdField();
+        String destIdField = destClient.getIdField();
         for (int i = 0; i < numThreads; i++) {
-            executorCompletionService.submit(new Copier(idField,
-                    ids, srcClient, targClient, whiteListFields, blackListFields));
+            executorCompletionService.submit(new Copier(srcIdField, destIdField,
+                    ids, srcClient, destClient, whiteListFields, blackListFields));
         }
         int finished = 0;
         try {
@@ -189,7 +190,7 @@ public class CopyIndex extends AbstractCLI {
                 Future<Integer> future = executorCompletionService.poll(1, TimeUnit.SECONDS);
                 if (future != null) {
                     Integer done = future.get();
-                    LOG.debug("finished: " + finished + " : "+ done);
+                    LOG.debug("finished: " + finished + " : " + done);
                     finished++;
                 }
             }
@@ -201,21 +202,23 @@ public class CopyIndex extends AbstractCLI {
     }
 
     private static class Copier implements Callable<Integer> {
-        private final String idField;
+        private final String srcIdField;
+        private final String destIdField;
         private final ArrayBlockingQueue<Set<String>> ids;
         private final SearchClient src;
-        private final SearchClient targ;
+        private final SearchClient dest;
         private final Set<String> whiteListFields;
         private final Set<String> blackListFields;
         private int totalDocs = 0;
 
-        private Copier(String idField, ArrayBlockingQueue<Set<String>> ids,
-                       SearchClient src, SearchClient targ,
+        private Copier(String srcIdField, String destIdField, ArrayBlockingQueue<Set<String>> ids,
+                       SearchClient src, SearchClient dest,
                        Set<String> whiteListFields, Set<String> blackListFields) {
-            this.idField = idField;
+            this.srcIdField = srcIdField;
+            this.destIdField = destIdField;
             this.ids = ids;
             this.src = src;
-            this.targ = targ;
+            this.dest = dest;
             this.whiteListFields = whiteListFields;
             this.blackListFields = blackListFields;
         }
@@ -225,13 +228,19 @@ public class CopyIndex extends AbstractCLI {
             while (true) {
                 //block on more ids
                 Set<String> myIds = ids.take();
-                LOG.debug("ids size: "+ids.size() + " : " + myIds.size());
+                LOG.debug("ids size: " + ids.size() + " : " + myIds.size());
                 if (myIds.size() == 0) {
                     return totalDocs;
                 }
-                List<StoredDocument> docs = src.getDocs(idField, myIds, whiteListFields, blackListFields);
-                targ.addDocuments(docs);
-                LOG.debug("inserted : "+totalDocs);
+                List<StoredDocument> docs = src.getDocs(srcIdField, myIds, whiteListFields, blackListFields);
+                if (!srcIdField.equals(destIdField)) {
+                    for (StoredDocument d : docs) {
+                        d.rename(srcIdField, destIdField);
+                    }
+                }
+
+                dest.addDocuments(docs);
+                LOG.debug("inserted : " + totalDocs);
                 totalDocs += docs.size();
             }
 

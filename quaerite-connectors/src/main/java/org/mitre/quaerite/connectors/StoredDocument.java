@@ -45,6 +45,7 @@ public class StoredDocument {
             if (values instanceof String) {
                 List<String> tmp = new ArrayList<>();
                 tmp.add((String)values);
+                tmp.add(value);
                 fields.put(field, tmp);
             } else {
                 ((List)values).add(value);
@@ -63,5 +64,12 @@ public class StoredDocument {
         return "StoredDocument{" +
                 "fields=" + fields +
                 '}';
+    }
+
+    public void rename(String srcIdField, String destIdField) {
+        Object value = fields.remove(srcIdField);
+        if (value != null) {
+            fields.put(destIdField, value);
+        }
     }
 }
