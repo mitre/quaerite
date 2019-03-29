@@ -29,6 +29,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.mitre.quaerite.connectors.SearchClientException;
 import org.mitre.quaerite.core.Experiment;
 import org.mitre.quaerite.core.ExperimentConfig;
 import org.mitre.quaerite.core.ExperimentSet;
@@ -162,7 +163,7 @@ public class RunExperiments extends AbstractExperimentRunner {
     }
 
 
-    private void run(ExperimentDB experimentDB, String experimentName, boolean freshStart, boolean latest) throws SQLException, IOException {
+    private void run(ExperimentDB experimentDB, String experimentName, boolean freshStart, boolean latest) throws SQLException, IOException, SearchClientException {
         ExperimentSet experimentSet = experimentDB.getExperiments();
         if (freshStart) {
             experimentDB.clearScores();

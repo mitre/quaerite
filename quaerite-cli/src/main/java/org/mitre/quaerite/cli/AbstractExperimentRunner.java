@@ -85,7 +85,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
 
     void runExperiment(String experimentName, ExperimentDB experimentDB, JudgmentList judgmentList,
-                       String judgmentListId, boolean logResults) throws SQLException {
+                       String judgmentListId, boolean logResults) throws SQLException, IOException, SearchClientException {
         if (experimentDB.hasScores(experimentName)) {
             LOG.info("Already has scores for " + experimentName + "; skipping.  " +
                     "Use the -freshStart commandline option to clear all scores");
@@ -315,7 +315,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
         public QueryRunner(String idField, int maxRows, ArrayBlockingQueue<Judgments> judgments,
                            Experiment experiment, ExperimentDB experimentDB,
-                           List<ScoreAggregator> scoreAggregators) {
+                           List<ScoreAggregator> scoreAggregators) throws IOException, SearchClientException {
             this.idField = idField;
             this.maxRows = maxRows;
             this.queue = judgments;

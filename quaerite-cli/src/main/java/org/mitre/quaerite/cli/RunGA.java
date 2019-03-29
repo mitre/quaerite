@@ -39,6 +39,7 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.log4j.Logger;
+import org.mitre.quaerite.connectors.SearchClientException;
 import org.mitre.quaerite.core.Experiment;
 import org.mitre.quaerite.core.ExperimentFactory;
 import org.mitre.quaerite.core.ExperimentSet;
@@ -167,7 +168,7 @@ public class RunGA extends AbstractExperimentRunner {
         }
     }
 
-    private void executeTrainTest(GAPaths gaPaths) throws IOException, SQLException {
+    private void executeTrainTest(GAPaths gaPaths) throws IOException, SQLException, SearchClientException {
 
         if (! Files.isDirectory(gaPaths.outputDir)) {
             Files.createDirectories(gaPaths.outputDir);
@@ -196,7 +197,7 @@ public class RunGA extends AbstractExperimentRunner {
         reportFinal(gaDb, experimentFactory, 1);
     }
 
-    private void executeNFold(GAPaths gaPaths) throws IOException, SQLException {
+    private void executeNFold(GAPaths gaPaths) throws IOException, SQLException, SearchClientException {
 
         if (! Files.isDirectory(gaPaths.outputDir)) {
             Files.createDirectories(gaPaths.outputDir);
@@ -279,7 +280,7 @@ public class RunGA extends AbstractExperimentRunner {
     }
 
 
-    private void runFold(int fold, GADB gaDb, ExperimentFactory experimentFactory, GAPaths gaPaths) throws IOException, SQLException {
+    private void runFold(int fold, GADB gaDb, ExperimentFactory experimentFactory, GAPaths gaPaths) throws IOException, SQLException, SearchClientException {
         TrainTestJudmentListPair trainTestJudmentListPair = gaDb.getTrainTestJudgmentsByFold(fold);
         JudgmentList trainJudgmentList = trainTestJudmentListPair.getTrain();
         LOG.info("scoring training seed for fold: "+fold);
@@ -330,7 +331,7 @@ public class RunGA extends AbstractExperimentRunner {
     }
 
     private void scoreSeed(int fold, GADB gaDb, JudgmentList trainJudgmentList,
-                           String trainScoreAggregatorName, GAPaths gaPaths) throws SQLException, IOException {
+                           String trainScoreAggregatorName, GAPaths gaPaths) throws SQLException, IOException, SearchClientException {
         ExperimentSet experimentSet = gaDb.getExperiments(gaConfig);
 
         String trainFoldSeedPrefix = TRAIN_PREFIX+FOLD_PREFIX+fold+"_"+SEED_PREFIX;
@@ -362,7 +363,7 @@ public class RunGA extends AbstractExperimentRunner {
 
     private void runGeneration(int fold, int generation, ExperimentDB experimentDB,
                                ExperimentFactory experimentFactory,
-                               JudgmentList judgmentList, GAPaths gaPaths) throws SQLException, IOException {
+                               JudgmentList judgmentList, GAPaths gaPaths) throws SQLException, IOException, SearchClientException {
         List<String> experimentNames = generateNewExperiments(fold, generation,
                 experimentDB, experimentFactory);
         LOG.info("starting generation "+generation + " for fold "+fold);

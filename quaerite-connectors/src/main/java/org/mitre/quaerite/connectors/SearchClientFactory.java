@@ -16,12 +16,11 @@
  */
 package org.mitre.quaerite.connectors;
 
-import org.mitre.quaerite.connectors.es.ESClient;
-import org.mitre.quaerite.connectors.solr.SolrClient;
+import java.io.IOException;
 
 public class SearchClientFactory {
 
-    public static SearchClient getClient(String url) {
+    public static SearchClient getClient(String url) throws IOException, SearchClientException {
         //TODO: remove collection/core name and actually
         //run something like http://yoursolrhost:8983/solr/admin/info/system?wt=json
         if (url.contains("solr")) {

@@ -14,15 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.connectors.solr;
+package org.mitre.quaerite.connectors;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,11 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import com.google.gson.Gson;
@@ -47,11 +40,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.mitre.quaerite.connectors.JsonResponse;
-import org.mitre.quaerite.connectors.QueryRequest;
-import org.mitre.quaerite.connectors.SearchClient;
-import org.mitre.quaerite.connectors.SearchClientException;
-import org.mitre.quaerite.connectors.StoredDocument;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 
@@ -59,16 +47,25 @@ public class SolrClient extends SearchClient {
 
     private static final String DEFAULT_HANDLER = "select";
     private static final String JSON_RESPONSE = "&wt=json";
+    private static Set<String> SYS_INTERNAL_FIELDS;
+
+    static {
+        Set<String> tmp = new HashSet<>();
+        tmp.add("_version_");
+        SYS_INTERNAL_FIELDS = Collections.unmodifiableSet(tmp);
+    }
+
     static Logger LOG = Logger.getLogger(SolrClient.class);
 
     private static final Gson GSON = new Gson();
 
     private final String url;
+    private String idField;
 
     /**
      * @param url url to Solr including /collection
      */
-    public SolrClient(String url) {
+    protected SolrClient(String url) throws IOException, SearchClientException {
         this.url = url;
     }
 
@@ -110,36 +107,28 @@ public class SolrClient extends SearchClient {
         sb.append(handler);
         sb.append("?");
 
-        try {
         /* TODO: make this configurable; turn off for now
             if (!StringUtils.isBlank(query.getCustomHandler())) {
                 sb.append("qq=");
             } else { */
-            sb.append("q=");
+        sb.append("q=");
 
-            sb.append(URLEncoder.encode(query.getQuery(), StandardCharsets.UTF_8.name()));
-            if (!query.getParameters().containsKey("defType")) {
-                sb.append("&defType=edismax");
-            }
-            if (query.getFields().size() > 0) {
-                sb.append("&fl=").append(StringUtils.join(query.getFields(), ','));
-            }
-            if (!query.getParameters().containsKey("start")) {
-                sb.append("&start=0");
-            }
-            sb.append("&rows=" + query.getNumResults());
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalArgumentException(e);
+        sb.append(encode(query.getQuery()));
+        if (!query.getParameters().containsKey("defType")) {
+            sb.append("&defType=edismax");
         }
+        if (query.getFields().size() > 0) {
+            sb.append("&fl=").append(StringUtils.join(query.getFields(), ','));
+        }
+        if (!query.getParameters().containsKey("start")) {
+            sb.append("&start=0");
+        }
+        sb.append("&rows=" + query.getNumResults());
         for (Map.Entry<String, List<String>> e : query.getParameters().entrySet()) {
             for (String value : e.getValue()) {
-                try {
-                    sb.append("&");
-                    sb.append(URLEncoder.encode(e.getKey(), StandardCharsets.UTF_8.name()));
-                    sb.append("=").append(URLEncoder.encode(value, StandardCharsets.UTF_8.name()));
-                } catch (UnsupportedEncodingException ex) {
-                    throw new IllegalArgumentException(ex);
-                }
+                sb.append("&");
+                sb.append(encode(e.getKey()));
+                sb.append("=").append(encode(value));
             }
         }
         /*
@@ -222,32 +211,32 @@ public class SolrClient extends SearchClient {
         sb.append(")");
         Map<String, String> qRequest = new HashMap<>();
         qRequest.put("query", sb.toString());
-        qRequest.put("limit", Integer.toString(i+10));
+        qRequest.put("limit", Integer.toString(i + 10));
         if (whiteListFields.size() > 0) {
             String fields = StringUtils.join(whiteListFields, ",");
             qRequest.put("fields", fields);
         }
         String json = GSON.toJson(qRequest);
-        JsonResponse fullResponse = postJson(url+"/select", json);
+        JsonResponse fullResponse = postJson(url + "/select", json);
         if (fullResponse.getStatus() != 200) {
-            LOG.warn("problem with "+url+" and "+json);
+            LOG.warn("problem with " + url + " and " + json);
             return Collections.EMPTY_LIST;
         }
         List<StoredDocument> documents = new ArrayList<>();
         JsonElement root = fullResponse.getJson();
-        JsonObject response = (JsonObject)((JsonObject)root).get("response");
+        JsonObject response = (JsonObject) ((JsonObject) root).get("response");
         long totalHits = response.get("numFound").getAsLong();
         if (response.has("docs")) {
             JsonArray docs = (JsonArray) response.get("docs");
             for (JsonElement docElement : docs) {
                 StoredDocument document = new StoredDocument();
-                JsonObject docObj = (JsonObject)docElement;
+                JsonObject docObj = (JsonObject) docElement;
                 for (String key : docObj.keySet()) {
                     if (!blackListFields.contains(key)) {
                         JsonElement value = docObj.get(key);
                         if (value.isJsonArray()) {
-                            for (int j = 0; j < ((JsonArray)value).size(); j++) {
-                                document.addNonBlankField(key, ((JsonArray)value).get(j).getAsString());
+                            for (int j = 0; j < ((JsonArray) value).size(); j++) {
+                                document.addNonBlankField(key, ((JsonArray) value).get(j).getAsString());
                             }
                         } else {
                             document.addNonBlankField(key, value.getAsString());
@@ -281,60 +270,35 @@ public class SolrClient extends SearchClient {
     }
 
     @Override
-    public String getIdField() throws IOException, SearchClientException {
-        JsonElement root = getJson(url+"/schema/uniquekey");
-        return ((JsonObject)root).get("uniqueKey").getAsString();
-    }
-
-    @Override
-    public void startLoadingIds(ArrayBlockingQueue<Set<String>> ids, int batchSize, int copierThreads, Set<String> filterQueries) throws IOException, SearchClientException {
-        String idField = getIdField();
-        new Thread() {
-            @Override
-            public void run() {
-                ExecutorService ex = Executors.newFixedThreadPool(1);
-                ExecutorCompletionService<Integer> completionService = new ExecutorCompletionService<>(ex);
-                completionService.submit(new
-
-                        IdLoader(idField, ids, batchSize, copierThreads, filterQueries));
-                Future<Integer> future = null;
-                try {
-                    future = completionService.poll(1, TimeUnit.SECONDS);
-                    while (future == null) {
-                        future = completionService.poll(1, TimeUnit.SECONDS);
-                    }
-                    Integer i = future.get();
-                } catch (
-                        Exception e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    ex.shutdownNow();
-                }
-            }
-        }.start();
-
+    public synchronized String getIdField() throws IOException, SearchClientException {
+        if (idField == null) {
+            JsonElement root = getJson(url + "/schema/uniquekey");
+            idField = ((JsonObject) root).get("uniqueKey").getAsString();
+        }
+        return idField;
     }
 
     @Override
     public void deleteAll() throws SearchClientException, IOException {
         String json = "{ \"delete\": {\"query\":\"*:*\"} }";
-        postJson(url+"/update?&commitWithin=10000", json);
+        postJson(url + "/update?&commitWithin=10000", json);
     }
 
-    private class IdLoader implements Callable<Integer> {
+    @Override
+    public IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids, int batchSize,
+                                  int copierThreads, Collection<String> filterQueries) throws IOException, SearchClientException {
+        return new SolrIdGrabber(getIdField(), ids, batchSize, copierThreads, filterQueries);
+    }
 
-        final String idField;
-        final ArrayBlockingQueue<Set<String>> ids;
-        final int batchSize;
-        final int copierThreads;
-        final Collection<String> filterQueries;
+    @Override
+    public Set<String> getSystemInternalFields() {
+        return SYS_INTERNAL_FIELDS;
+    }
 
-        public IdLoader(String idField, ArrayBlockingQueue<Set<String>> ids, int batchSize, int copierThreads, Collection<String> filterQueries) {
-            this.idField = idField;
-            this.ids = ids;
-            this.batchSize = batchSize;
-            this.copierThreads = copierThreads;
-            this.filterQueries = filterQueries;
+    class SolrIdGrabber extends IdGrabber {
+
+        public SolrIdGrabber(String idField, ArrayBlockingQueue<Set<String>> ids, int batchSize, int copierThreads, Collection<String> filterQueries) {
+            super(idField, ids, batchSize, copierThreads, filterQueries);
         }
 
         @Override
@@ -342,38 +306,31 @@ public class SolrClient extends SearchClient {
             int start = 0;
             int totalAdded = 0;
             int idSize = 10000;
-            while (true) {
+            try {
                 QueryRequest queryRequest = buildQueryRequest(idField, start, idSize, filterQueries);
                 ResultSet rs = search(queryRequest);
-                if (rs.size() == 0) {
-                    break;
-                }
-                Set<String> set = new HashSet<>();
-                for (int i = 0; i < rs.size(); i++) {
-                    set.add(rs.get(i));
-                    if (set.size() > batchSize) {
-                        totalAdded += addSet(set);
-                        set = new HashSet<>();
+                while (rs.size() > 0) {
+                    Set<String> set = new HashSet<>();
+                    for (int i = 0; i < rs.size(); i++) {
+                        set.add(rs.get(i));
+                        if (set.size() > batchSize) {
+                            totalAdded += addSet(set);
+                            set = new HashSet<>();
+                        }
                     }
+                    if (set.size() > 0) {
+                        totalAdded += addSet(set);
+                    }
+                    LOG.info("ids added: " + totalAdded);
+                    start += idSize;
+                    queryRequest = buildQueryRequest(idField, start, idSize, filterQueries);
+                    rs = search(queryRequest);
                 }
-                if (set.size() > 0) {
-                    totalAdded += addSet(set);
-                    set = new HashSet<>();
-                }
-                LOG.info("ids added: " + totalAdded);
-                start += idSize;
+                LOG.debug("id grabber is finishing" + start);
+            } finally {
+                addPoison();
             }
-            LOG.debug("id stuffer is finishing" + start);
-            //this is the poison that signals to the copiers to stop copying
-            for (int i = 0; i < copierThreads; i++) {
-                boolean added = ids.offer(Collections.EMPTY_SET,
-                        1, TimeUnit.SECONDS);
-                while (!added) {
-                    added = ids.offer(Collections.EMPTY_SET,
-                            1, TimeUnit.SECONDS);
-                }
-            }
-            return totalAdded;
+            return -1;
         }
 
         private QueryRequest buildQueryRequest(String idField, int start, int numResults, Collection<String> filterQueries) {
@@ -401,7 +358,6 @@ public class SolrClient extends SearchClient {
             return sz;
         }
     }
-
 
 
 }

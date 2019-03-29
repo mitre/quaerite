@@ -36,19 +36,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.mitre.quaerite.connectors.solr.SolrClient;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 
@@ -152,9 +147,11 @@ public abstract class SearchClient implements Closeable {
 
     public abstract String getIdField() throws IOException, SearchClientException;
 
-    public abstract void startLoadingIds(ArrayBlockingQueue<Set<String>> ids, int batchSize, int copierThreads, Set<String> filterQueries) throws SearchClientException, IOException;
-
     public abstract void deleteAll() throws SearchClientException, IOException;
+
+    public abstract IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids, int batchSize,
+                                  int copierThreads, Collection<String> filterQueries) throws IOException, SearchClientException;
+
 
     protected JsonElement getJson(String url) throws IOException, SearchClientException {
         byte[] bytes = get(url);
@@ -162,4 +159,11 @@ public abstract class SearchClient implements Closeable {
             return parser.parse(reader);
         }
     }
+
+    /**
+     * return common system internal fields, such as "_version_"
+     * in Solr
+     * @return
+     */
+    public abstract Set<String> getSystemInternalFields();
 }

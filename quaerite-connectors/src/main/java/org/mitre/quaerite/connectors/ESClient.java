@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.connectors.es;
+package org.mitre.quaerite.connectors;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -35,11 +34,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.mitre.quaerite.connectors.JsonResponse;
-import org.mitre.quaerite.connectors.QueryRequest;
-import org.mitre.quaerite.connectors.SearchClient;
-import org.mitre.quaerite.connectors.SearchClientException;
-import org.mitre.quaerite.connectors.StoredDocument;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.util.JsonUtil;
@@ -48,6 +42,16 @@ public class ESClient extends SearchClient {
     private static final String _ID = "_id";
     private static final String _DOC = "_doc";
     private static final Gson GSON = new Gson();
+
+    private static Set<String> SYS_INTERNAL_FIELDS;
+
+    static {
+        Set<String> tmp = new HashSet<>();
+        tmp.add("_version_");
+        SYS_INTERNAL_FIELDS = Collections.unmodifiableSet(tmp);
+    }
+
+
     static Logger LOG = Logger.getLogger(ESClient.class);
 
     private final String url;//must include esbase and es collection; must end in /
@@ -270,81 +274,6 @@ public class ESClient extends SearchClient {
         return _ID;
     }
 
-    @Override
-    public void startLoadingIds(ArrayBlockingQueue<Set<String>> ids, int batchSize, int copierThreads, Set<String> filterQueries) throws SearchClientException, IOException {
-        new Thread() {
-            @Override
-            public void run() {
-                Map<String, Object> q = wrapAMap("query",
-                        wrapAMap("match_all", Collections.EMPTY_MAP));
-                q.put("size", Integer.toString(batchSize));
-                q.put("stored_fields", Collections.EMPTY_LIST);
-                JsonResponse response = null;
-                try {
-                    response = postJson(url + "_search?scroll=10m", GSON.toJson(q));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                JsonObject root = (JsonObject) response.getJson();
-                String scrollId = JsonUtil.getPrimitive(root, "_scroll_id", "");
-                ResultSet resultSet = null;
-                try {
-                    resultSet = scrapeIds(root, System.currentTimeMillis());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (SearchClientException e) {
-                    e.printStackTrace();
-                }
-                Set<String> set = new HashSet<>();
-                set.addAll(resultSet.getIds());
-                try {
-                    addSet(ids, set);
-                } catch (
-                        InterruptedException e) {
-
-                }
-
-                while (resultSet.size() > 0) {
-                    Map<String, String> nextScroll = new HashMap<>();
-                    nextScroll.put("scroll", "1m");
-                    nextScroll.put("scroll_id", scrollId);
-                    System.out.println(response);
-                    String u = esBase + "_search/scroll";
-                    try {
-                        response = postJson(u, GSON.toJson(nextScroll));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    root = (JsonObject) response.getJson();
-                    try {
-                        resultSet = scrapeIds(root, System.currentTimeMillis());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (SearchClientException e) {
-                        e.printStackTrace();
-                    }
-                    set = new HashSet<>();
-                    set.addAll(resultSet.getIds());
-                    try {
-                        addSet(ids, set);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }.start();
-    }
-
-    private int addSet(ArrayBlockingQueue<Set<String>> ids, Set<String> set) throws InterruptedException {
-        int sz = set.size();
-        boolean added = ids.offer(set, 1, TimeUnit.SECONDS);
-        LOG.debug("id adder: " + added + " " + ids.size());
-        while (!added) {
-            added = ids.offer(set, 1, TimeUnit.SECONDS);
-            LOG.debug("waiting to add");
-        }
-        return sz;
-    }
 
     @Override
     public void deleteAll() throws SearchClientException, IOException {
@@ -354,6 +283,17 @@ public class ESClient extends SearchClient {
         if (response.getStatus() != 200) {
             throw new SearchClientException(response.getMsg());
         }
+    }
+
+    @Override
+    public IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids,
+                                  int batchSize, int copierThreads, Collection<String> filterQueries) throws IOException, SearchClientException {
+        return new ESIdGrabber(getIdField(), ids, batchSize, copierThreads, filterQueries);
+    }
+
+    @Override
+    public Set<String> getSystemInternalFields() {
+        return SYS_INTERNAL_FIELDS;
     }
 
     protected String getESBase() {
@@ -378,5 +318,48 @@ public class ESClient extends SearchClient {
             ret.put(key, value);
         }
         return ret;
+    }
+
+    private class ESIdGrabber extends IdGrabber {
+
+        public ESIdGrabber(String idField, ArrayBlockingQueue<Set<String>> ids, int batchSize, int copierThreads, Collection<String> filterQueries) {
+            super(idField, ids, batchSize, copierThreads, filterQueries);
+        }
+
+        @Override
+        public Integer call() throws Exception {
+            try {
+                Map<String, Object> q = wrapAMap("query",
+                        wrapAMap("match_all", Collections.EMPTY_MAP));
+                q.put("size", Integer.toString(batchSize));
+                q.put("stored_fields", Collections.EMPTY_LIST);
+                JsonResponse response = null;
+                response = postJson(url + "_search?scroll=5m", GSON.toJson(q));
+                JsonObject root = (JsonObject) response.getJson();
+                String scrollId = JsonUtil.getPrimitive(root, "_scroll_id", "");
+                ResultSet resultSet = scrapeIds(root, System.currentTimeMillis());
+
+                Map<String, String> nextScroll = new HashMap<>();
+                nextScroll.put("scroll", "5m");
+                nextScroll.put("scroll_id", scrollId);
+
+                while (resultSet.size() > 0) {
+                    Set<String> set = new HashSet<>();
+                    set.addAll(resultSet.getIds());
+                    LOG.debug("adding "+set.size());
+                    addSet(ids, set);
+                    String u = esBase + "_search/scroll";
+                    response = postJson(u, GSON.toJson(nextScroll));
+                    root = (JsonObject) response.getJson();
+                    resultSet = scrapeIds(root, System.currentTimeMillis());
+                }
+            } finally {
+                LOG.debug("id grabber adding poison");
+                addPoison();
+            }
+            return -1;
+
+        }
+
     }
 }

@@ -147,8 +147,7 @@ public class CopyIndex extends AbstractCLI {
         Set<String> tmp = new HashSet<>();
         tmp.addAll(blackListFields);
         tmp.addAll(srcClient.getCopyFields());
-        //stinky solr-specific
-        tmp.add("_version_");
+        tmp.addAll(srcClient.getSystemInternalFields());
         return tmp;
     }
 
@@ -172,30 +171,35 @@ public class CopyIndex extends AbstractCLI {
     }
 
     private void execute(SearchClient srcClient, SearchClient destClient, Set<String> filterQueries, Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
-        ArrayBlockingQueue<Set<String>> ids = new ArrayBlockingQueue<>(100);
-        srcClient.startLoadingIds(ids, batchSize, numThreads, filterQueries);
+        ArrayBlockingQueue<Set<String>> idQueue = new ArrayBlockingQueue<>(100);
 
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
         ExecutorCompletionService<Integer> executorCompletionService = new ExecutorCompletionService<>(executorService);
         String srcIdField = srcClient.getIdField();
         String destIdField = destClient.getIdField();
+
+        executorCompletionService.submit(srcClient.getIdGrabber(idQueue,
+                batchSize, numThreads, filterQueries));
+
         for (int i = 0; i < numThreads; i++) {
-            executorCompletionService.submit(new Copier(srcIdField, destIdField,
-                    ids, srcClient, destClient, whiteListFields, blackListFields));
+            executorCompletionService.submit(new Copier(
+                    idQueue, srcClient, destClient, whiteListFields, blackListFields));
         }
         int finished = 0;
         try {
-            while (finished < numThreads) {
-
+            while (finished < numThreads+1) {
                 Future<Integer> future = executorCompletionService.poll(1, TimeUnit.SECONDS);
                 if (future != null) {
                     Integer done = future.get();
-                    LOG.debug("finished: " + finished + " : " + done);
+                    if (done < 0) {
+                        LOG.debug("id grabber is done");
+                    } else if (done > 0) {
+                        LOG.debug("finished: " + finished + " : " + done);
+                    }
                     finished++;
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
         executorService.shutdownNow();
@@ -211,11 +215,11 @@ public class CopyIndex extends AbstractCLI {
         private final Set<String> blackListFields;
         private int totalDocs = 0;
 
-        private Copier(String srcIdField, String destIdField, ArrayBlockingQueue<Set<String>> ids,
+        private Copier(ArrayBlockingQueue<Set<String>> ids,
                        SearchClient src, SearchClient dest,
-                       Set<String> whiteListFields, Set<String> blackListFields) {
-            this.srcIdField = srcIdField;
-            this.destIdField = destIdField;
+                       Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
+            this.srcIdField = src.getIdField();
+            this.destIdField = dest.getIdField();
             this.ids = ids;
             this.src = src;
             this.dest = dest;
