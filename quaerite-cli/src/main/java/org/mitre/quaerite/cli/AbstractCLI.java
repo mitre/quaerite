@@ -43,46 +43,6 @@ import org.mitre.quaerite.db.ExperimentDB;
 
 public abstract class AbstractCLI {
 
-    static int getInt(CommandLine commandLine, String opt, int dfault) {
-        if (commandLine.hasOption(opt)) {
-            return Integer.parseInt(commandLine.getOptionValue(opt));
-        }
-        return dfault;
-    }
-
-    static float getFloat(CommandLine commandLine, String opt, float def) {
-        if (commandLine.hasOption(opt)) {
-            return Float.parseFloat(commandLine.getOptionValue(opt));
-        }
-        return def;
-    }
-
-    static Path getPath(CommandLine commandLine, String opt, boolean mustExist) {
-        if (! commandLine.hasOption(opt)) {
-            return null;
-        }
-        Path p = Paths.get(commandLine.getOptionValue(opt));
-        if (mustExist && !Files.exists(p)) {
-            throw new IllegalArgumentException("File "+p+" must exist");
-        }
-        return p;
-    }
-
-    static boolean getBoolean(CommandLine commandLine, String opt) {
-        if (commandLine.hasOption(opt)) {
-            return true;
-        }
-        return false;
-    }
-
-    static String getString(CommandLine commandLine, String opt, String dfault) {
-        if (commandLine.hasOption(opt)) {
-            return commandLine.getOptionValue(opt);
-        }
-        return dfault;
-    }
-
-
     static ExperimentSet addExperiments(ExperimentDB experimentDB, Path experimentsJson, boolean merge, boolean freshStart) throws SQLException, IOException {
         if (freshStart) {
             experimentDB.clearExperiments();

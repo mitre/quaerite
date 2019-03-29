@@ -16,6 +16,7 @@
   <field name="original_language_facet" type="icu_lowercase" stored="true"/>
   <field name="genres_facet" type="icu_lowercase" stored="true" multiValued="true"/>
   <field name="production_companies_facet" type="icu_lowercase" stored="true" multiValued="true"/>
+  <field name="production_companies_facet_lc" type="lowercase" stored="true" multiValued="true"/>
 
 
   <field name="budget" type="pdouble" stored="true"/>
@@ -41,6 +42,7 @@
   <!-- copy to facet fields -->
   <copyField source="original_language" dest="original_language_facet"/>
   <copyField source="production_companies" dest="production_companies_facet"/>
+  <copyField source="production_companies" dest="production_companies_facet_lc"/>
   <copyField source="genres" dest="genres_facet"/>
 
   <!-- model "people" as their own field -->

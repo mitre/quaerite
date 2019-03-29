@@ -46,6 +46,7 @@ import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.stats.TokenDF;
 
 public abstract class SearchClient implements Closeable {
 
@@ -85,8 +86,9 @@ public abstract class SearchClient implements Closeable {
         //try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             try(CloseableHttpResponse httpResponse = httpClient.execute(target, httpGet)) {
                 if (httpResponse.getStatusLine().getStatusCode() != 200) {
+                    String msg = new String(EntityUtils.toByteArray(httpResponse.getEntity()), StandardCharsets.UTF_8);
                     throw new SearchClientException("Bad status code: "+httpResponse.getStatusLine().getStatusCode()
-                    + "for url: "+url);
+                    + "for url: "+url + "; msg: "+msg);
                 }
                 return EntityUtils.toByteArray(httpResponse.getEntity());
             }
@@ -153,10 +155,15 @@ public abstract class SearchClient implements Closeable {
                                   int copierThreads, Collection<String> filterQueries) throws IOException, SearchClientException;
 
 
-    protected JsonElement getJson(String url) throws IOException, SearchClientException {
-        byte[] bytes = get(url);
+    protected JsonResponse getJson(String url) throws IOException, SearchClientException {
+        byte[] bytes;
+        try {
+            bytes = get(url);
+        } catch (SearchClientException e) {
+            return new JsonResponse(-1, e.getMessage());
+        }
         try (Reader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8))) {
-            return parser.parse(reader);
+            return new JsonResponse(200, parser.parse(reader));
         }
     }
 
@@ -166,4 +173,8 @@ public abstract class SearchClient implements Closeable {
      * @return
      */
     public abstract Set<String> getSystemInternalFields();
+
+    public abstract List<String> analyze(String field, String string) throws IOException, SearchClientException;
+
+    public abstract List<TokenDF> getTerms(String field, String lower, int limit, int minCount) throws IOException, SearchClientException;
 }

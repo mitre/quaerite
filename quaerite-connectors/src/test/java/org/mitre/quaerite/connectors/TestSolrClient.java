@@ -34,6 +34,7 @@ import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.connectors.SolrClient;
 import org.mitre.quaerite.connectors.StoredDocument;
 import org.mitre.quaerite.core.FacetResult;
+import org.mitre.quaerite.core.stats.TokenDF;
 
 @Disabled("need to have Solr tmdb instance running")
 public class TestSolrClient {
@@ -135,5 +136,51 @@ public class TestSolrClient {
         }
         String title = (String)doc1359.getFields().get("original_title");
         assertEquals("American Psycho", title);
+    }
+
+    @Test
+    public void testTerms() throws Exception {
+        SearchClient client = SearchClientFactory.getClient(TMDB_URL);
+        String lower = "";
+        Set<TokenDF> allTerms = new HashSet<>();
+        while (true) {
+            List<TokenDF> terms = client.getTerms("production_companies_facet", lower, 100, 0);
+            if (terms.size() == 0) {
+                break;
+            }
+            lower = terms.get(terms.size()-1).getToken();
+            allTerms.addAll(terms);
+        }
+        assertEquals(15904, allTerms.size());
+        boolean found = false;
+        for (TokenDF tdf : allTerms) {
+            if (tdf.getToken().equals("13 productions")) {
+                assertEquals(3l, tdf.getDf());
+                found = true;
+            }
+        }
+        assertTrue(found);
+
+        allTerms = new HashSet<>();
+        lower = "";
+        while (true) {
+            List<TokenDF> terms = client.getTerms("production_companies_facet_lc", lower, 100, 0);
+            if (terms.size() == 0) {
+                break;
+            }
+            lower = terms.get(terms.size()-1).getToken();
+            allTerms.addAll(terms);
+        }
+        assertEquals(15938, allTerms.size());
+
+    }
+
+    @Test
+    public void testAnalysis() throws Exception {
+        String s = "THE Quick brün FOX";
+        SearchClient client = SearchClientFactory.getClient(TMDB_URL);
+        List<String> tokens = client.analyze("title", s);
+        assertEquals(3, tokens.size());
+        assertEquals("brün", tokens.get(2));
     }
 }

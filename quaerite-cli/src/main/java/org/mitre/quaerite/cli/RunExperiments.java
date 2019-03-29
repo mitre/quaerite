@@ -16,6 +16,9 @@
  */
 package org.mitre.quaerite.cli;
 
+import static org.mitre.quaerite.core.util.CommandLineUtil.getBoolean;
+import static org.mitre.quaerite.core.util.CommandLineUtil.getPath;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;

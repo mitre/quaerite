@@ -43,6 +43,7 @@
         <module>quaerite-cli</module>
         <module>quaerite-examples</module>
         <module>quaerite-core</module>
+        <module>quaerite-analysis</module>
     </modules>
 
 </project>

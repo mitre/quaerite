@@ -36,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.stats.TokenDF;
 import org.mitre.quaerite.core.util.JsonUtil;
 
 public class ESClient extends SearchClient {
@@ -241,7 +242,11 @@ public class ESClient extends SearchClient {
     public Collection<? extends String> getCopyFields() throws IOException, SearchClientException {
 
         //what do we need to do to make this more robust and/or handle wildcarding of templates?
-        JsonElement root = getJson(esBase + "_template/" + esCollection);
+        JsonResponse response = getJson(esBase + "_template/" + esCollection);
+        if (response.getStatus() != 200) {
+            throw new SearchClientException(response.getMsg());
+        }
+        JsonElement root = response.getJson();
         if (!root.isJsonObject()) {
             return Collections.EMPTY_SET;
         }
@@ -294,6 +299,18 @@ public class ESClient extends SearchClient {
     @Override
     public Set<String> getSystemInternalFields() {
         return SYS_INTERNAL_FIELDS;
+    }
+
+    @Override
+    public List<String> analyze(String field, String string) {
+        //todo stub
+        return Collections.EMPTY_LIST;
+    }
+
+    @Override
+    public List<TokenDF> getTerms(String field, String lower, int limit, int minCount) throws IOException, SearchClientException {
+        //todo stub
+        return Collections.EMPTY_LIST;
     }
 
     protected String getESBase() {

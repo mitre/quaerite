@@ -42,6 +42,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.stats.TokenDF;
+import org.mitre.quaerite.core.util.JsonUtil;
 
 public class SolrClient extends SearchClient {
 
@@ -74,9 +76,12 @@ public class SolrClient extends SearchClient {
 
         String url = generateRequestURL(query);
         long start = System.currentTimeMillis();
-        JsonElement jsonElement = getJson(url);
+        JsonResponse response = getJson(url);
+        if (response.getStatus() != 200) {
+            throw new SearchClientException(response.getMsg());
+        }
         long elapsed = System.currentTimeMillis() - start;
-        return translateResponse(elapsed, jsonElement);
+        return translateResponse(elapsed, response.getJson());
     }
 
 
@@ -258,7 +263,11 @@ public class SolrClient extends SearchClient {
             sb.append("/");
         }
         sb.append("schema/copyfields?wt=json");
-        JsonElement root = getJson(sb.toString());
+        JsonResponse response = getJson(sb.toString());
+        if (response.getStatus() != 200) {
+            throw new SearchClientException(response.getMsg());
+        }
+        JsonElement root = response.getJson();
         JsonArray copyFields = (JsonArray) ((JsonObject) root).get("copyFields");
         Set<String> dests = new HashSet<>();
         for (int i = 0; i < copyFields.size(); i++) {
@@ -272,7 +281,11 @@ public class SolrClient extends SearchClient {
     @Override
     public synchronized String getIdField() throws IOException, SearchClientException {
         if (idField == null) {
-            JsonElement root = getJson(url + "/schema/uniquekey");
+            JsonResponse jsonResponse = getJson(url + "/schema/uniquekey");
+            if (jsonResponse.getStatus() != 200) {
+                throw new SearchClientException(jsonResponse.getMsg());
+            }
+            JsonElement root = jsonResponse.getJson();
             idField = ((JsonObject) root).get("uniqueKey").getAsString();
         }
         return idField;
@@ -293,6 +306,63 @@ public class SolrClient extends SearchClient {
     @Override
     public Set<String> getSystemInternalFields() {
         return SYS_INTERNAL_FIELDS;
+    }
+
+    @Override
+    public List<String> analyze(String field, String string) throws IOException, SearchClientException {
+        StringBuilder request = new StringBuilder();
+        request.append(url);
+        request.append("/analysis/field?wt=json").append("&analysis.fieldname=").append(encode(field));
+        request.append("&analysis.fieldvalue=").append(encode(string));
+        JsonResponse jsonResponse = getJson(request.toString());
+        if (jsonResponse.getStatus() != 200) {
+            throw new SearchClientException(jsonResponse.getMsg());
+        }
+        JsonObject root = jsonResponse.getJson().getAsJsonObject();
+        JsonObject analysisNode = root.get("analysis").getAsJsonObject();
+        JsonObject fieldNamesNode = analysisNode.get("field_names").getAsJsonObject();
+        JsonObject fieldNode = fieldNamesNode.get(field).getAsJsonObject();
+        JsonArray indexArr = fieldNode.getAsJsonArray("index");
+        JsonArray lastStep = indexArr.get(indexArr.size()-1).getAsJsonArray();
+        List<String> tokens = new ArrayList<>();
+        for (JsonElement el : lastStep) {
+            String t = el.getAsJsonObject().get("text").getAsString();
+            tokens.add(t);
+        }
+        return tokens;
+    }
+
+    @Override
+    public List<TokenDF> getTerms(String field, String lower, int limit, int minCount) throws IOException, SearchClientException {
+        StringBuilder request = new StringBuilder();
+        request.append(url).append("/terms?terms=true");
+        request.append("&terms.fl=").append(encode(field));
+        request.append("&limit="+limit);
+        if (! StringUtils.isBlank(lower)) {
+            request.append("&terms.lower=").append(encode(lower));
+        }
+        if (minCount > 0) {
+            request.append("&terms.mincount="+minCount);
+        }
+        request.append("&terms.lower.incl=false");
+        request.append("&terms.sort=index");
+        JsonResponse jsonResponse = getJson(request.toString());
+        if (jsonResponse.getStatus() != 200) {
+            throw new SearchClientException(jsonResponse.getMsg());
+        }
+        List<TokenDF> termDFList = new ArrayList<>();
+        JsonObject termObj = jsonResponse.getJson().getAsJsonObject().getAsJsonObject("terms");
+
+        JsonArray fieldArr = termObj.getAsJsonArray(field);
+
+        for (int i = 0; i < fieldArr.size(); i+=2) {
+            termDFList.add(new TokenDF(
+                    fieldArr.get(i).getAsString(),
+                    fieldArr.get(i+1).getAsLong()
+            ));
+        }
+
+        return termDFList;
     }
 
     class SolrIdGrabber extends IdGrabber {

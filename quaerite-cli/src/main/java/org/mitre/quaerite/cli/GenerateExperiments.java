@@ -16,6 +16,8 @@
  */
 package org.mitre.quaerite.cli;
 
+import static org.mitre.quaerite.core.util.CommandLineUtil.getPath;
+
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;

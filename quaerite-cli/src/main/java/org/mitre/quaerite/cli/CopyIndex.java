@@ -16,6 +16,9 @@
  */
 package org.mitre.quaerite.cli;
 
+import static org.mitre.quaerite.core.util.CommandLineUtil.getInt;
+import static org.mitre.quaerite.core.util.CommandLineUtil.getString;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
@@ -173,7 +176,7 @@ public class CopyIndex extends AbstractCLI {
     private void execute(SearchClient srcClient, SearchClient destClient, Set<String> filterQueries, Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
         ArrayBlockingQueue<Set<String>> idQueue = new ArrayBlockingQueue<>(100);
 
-        ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
+        ExecutorService executorService = Executors.newFixedThreadPool(numThreads+1);
         ExecutorCompletionService<Integer> executorCompletionService = new ExecutorCompletionService<>(executorService);
         String srcIdField = srcClient.getIdField();
         String destIdField = destClient.getIdField();
