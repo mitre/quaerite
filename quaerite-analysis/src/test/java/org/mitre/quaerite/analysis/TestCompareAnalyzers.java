@@ -21,15 +21,12 @@ import org.junit.jupiter.api.Test;
 
 @Disabled("need to have Solr/ES tmdb instance running")
 public class TestCompareAnalyzers {
-    private static String TMDB_URL = "http://localhost:8983/solr/tmdb";
+    private static String TMDB_URL = "http://localhost:8983/solr/GIJQ-142824-target";
 
     @Test
     public void IntegrationTMDBTest() throws Exception {
         CompareAnalyzers.main(new String[]{
-            "-s", TMDB_URL,
-                "-bf", "production_companies_facet_lc",
-                "-ff", "production_companies_facet",
-                "-minSetSize", "1"
+
 
         });
         //TODO -- catch stdout and turn this into a real unit test

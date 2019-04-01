@@ -346,6 +346,7 @@ public class SolrClient extends SearchClient {
         }
         request.append("&terms.lower.incl=false");
         request.append("&terms.sort=index");
+        request.append(JSON_RESPONSE);
         JsonResponse jsonResponse = getJson(request.toString());
         if (jsonResponse.getStatus() != 200) {
             throw new SearchClientException(jsonResponse.getMsg());

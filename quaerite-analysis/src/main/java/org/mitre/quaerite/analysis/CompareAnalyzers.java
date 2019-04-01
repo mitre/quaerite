@@ -48,7 +48,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -57,7 +56,6 @@ import org.apache.log4j.Logger;
 import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientException;
 import org.mitre.quaerite.connectors.SearchClientFactory;
-import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.stats.TokenDF;
 import org.mitre.quaerite.core.util.CommandLineUtil;
 import org.mitre.quaerite.core.util.MapUtil;
@@ -95,7 +93,7 @@ public class CompareAnalyzers {
                         .longOpt("queries")
                         .hasArg()
                         .required(false)
-                        .desc("query csv file to filter results").build()
+                        .desc("query csv file to filter results -- UTF-8 csv with at least 'query' column header").build()
         );
         OPTIONS.addOption(
                 Option.builder("n")
@@ -143,24 +141,35 @@ public class CompareAnalyzers {
                 getInt(commandLine, "n", DEFAULT_NUM_THREADS));
 
         String filteredField = commandLine.getOptionValue("ff");
-        Set<String> targetTokens = Collections.EMPTY_SET;
-        if (commandLine.hasOption("j")) {
-            targetTokens = loadJudgments(
-                    CommandLineUtil.getPath(commandLine, "j", true),
-                    client, filteredField);
+        String baseField = commandLine.getOptionValue("bf");
+        Set<String> targetTokens;
+        List<QueryTokenPair> queryTokenPairs;
+        if (commandLine.hasOption("q")) {
+            targetTokens = ConcurrentHashMap.newKeySet();
+            queryTokenPairs = loadQueries(
+                    CommandLineUtil.getPath(commandLine, "q", true),
+                    client, baseField, filteredField);
+            for (QueryTokenPair p : queryTokenPairs) {
+                targetTokens.addAll(p.getTokens());
+            }
+        } else {
+            targetTokens = Collections.EMPTY_SET;
+            queryTokenPairs = Collections.EMPTY_LIST;
         }
         compareAnalyzers.setTargetTokens(targetTokens);
 
         Map<String, EquivalenceSet> map = compareAnalyzers.compare(
                 client,
-                commandLine.getOptionValue("bf"),
-                commandLine.getOptionValue("ff"));
+                baseField,
+                filteredField);
 
         for (Map.Entry<String, EquivalenceSet> e : map.entrySet()) {
             if (e.getValue().getMap().size() > minSetSize) {
                 boolean printed = false;
                 for (Map.Entry<String, MutableLong> orig : e.getValue().getSortedMap().entrySet()) {
-                    if (orig.getValue().longValue() < minDF);
+                    if (orig.getValue().longValue() < minDF) {
+                        continue;
+                    }
                     if (! printed) {
                         System.out.println(e.getKey());
                         printed = true;
@@ -169,13 +178,35 @@ public class CompareAnalyzers {
                 }
             }
         }
+
+        for (QueryTokenPair q : queryTokenPairs) {
+            System.out.println(q.query);
+            for (String token : q.getTokens()) {
+                EquivalenceSet e = map.get(token);
+                if (e == null) {
+                    System.out.println("\t"+token);
+                } else {
+                    boolean printed = false;
+                    for (Map.Entry<String, MutableLong> orig : e.getSortedMap().entrySet()) {
+                        if (! printed) {
+                            System.out.println("\t" + token);
+                            printed = true;
+                        }
+                        System.out.println("\t\t" + orig.getKey() + ": " + orig.getValue());
+                    }
+                }
+            }
+            System.out.println("\n");
+        }
     }
 
     private void setTargetTokens(Set<String> targetTokens) {
         this.targetTokens = targetTokens;
     }
 
-    private static Set<String> loadJudgments(Path path, SearchClient searchClient, String field) throws IOException, SearchClientException {
+    private static List<QueryTokenPair> loadQueries(Path path,
+                                                    SearchClient searchClient,
+                                                    String baseField, String filterField) throws IOException, SearchClientException {
 
         Set<String> queries = new HashSet<>();
         try (InputStream is = Files.newInputStream(path)) {
@@ -188,11 +219,23 @@ public class CompareAnalyzers {
                 }
             }
         }
-        Set<String> tokens = ConcurrentHashMap.newKeySet();
+        List<QueryTokenPair> queryTokenPairs = new ArrayList<>();
+        int max = 0;
         for (String query : queries) {
-            tokens.addAll(searchClient.analyze(field, query));
+            List<String> baseAnalyzed = searchClient.analyze(baseField, query);
+            List<String> allFiltered = new ArrayList<>();
+            for (String baseToken : baseAnalyzed) {
+                List<String> filtered = searchClient.analyze(filterField, baseToken);
+                if (filtered.size() == 0) {
+                    filtered.add("");
+                }
+                allFiltered.add(StringUtils.join(filtered, ", "));
+            }
+            queryTokenPairs.add(
+                    new QueryTokenPair(query, allFiltered)
+            );
         }
-        return tokens;
+        return queryTokenPairs;
     }
 
     private void setNumThreads(int numThreads) {
@@ -217,17 +260,22 @@ public class CompareAnalyzers {
         }
         //map
         int completed = 0;
+        int totalAnalyzed = 0;
         while (completed < numThreads+1) {
             try {
                 Future<Integer> future = completionService.poll(1, TimeUnit.SECONDS);
                 if (future != null) {
-                    future.get();
+                    int analyzed = future.get();
+                    if (analyzed > 0) {
+                        totalAnalyzed += analyzed;
+                    }
                     completed++;
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
+        LOG.info("Analyzed "+totalAnalyzed);
         executorService.shutdownNow();
         //reduce
         Map<String, EquivalenceSet> overall = new HashMap<>();
@@ -284,12 +332,20 @@ public class CompareAnalyzers {
                     break;
                 }
                 Set<TokenDF> tdf = new HashSet<>(terms);
-                queue.add(tdf);
+                boolean added = queue.offer(tdf, 1, TimeUnit.SECONDS);
+                while (added == false) {
+                    added = queue.offer(tdf, 1, TimeUnit.SECONDS);
+                    LOG.debug("waiting to offer");
+                }
 
                 lower = terms.get(terms.size() - 1).getToken();
             }
             for (int i = 0; i < numThreads; i++) {
-                queue.add(Collections.EMPTY_SET);
+                boolean added = queue.offer(Collections.EMPTY_SET, 1, TimeUnit.SECONDS);
+                while (added == false) {
+                    added = queue.offer(Collections.EMPTY_SET, 1, TimeUnit.SECONDS);
+                    LOG.debug("waiting to offer poison");
+                }
             }
             return -1;
         }
@@ -310,6 +366,7 @@ public class CompareAnalyzers {
 
         @Override
         public Integer call() throws Exception {
+            int analyzed = 0;
             while (true) {
                 Set<TokenDF> set = queue.take();
                 if (set != null) {
@@ -318,6 +375,7 @@ public class CompareAnalyzers {
                     }
                     for (TokenDF tdf : set) {
                         String filtered = analyze(client, field, tdf.getToken());
+                        analyzed++;
                         if (filtered == null) {
                             continue;
                         }
@@ -334,7 +392,7 @@ public class CompareAnalyzers {
                     }
                 }
             }
-            return 1;
+            return analyzed;
         }
 
         private String analyze(SearchClient client, String field, String s) {
@@ -350,6 +408,21 @@ public class CompareAnalyzers {
 
         public Map<String, EquivalenceSet> getMap() {
             return equivalenceMap;
+        }
+    }
+
+
+    private static class QueryTokenPair {
+        private final String query;
+        private final List<String> filteredTokens;
+
+        public QueryTokenPair(String query, List<String> filteredTokens) {
+            this.query = query;
+            this.filteredTokens = filteredTokens;
+        }
+
+        public List<String> getTokens() {
+            return filteredTokens;
         }
     }
 }
