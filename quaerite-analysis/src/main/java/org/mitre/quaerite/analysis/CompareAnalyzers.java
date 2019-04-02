@@ -178,7 +178,9 @@ public class CompareAnalyzers {
                 }
             }
         }
+        System.out.println("\n\nQUERIES...\n\n\n");
 
+        int maxEquivalences = 10;
         for (QueryTokenPair q : queryTokenPairs) {
             System.out.println(q.query);
             for (String token : q.getTokens()) {
@@ -187,12 +189,17 @@ public class CompareAnalyzers {
                     System.out.println("\t"+token);
                 } else {
                     boolean printed = false;
+                    int equivs = 0;
                     for (Map.Entry<String, MutableLong> orig : e.getSortedMap().entrySet()) {
                         if (! printed) {
                             System.out.println("\t" + token);
                             printed = true;
                         }
                         System.out.println("\t\t" + orig.getKey() + ": " + orig.getValue());
+                        if (equivs++ >= maxEquivalences) {
+                            System.out.println("\t\t...");
+                            break;
+                        }
                     }
                 }
             }
