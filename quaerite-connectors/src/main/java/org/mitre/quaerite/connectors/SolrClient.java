@@ -44,10 +44,13 @@ import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.stats.TokenDF;
 
+/**
+ * This should work with versions >= Solr 7.x
+ */
 public class SolrClient extends SearchClient {
 
     private static final String DEFAULT_HANDLER = "select";
-    private static final String JSON_RESPONSE = "&wt=json";
+    protected static final String JSON_RESPONSE = "&wt=json";
     private static Set<String> SYS_INTERNAL_FIELDS;
 
     static {
@@ -58,10 +61,10 @@ public class SolrClient extends SearchClient {
 
     static Logger LOG = Logger.getLogger(SolrClient.class);
 
-    private static final Gson GSON = new Gson();
+    static final Gson GSON = new Gson();
 
-    private final String url;
-    private String idField;
+    final String url;
+    String idField;
 
     /**
      * @param url url to Solr including /collection
@@ -100,7 +103,7 @@ public class SolrClient extends SearchClient {
         return new ResultSet(totalHits, queryTime, totalTime, ids);
     }
 
-    private String generateRequestURL(QueryRequest query) {
+    String generateRequestURL(QueryRequest query) {
         StringBuilder sb = new StringBuilder();
         sb.append(url);
         if (!url.endsWith("/")) {
@@ -202,12 +205,7 @@ public class SolrClient extends SearchClient {
     @Override
     public List<StoredDocument> getDocs(String idField, Set<String> ids,
                                         Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
-        //have to use old school url to make requests
-        //because json request option isn't backwards compatible to 4.x
-        //If we have different Solr clients supporting diff versions,
-        //add in json for this for more modern versions of Solr.
         StringBuilder sb = new StringBuilder();
-        List<StoredDocument> documents = new ArrayList<>();
         int i = 0;
         sb.append(idField + ":(");
         for (String id : ids) {
@@ -215,40 +213,23 @@ public class SolrClient extends SearchClient {
                 sb.append(" OR ");
             }
             sb.append("\"" + id + "\"");
-            if (sb.length() > 1000) {
-                sb.append(")");
-                QueryRequest q = new QueryRequest(sb.toString());
-                q.setNumResults(i);
-                q.addFields(whiteListFields);
-                String url = generateRequestURL(q);
-                List<StoredDocument> localDocs = _getDocs(url, blackListFields);
-                documents.addAll(localDocs);
-                i = 0;
-                sb.setLength(0);
-                sb.append(idField + ":(");
-            }
         }
-        if (sb.length() > 0) {
-            sb.append(")");
-            QueryRequest q = new QueryRequest(sb.toString());
-            q.setNumResults(i);
-            q.addFields(whiteListFields);
-            String url = generateRequestURL(q);
-            List<StoredDocument> localDocs = _getDocs(url, blackListFields);
-            documents.addAll(localDocs);
-        }
-        return documents;
-    }
 
-    private List<StoredDocument> _getDocs(String requestUrl, Set<String> blackListFields) {
-        List<StoredDocument> documents = new ArrayList<>();
-        JsonResponse fullResponse = null;
-        try {
-            fullResponse = getJson(requestUrl);
-        } catch (IOException|SearchClientException e) {
-            LOG.warn("problem with " + url + " and " + requestUrl + " :: "+fullResponse.getMsg());
+        sb.append(")");
+        Map<String, String> qRequest = new HashMap<>();
+        qRequest.put("query", sb.toString());
+        qRequest.put("limit", Integer.toString(i + 10));
+        if (whiteListFields.size() > 0) {
+            String fields = StringUtils.join(whiteListFields, ",");
+            qRequest.put("fields", fields);
+        }
+        String json = GSON.toJson(qRequest);
+        JsonResponse fullResponse = postJson(url + "/select", json);
+        if (fullResponse.getStatus() != 200) {
+            LOG.warn("problem with " + url + " and " + json);
             return Collections.EMPTY_LIST;
         }
+        List<StoredDocument> documents = new ArrayList<>();
         JsonElement root = fullResponse.getJson();
         JsonObject response = (JsonObject) ((JsonObject) root).get("response");
         long totalHits = response.get("numFound").getAsLong();
@@ -269,7 +250,6 @@ public class SolrClient extends SearchClient {
                         }
                     }
                 }
-                LOG.trace("getting doc from solr: "+document.getFields().get("id"));
                 documents.add(document);
             }
         }
@@ -315,14 +295,8 @@ public class SolrClient extends SearchClient {
 
     @Override
     public void deleteAll() throws SearchClientException, IOException {
-        //json is not back compat to 4.5.x
-        //String json = "{ \"delete\": {\"query\":\"*:*\"} }";
-        String xml = "<delete><query>*:*</query></delete>";
-        JsonResponse jsonResponse = postJson(url + "/update?&commitWithin=1000"+JSON_RESPONSE, xml);
-        if (jsonResponse.getStatus() != 200) {
-            throw new SearchClientException(jsonResponse.getMsg());
-        }
-
+        String json = "{ \"delete\": {\"query\":\"*:*\"} }";
+        postJson(url + "/update?&commit=true", json);
     }
 
     @Override
