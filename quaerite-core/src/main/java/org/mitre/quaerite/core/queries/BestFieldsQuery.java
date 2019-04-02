@@ -16,5 +16,21 @@
  */
 package org.mitre.quaerite.core.queries;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 public class BestFieldsQuery extends MultiMatchQuery {
+    @Override
+    public String getName() {
+        return "best_fields";
+    }
+
+    @Override
+    public Pair crossover(Object parentB) {
+        return null;
+    }
+
+    @Override
+    public Object deepCopy() {
+        return null;
+    }
 }

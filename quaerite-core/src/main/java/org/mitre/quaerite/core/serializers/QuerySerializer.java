@@ -24,8 +24,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
@@ -40,31 +38,83 @@ import com.google.gson.JsonSerializer;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.FloatFeature;
-import org.mitre.quaerite.core.features.StringListFeature;
-import org.mitre.quaerite.core.features.ParamsMap;
+import org.mitre.quaerite.core.features.PF;
+import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.StringFeature;
+import org.mitre.quaerite.core.features.StringListFeature;
+import org.mitre.quaerite.core.features.TIE;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
-import org.mitre.quaerite.core.features.factories.FeatureFactory;
-import org.mitre.quaerite.core.features.factories.WeightableListFeatureFactory;
+import org.mitre.quaerite.core.queries.DisMaxQuery;
+import org.mitre.quaerite.core.queries.EDisMaxQuery;
+import org.mitre.quaerite.core.queries.MultiMatchQuery;
+import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.util.JsonUtil;
 
-public class ParamsSerializer extends AbstractFeatureSerializer
-        implements JsonSerializer<ParamsMap>, JsonDeserializer<ParamsMap> {
+public class QuerySerializer extends AbstractFeatureSerializer
+        implements JsonSerializer<Query>, JsonDeserializer<Query> {
 
-    static Logger LOG = Logger.getLogger(ParamsSerializer.class);
+    static Logger LOG = Logger.getLogger(QuerySerializer.class);
 
     @Override
-    public ParamsMap deserialize(JsonElement jsonElement, Type type,
+    public Query deserialize(JsonElement jsonElement, Type type,
                          JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        JsonObject jsonObject = jsonElement.getAsJsonObject();
-        ParamsMap paramsMap = new ParamsMap();
-        for (String name : jsonObject.keySet()) {
-            Feature param = buildParam(name, jsonObject.get(name));
-            if (param != null) {
-                paramsMap.put(name, param);
-            }
+        JsonObject root = jsonElement.getAsJsonObject();
+        String queryType = JsonUtil.getSingleChildName(root);
+        if (queryType.equals("edismax")) {
+            return buildEDisMax(root.get(queryType).getAsJsonObject());
+        } else if (queryType.equals("dismax")) {
+            return buildDisMax(root.get(queryType).getAsJsonObject());
+        } else {
+            throw new IllegalArgumentException("I regret I don't yet support: "+queryType);
         }
-        return paramsMap;
+    }
+
+
+    Query buildEDisMax(JsonObject obj) {
+        Query q = new EDisMaxQuery();
+        deserializeDisMax((DisMaxQuery)q, obj);
+        return q;
+    }
+
+    Query buildDisMax(JsonObject obj) {
+        Query q = new DisMaxQuery();
+        deserializeDisMax((DisMaxQuery)q, obj);
+        return q;
+    }
+
+    void deserializeDisMax(DisMaxQuery q, JsonObject obj) {
+        PF pf = new PF();
+        for (String f : toStringList(obj.get("pf"))) {
+            pf.add(new WeightableField(f));
+        }
+        q.setPF(pf);
+        //TODO -- stub add in bq and bf
+        /*
+        if (obj.has("bq")) {
+            BQ bq = new BQ(obj.get("bq").getAsString());
+        }
+
+        BF bf = new BF();
+        */
+        deserializeMultiMatch((MultiMatchQuery)q, obj);
+    }
+
+    void deserializeMultiMatch(MultiMatchQuery q, JsonObject obj) {
+        QF qf = new QF();
+        int fields = 0;
+        for (String f : toStringList(obj.get("qf"))) {
+            qf.add(new WeightableField(f));
+            fields++;
+        }
+        if (fields == 0) {
+            throw new IllegalArgumentException("must specify qf parameter in a multimatch with at least one field");
+        }
+        q.setQF(qf);
+        if (obj.has("tie")) {
+            TIE tie = new TIE(obj.get("tie").getAsFloat());
+            q.setTie(tie);
+        }
     }
 
     private Feature buildParam(String parameterName, JsonElement element) {
@@ -180,16 +230,44 @@ public class ParamsSerializer extends AbstractFeatureSerializer
 
 
     @Override
-    public JsonElement serialize(ParamsMap paramsMap, Type type, JsonSerializationContext jsonSerializationContext) {
+    public JsonElement serialize(Query query, Type type, JsonSerializationContext jsonSerializationContext) {
         JsonObject jsonObject = new JsonObject();
-        for (Map.Entry<String, Feature> e : paramsMap.getParams().entrySet()) {
-            String name = e.getKey();
-            JsonElement jsonFeature = serializeFeature(e.getValue());
-            if (jsonFeature != JsonNull.INSTANCE) {
-                jsonObject.add(name.toLowerCase(Locale.US), jsonFeature);
-            }
+        if (query instanceof EDisMaxQuery) {
+            jsonObject.add("edismax", serializeEDisMax((EDisMaxQuery)query));
+        } else if (query instanceof DisMaxQuery) {
+            jsonObject.add("dismax", serializeDisMax((DisMaxQuery)query));
         }
         return jsonObject;
+    }
+
+    private JsonElement serializeDisMax(DisMaxQuery query) {
+        JsonObject obj = new JsonObject();
+        serializeDisMaxComponents(query, obj);
+        serializeMultiMatchComponents((MultiMatchQuery)query, obj);
+        return obj;
+    }
+
+    private JsonElement serializeEDisMax(EDisMaxQuery query) {
+        JsonObject obj = new JsonObject();
+        serializeEDisMaxComponents(query, obj);
+        serializeDisMaxComponents((DisMaxQuery)query, obj);
+        serializeMultiMatchComponents((MultiMatchQuery)query, obj);
+        return obj;
+    }
+
+    private void serializeEDisMaxComponents(EDisMaxQuery query, JsonObject obj) {
+        //stub
+    }
+
+    private void serializeDisMaxComponents(DisMaxQuery query, JsonObject obj) {
+        //stub
+    }
+
+    private void serializeMultiMatchComponents(MultiMatchQuery query, JsonObject obj) {
+        obj.add("qf", serializeFeature(query.getQF()));
+        if (query.getTIE() != null) {
+            obj.add("tie", serializeFeature(query.getTIE()));
+        }
     }
 
     private JsonElement serializeFeature(Feature feature) {
@@ -243,24 +321,6 @@ public class ParamsSerializer extends AbstractFeatureSerializer
 
         } else {
             throw new IllegalArgumentException("not yet implemented: "+feature);
-        }
-    }
-
-    /****** Helper method to get the className of the object to be deserialized *****/
-    private FeatureFactory buildWeightableFeatureSet(String clazzName, List<String> fields, List<Float> defaultWeights) {
-        if (!clazzName.contains(".")) {
-            clazzName = getClassName(clazzName);
-        }
-        try {
-            Class cl = Class.forName(clazzName);
-            if (!(WeightableListFeatureFactory.class.isAssignableFrom(cl))) {
-                throw new IllegalArgumentException(clazzName + " must be assignable from WeightableListFeatureFactory");
-            }
-            Constructor con = cl.getConstructor(List.class, List.class);
-            return (FeatureFactory) con.newInstance(fields, defaultWeights);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new JsonParseException(e.getMessage());
         }
     }
 }

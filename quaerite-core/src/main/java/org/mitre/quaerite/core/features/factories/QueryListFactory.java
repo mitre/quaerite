@@ -14,23 +14,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.queries;
+package org.mitre.quaerite.core.features.factories;
 
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.ArrayList;
+import java.util.List;
 
-public class PhraseQuery extends MultiMatchQuery {
+
+import org.mitre.quaerite.core.queries.EDisMaxQuery;
+import org.mitre.quaerite.core.queries.Query;
+
+public class QueryListFactory extends AbstractFeatureFactory<Query> {
+
+    List<QueryFactory> queryFactories = new ArrayList<>();
+
+    public QueryListFactory() {
+        super("queries");
+    }
+
     @Override
-    public String getName() {
+    public List<Query> permute(int maxSize) {
         return null;
     }
 
     @Override
-    public Pair crossover(Object parentB) {
+    public Query random() {
         return null;
     }
 
     @Override
-    public Object deepCopy() {
+    public Query mutate(Query feature, double probability, double amplitude) {
         return null;
+    }
+
+    public void add(QueryFactory queryFactory) {
+        queryFactories.add(queryFactory);
+    }
+
+    public QueryFactory<? extends Query> get(int i) {
+        return queryFactories.get(i);
     }
 }

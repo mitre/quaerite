@@ -36,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.stats.TokenDF;
 import org.mitre.quaerite.core.util.JsonUtil;
 
@@ -117,10 +118,11 @@ public class ESClient extends SearchClient {
         multiMatchParams.put("query", query.getQuery());
         //parameterize this
         multiMatchParams.put("type", "best_fields");
+        /** TODO FIX THIS
         multiMatchParams.put("fields", query.getParameters().get("qf"));
         if (query.getParameters().get("tie") != null) {
             multiMatchParams.put("tie_breaker", query.getParameters().get("tie"));
-        }
+        }*/
         Map<String, Object> multiMatch = wrapAMap("multi_match", multiMatchParams);
         Map<String, Object> queryMap = wrapAMap("query", multiMatch);
 
@@ -165,12 +167,13 @@ public class ESClient extends SearchClient {
                         )
                 );
         aggsMap.put("size", "0");
+        /* TODO
         if (!(StringUtils.isBlank(query.getQuery()) ||
                 "*:*".equals(query.getQuery()))) {
 
             Map<String, Object> queryMap = getQueryMap(query, Collections.EMPTY_LIST);
             aggsMap.put("query", queryMap.get("query"));
-        }
+        }*/
         return GSON.toJson(aggsMap);
     }
 
@@ -292,7 +295,7 @@ public class ESClient extends SearchClient {
 
     @Override
     public IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids,
-                                  int batchSize, int copierThreads, Collection<String> filterQueries) throws IOException, SearchClientException {
+                                  int batchSize, int copierThreads, Collection<Query> filterQueries) throws IOException, SearchClientException {
         return new ESIdGrabber(getIdField(), ids, batchSize, copierThreads, filterQueries);
     }
 
@@ -339,7 +342,8 @@ public class ESClient extends SearchClient {
 
     private class ESIdGrabber extends IdGrabber {
 
-        public ESIdGrabber(String idField, ArrayBlockingQueue<Set<String>> ids, int batchSize, int copierThreads, Collection<String> filterQueries) {
+        public ESIdGrabber(String idField, ArrayBlockingQueue<Set<String>> ids, int batchSize,
+                           int copierThreads, Collection<Query> filterQueries) {
             super(idField, ids, batchSize, copierThreads, filterQueries);
         }
 

@@ -16,5 +16,7 @@
  */
 package org.mitre.quaerite.core.queries;
 
-public abstract class Query {
+import org.mitre.quaerite.core.features.Feature;
+
+public abstract class Query implements Feature {
 }

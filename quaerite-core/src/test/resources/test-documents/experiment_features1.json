@@ -8,7 +8,6 @@
     }
   ],
   "featureFactories" : {
-    "tie": [0.0, 0.1, 0.2],
     "url" : [
       "http://localhost:8983/solr/tmdb",
       "http://localhost:8983/solr/tmdb2"
@@ -17,18 +16,25 @@
       "custom1",
       "custom2"
     ],
-    "qf": {
-      "fields": [
-        "title",
-        "overview",
-        "people",
-        "content"
-      ],
-      "defaultWeights": [
-        "0.0",
-        "1.0",
-        "7.0"
-      ]
-    }
+    "queries" : [
+      {
+        "edismax": {
+          "qf": {
+            "fields": [
+              "title",
+              "overview",
+              "people",
+              "content"
+            ],
+            "defaultWeights": [
+              "0.0",
+              "1.0",
+              "7.0"
+            ]
+          },
+          "tie": [0.0, 0.1, 0.2]
+        }
+      }
+    ]
   }
 }

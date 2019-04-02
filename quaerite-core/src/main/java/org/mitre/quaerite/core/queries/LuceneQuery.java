@@ -17,5 +17,51 @@
 
 package org.mitre.quaerite.core.queries;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 public class LuceneQuery extends Query {
+
+    private final static QueryOperator.OPERATOR
+            DEFAULT_QUERY_OPERATOR = QueryOperator.OPERATOR.AND;
+
+    private final String defaultField;
+    private final String queryString;
+    private final QueryOperator.OPERATOR qop;
+
+    public LuceneQuery(String defaultField, String queryString) {
+        this(defaultField, queryString, DEFAULT_QUERY_OPERATOR);
+    }
+    public LuceneQuery(String defaultField, String queryString, QueryOperator.OPERATOR qop) {
+        this.defaultField = defaultField;
+        this.queryString = queryString;
+        this.qop = qop;
+
+    }
+
+    public String getDefaultField() {
+        return defaultField;
+    }
+
+    public String getQueryString() {
+        return queryString;
+    }
+
+    public QueryOperator.OPERATOR getQueryOperator() {
+        return qop;
+    }
+
+    @Override
+    public String getName() {
+        return "lucene";
+    }
+
+    @Override
+    public Pair crossover(Object parentB) {
+        return null;
+    }
+
+    @Override
+    public Object deepCopy() {
+        return null;
+    }
 }

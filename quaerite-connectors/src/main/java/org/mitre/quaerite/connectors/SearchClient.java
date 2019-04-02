@@ -46,6 +46,7 @@ import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.stats.TokenDF;
 
 public abstract class SearchClient implements Closeable {
@@ -152,7 +153,7 @@ public abstract class SearchClient implements Closeable {
     public abstract void deleteAll() throws SearchClientException, IOException;
 
     public abstract IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids, int batchSize,
-                                  int copierThreads, Collection<String> filterQueries) throws IOException, SearchClientException;
+                                  int copierThreads, Collection<Query> filterQueries) throws IOException, SearchClientException;
 
 
     protected JsonResponse getJson(String url) throws IOException, SearchClientException {

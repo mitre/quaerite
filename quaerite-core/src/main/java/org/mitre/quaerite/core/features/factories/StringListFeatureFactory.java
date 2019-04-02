@@ -63,12 +63,12 @@ public class StringListFeatureFactory<T extends StringListFeature>
         }
         if (minSetSize > features.size()) {
             throw new IllegalArgumentException("minSetSize ("+minSetSize+
-                    ") must be <= features size ("+features.size()+")" );
+                    ") must be <= factories size ("+features.size()+")" );
         }
 
         if (maxSetSize > features.size()) {
             throw new IllegalArgumentException("maxSetSize ("+maxSetSize+
-                    ") must be <= features size ("+features.size()+")" );
+                    ") must be <= factories size ("+features.size()+")" );
         }
 
         this.features = features;

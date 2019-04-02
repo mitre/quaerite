@@ -41,6 +41,13 @@ import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.connectors.StoredDocument;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.features.WeightableField;
+import org.mitre.quaerite.core.queries.DisMaxQuery;
+import org.mitre.quaerite.core.queries.EDisMaxQuery;
+import org.mitre.quaerite.core.queries.LuceneQuery;
+import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
+import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.queries.TermQuery;
 
 /**
  * This class needs the tmdb collection up and running.
@@ -57,7 +64,7 @@ import org.mitre.quaerite.core.ResultSet;
 public class TestESClient {
 
 
-    private static String ALL_DOCS = "*:*";
+    private static Query ALL_DOCS = new MatchAllDocsQuery();
     private static String TMDB_URL = "http://localhost:9200/tmdb";
 
     @Test
@@ -100,9 +107,8 @@ public class TestESClient {
         assertEquals(1, counts.get("haile gerima"));
         assertEquals(90, counts.get("dreamworks skg"));
 
-        queryRequest = new QueryRequest("red");
+        queryRequest = new QueryRequest(new TermQuery("title", "red"));
         queryRequest.setFacetLimit(20000);
-        queryRequest.addParameter("qf", "title");
         queryRequest.setFacetField("production_companies.facet");
         result = client.facet(queryRequest);
         counts = result.getFacetCounts();
@@ -114,8 +120,9 @@ public class TestESClient {
     @Test
     public void testQuery() throws Exception {
         SearchClient client = SearchClientFactory.getClient(TMDB_URL);
-        QueryRequest queryRequest = new QueryRequest("psycho", null, client.getIdField());
-        queryRequest.addParameter("qf", "title");
+        QueryRequest queryRequest = new QueryRequest(
+                new LuceneQuery("title", "psycho"),
+                null, client.getIdField());
         ResultSet result = client.search(queryRequest);
         Set<String> hits = new HashSet<>();
         for (int i = 0; i < result.size(); i++) {
@@ -124,6 +131,21 @@ public class TestESClient {
         assertEquals(8, hits.size());
         assertTrue(hits.contains("539"));
         assertTrue(hits.contains("35683"));
+
+        DisMaxQuery disMaxQuery = new DisMaxQuery("psycho");
+        disMaxQuery.getQF().add(new WeightableField("title"));
+
+        queryRequest = new QueryRequest(disMaxQuery,
+                null, client.getIdField());
+        result = client.search(queryRequest);
+        hits = new HashSet<>();
+        for (int i = 0; i < result.size(); i++) {
+            hits.add(result.get(i));
+        }
+        assertEquals(8, hits.size());
+        assertTrue(hits.contains("539"));
+        assertTrue(hits.contains("35683"));
+
     }
 
     @Test

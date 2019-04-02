@@ -17,5 +17,17 @@
 
 package org.mitre.quaerite.core.queries;
 
+import java.util.List;
+
 public class TermsQuery extends TermQuery {
+
+    private final List<String> terms;
+    public TermsQuery(String field, List<String> terms) {
+        super(field, null);
+        this.terms = terms;
+    }
+    
+    public List<String> getTerms() {
+        return terms;
+    }
 }

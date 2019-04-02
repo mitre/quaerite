@@ -16,21 +16,18 @@
  */
 package org.mitre.quaerite.core.queries;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.mitre.quaerite.core.features.PF2;
+import org.mitre.quaerite.core.features.PF3;
 
-public class PhraseQuery extends MultiMatchQuery {
-    @Override
-    public String getName() {
-        return null;
+public class EDisMaxQuery extends DisMaxQuery {
+
+    PF2 pf2;
+    PF3 pf3;
+    public EDisMaxQuery() {
+        super(null);
     }
 
-    @Override
-    public Pair crossover(Object parentB) {
-        return null;
-    }
-
-    @Override
-    public Object deepCopy() {
-        return null;
+    public EDisMaxQuery(String queryString) {
+        super(queryString);
     }
 }

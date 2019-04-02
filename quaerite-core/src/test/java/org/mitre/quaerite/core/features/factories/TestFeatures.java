@@ -32,12 +32,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.ExperimentFactory;
 import org.mitre.quaerite.core.GAConfig;
+import org.mitre.quaerite.core.features.AbstractFeature;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.FloatFeature;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.TIE;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
+import org.mitre.quaerite.core.queries.EDisMaxQuery;
+import org.mitre.quaerite.core.queries.Query;
 
 
 public class TestFeatures {
@@ -110,10 +113,19 @@ public class TestFeatures {
         @Test
     public void testQFDeserialization() throws Exception {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(newReader("/test-documents/experiment_features1.json"));
-        FloatFeatureFactory<FloatFeature> featureFactory = (FloatFeatureFactory)experimentFactory.getFeatureFactories().get("tie");
-        assertEquals(0.0, featureFactory.getFloats().get(0), 0.001);
-        assertEquals(0.1, featureFactory.getFloats().get(1), 0.001);
-        assertEquals(0.2, featureFactory.getFloats().get(2), 0.001);
+        QueryListFactory queryListFactory = (QueryListFactory)experimentFactory.getFeatureFactories().get("queries");
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)queryListFactory.get(0);
+
+        FloatFeatureFactory tie = null;
+        for (FeatureFactory f : qf.factories) {
+            if (((AbstractFeatureFactory)f).getName().equals("tie")) {
+                tie = (FloatFeatureFactory)f;
+            }
+        }
+        assertNotNull(tie);
+        assertEquals(0.0, (float)tie.getFloats().get(0), 0.001);
+        assertEquals(0.1, (float)tie.getFloats().get(1), 0.001);
+        assertEquals(0.2, (float)tie.getFloats().get(2), 0.001);
     }
 
     @Test
@@ -130,8 +142,15 @@ public class TestFeatures {
         );
 
         FeatureFactories featureFactories = experimentFactory.getFeatureFactories();
-        FeatureFactory qf = featureFactories.get("qf");
-        List<Feature> features = qf.permute(1000);
+        QueryListFactory qlf = (QueryListFactory)featureFactories.get("queries");
+        QueryFactory<EDisMaxQuery> qfactory = (QueryFactory<EDisMaxQuery>)qlf.get(0);
+
+        for (FeatureFactory f : qfactory.factories) {
+            if (((AbstractFeatureFactory)f).getName().equals("qf")) {
+                List<Feature> features = f.permute(1000);
+                assertEquals(80, features.size());
+            }
+        }
     }
 
     @Test

@@ -17,5 +17,37 @@
 
 package org.mitre.quaerite.core.queries;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 public class TermQuery extends Query {
+
+    final String field;
+    final String term;
+
+    public TermQuery(String field, String term) {
+        this.field = field;
+        this.term = term;
+    }
+    @Override
+    public String getName() {
+        return "term";
+    }
+
+    @Override
+    public Pair crossover(Object parentB) {
+        return null;
+    }
+
+    @Override
+    public Object deepCopy() {
+        return null;
+    }
+
+    public String getField() {
+        return field;
+    }
+
+    public String getTerm() {
+        return  term;
+    }
 }

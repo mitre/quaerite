@@ -14,7 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.queries;
+package org.mitre.quaerite.core.features.factories;
 
-public class EDismaxQuery extends DismaxQuery {
+import java.util.ArrayList;
+import java.util.List;
+
+import org.mitre.quaerite.core.queries.Query;
+
+public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
+
+    List<FeatureFactory> factories = new ArrayList<>();
+    public QueryFactory(String name) {
+        super(name);
+    }
+
+
+    @Override
+    public List<T> permute(int maxSize) {
+        return null;
+    }
+
+    @Override
+    public T random() {
+        return null;
+    }
+
+    @Override
+    public T mutate(T feature, double probability, double amplitude) {
+        return null;
+    }
+
+    public void add(FeatureFactory factory) {
+        factories.add(factory);
+    }
 }

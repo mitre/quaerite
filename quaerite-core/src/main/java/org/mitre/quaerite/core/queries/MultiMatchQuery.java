@@ -16,5 +16,43 @@
  */
 package org.mitre.quaerite.core.queries;
 
-public abstract class MultiMatchQuery {
+import org.mitre.quaerite.core.features.Feature;
+import org.mitre.quaerite.core.features.QF;
+import org.mitre.quaerite.core.features.TIE;
+
+public abstract class MultiMatchQuery extends Query {
+    protected String queryString;
+    protected QF qf = new QF();
+    protected TIE tie;
+
+    public MultiMatchQuery() {
+
+    }
+
+    public MultiMatchQuery(String queryString) {
+        this.queryString = queryString;
+    }
+    public QF getQF() {
+        return qf;
+    }
+
+    public void setQF(QF qf) {
+        this.qf = qf;
+    }
+
+    public void setTie(TIE tie) {
+        this.tie = tie;
+    }
+
+    public Feature getTIE() {
+        return tie;
+    }
+
+    public String getQueryString() {
+        return queryString;
+    }
+
+    public void setQueryString(String queryString) {
+        this.queryString = queryString;
+    }
 }

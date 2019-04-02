@@ -52,42 +52,35 @@
   ],
   "experiments": {
     "title": {
-      "name": "title",
       "searchServerUrl": "http://localhost:8983/solr/tmdb",
-      "params": {
-        "qf": [
-          "title"
-        ]
+      "query": {
+        "edismax" : {
+          "qf": "title"
+        }
       }
     },
     "overview": {
-      "name": "overview",
       "searchServerUrl": "http://localhost:8983/solr/tmdb",
-      "params": {
-        "qf": [
-          "overview"
-        ],
-        "bq": []
+      "query": {
+        "edismax" : {
+          "qf": ["overview"]
+        }
       },
       "filterQueries": []
     },
     "people": {
-      "name": "people",
       "searchServerUrl": "http://localhost:8983/solr/tmdb",
-      "params": {
-        "qf": [
-          "people"
-        ]
-      }
-    },
+      "query": {
+        "edismax" : {
+          "qf": ["people"]
+        }
+      }    },
     "people_title": {
-      "name": "people_title",
       "searchServerUrl": "http://localhost:8983/solr/tmdb",
-      "params": {
-        "qf": [
-          "people",
-          "title"
-        ]
+      "query": {
+        "edismax" : {
+          "qf": ["people","title"]
+        }
       }
     }
   }

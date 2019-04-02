@@ -16,5 +16,32 @@
  */
 package org.mitre.quaerite.core.queries;
 
-public class DismaxQuery extends MultiMatchQuery {
+public class QueryOperator {
+    enum OPERATOR {
+        AND,
+        OR
+    }
+
+    private final Float mmFloat;
+    private final Integer mmInt;
+    private final OPERATOR operator;
+
+    public QueryOperator(OPERATOR operator) {
+        this(operator, null, null);
+    }
+
+    public QueryOperator(OPERATOR operator, int mm) {
+        this(operator, null, mm);
+    }
+
+    public QueryOperator(OPERATOR operator, float mm) {
+        this(operator, mm, null);
+    }
+
+    private QueryOperator(OPERATOR operator, Float mmFloat, Integer mmInt) {
+        this.operator = operator;
+        this.mmFloat = mmFloat;
+        this.mmInt = mmInt;
+    }
+
 }

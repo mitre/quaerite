@@ -28,6 +28,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.Experiment;
 import org.mitre.quaerite.core.GAConfig;
+import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
 import org.mitre.quaerite.core.stats.ExperimentScorePair;
 
 public class TestMathUtil {
@@ -129,7 +130,7 @@ public class TestMathUtil {
     private static class ExperimentProxy extends Experiment {
 
         public ExperimentProxy(String name) {
-            super(name, "");
+            super(name, "", new MatchAllDocsQuery());
         }
     }
 

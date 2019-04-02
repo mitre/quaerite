@@ -34,6 +34,7 @@ import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
+import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.scoreaggregators.NDCGAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 
@@ -54,8 +55,9 @@ public class TestExperimentSet {
         assertEquals(8, experimentSet.getScoreAggregators().size());
         Map<String, Experiment> map = experimentSet.getExperiments();
         Experiment peopleTitle = map.get("people_title");
-        Map<String, Feature> features = peopleTitle.getParams();
-        Feature qf = features.get("qf");
+        assertEquals("people_title", peopleTitle.getName());
+        EDisMaxQuery query = (EDisMaxQuery)peopleTitle.getQuery();
+        Feature qf = query.getQF();
         assertEquals(QF.class, qf.getClass());
         List<WeightableField> fields = ((WeightableListFeature)qf).getWeightableFields();
         assertEquals(2, fields.size());
@@ -92,6 +94,17 @@ public class TestExperimentSet {
         ExperimentSet revivified = ExperimentSet.fromJson(new StringReader(json));
         assertEquals(20, revivified.getExperimentConfig().getNumThreads());
         assertEquals("customIdField", revivified.getExperimentConfig().getIdField());
+
+        Map<String, Experiment> map = revivified.getExperiments();
+        Experiment peopleTitle = map.get("people_title");
+        assertEquals("people_title", peopleTitle.getName());
+        EDisMaxQuery query = (EDisMaxQuery)peopleTitle.getQuery();
+        Feature qf = query.getQF();
+        assertEquals(QF.class, qf.getClass());
+        List<WeightableField> fields = ((WeightableListFeature)qf).getWeightableFields();
+        assertEquals(2, fields.size());
+        assertEquals("people", fields.get(0).getFeature());
+        assertEquals("title", fields.get(1).getFeature());
 
     }
 

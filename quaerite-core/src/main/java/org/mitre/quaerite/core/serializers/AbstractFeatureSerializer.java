@@ -23,9 +23,18 @@ import java.util.Locale;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import org.mitre.quaerite.core.features.PF;
+import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.StringFeature;
+import org.mitre.quaerite.core.features.TIE;
 import org.mitre.quaerite.core.features.WeightableField;
+import org.mitre.quaerite.core.features.factories.QueryListFactory;
+import org.mitre.quaerite.core.queries.DisMaxQuery;
+import org.mitre.quaerite.core.queries.EDisMaxQuery;
+import org.mitre.quaerite.core.queries.MultiMatchQuery;
+import org.mitre.quaerite.core.queries.Query;
 
 public class AbstractFeatureSerializer {
     static String DEFAULT_CLASS_NAME_SPACE = "org.mitre.quaerite.core.features.";
@@ -129,6 +138,9 @@ public class AbstractFeatureSerializer {
     }
 
     Class determineClass(String clazzName) {
+        if (clazzName.equals("queries")) {
+            return Query.class;
+        }
         if (!clazzName.contains(".")) {
             clazzName = getClassName(clazzName);
         }
@@ -138,4 +150,5 @@ public class AbstractFeatureSerializer {
             throw new JsonParseException(e.getMessage());
         }
     }
+
 }

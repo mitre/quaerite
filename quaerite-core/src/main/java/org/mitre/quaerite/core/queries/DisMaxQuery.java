@@ -17,11 +17,34 @@
 package org.mitre.quaerite.core.queries;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.mitre.quaerite.core.features.BF;
+import org.mitre.quaerite.core.features.BQ;
+import org.mitre.quaerite.core.features.PF;
+import org.mitre.quaerite.core.features.TIE;
 
-public class PhraseQuery extends MultiMatchQuery {
+public class DisMaxQuery extends MultiMatchQuery {
+
+
+    protected PF pf;
+    protected BQ bq;
+    protected BF bf;
+    protected TIE tie;
+
+    public DisMaxQuery() {
+       super();
+    }
+
+    public DisMaxQuery(String queryString) {
+        super(queryString);
+    }
+
+    public void setPF(PF pf) {
+        this.pf = pf;
+    }
+
     @Override
     public String getName() {
-        return null;
+        return "dismax";
     }
 
     @Override

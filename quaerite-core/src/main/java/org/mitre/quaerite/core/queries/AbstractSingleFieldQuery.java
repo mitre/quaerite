@@ -16,7 +16,7 @@
  */
 package org.mitre.quaerite.core.queries;
 
-public class AbstractSingleFieldQuery extends Query {
+public abstract class AbstractSingleFieldQuery extends Query {
 
     private final String field;
 

@@ -24,6 +24,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
+import org.mitre.quaerite.core.queries.Query;
 
 /**
  * This grabs ids from the index and puts them on a blocking queue
@@ -38,10 +39,10 @@ public abstract class IdGrabber implements Callable<Integer> {
     protected final ArrayBlockingQueue<Set<String>> ids;
     protected final int batchSize;
     protected final int copierThreads;
-    protected final Collection<String> filterQueries;
+    protected final Collection<Query> filterQueries;
 
     public IdGrabber(String idField, ArrayBlockingQueue<Set<String>> ids, int batchSize, int
-            copierThreads, Collection<String> filterQueries) {
+            copierThreads, Collection<Query> filterQueries) {
         this.idField = idField;
         this.ids = ids;
         this.batchSize = batchSize;
