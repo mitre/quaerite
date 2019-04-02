@@ -43,12 +43,14 @@ import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.stats.TokenDF;
-import org.mitre.quaerite.core.util.JsonUtil;
 
+/**
+ * This should work with versions >= Solr 7.x
+ */
 public class SolrClient extends SearchClient {
 
     private static final String DEFAULT_HANDLER = "select";
-    private static final String JSON_RESPONSE = "&wt=json";
+    protected static final String JSON_RESPONSE = "&wt=json";
     private static Set<String> SYS_INTERNAL_FIELDS;
 
     static {
@@ -59,10 +61,10 @@ public class SolrClient extends SearchClient {
 
     static Logger LOG = Logger.getLogger(SolrClient.class);
 
-    private static final Gson GSON = new Gson();
+    static final Gson GSON = new Gson();
 
-    private final String url;
-    private String idField;
+    final String url;
+    String idField;
 
     /**
      * @param url url to Solr including /collection
@@ -101,7 +103,7 @@ public class SolrClient extends SearchClient {
         return new ResultSet(totalHits, queryTime, totalTime, ids);
     }
 
-    private String generateRequestURL(QueryRequest query) {
+    String generateRequestURL(QueryRequest query) {
         StringBuilder sb = new StringBuilder();
         sb.append(url);
         if (!url.endsWith("/")) {
@@ -294,7 +296,7 @@ public class SolrClient extends SearchClient {
     @Override
     public void deleteAll() throws SearchClientException, IOException {
         String json = "{ \"delete\": {\"query\":\"*:*\"} }";
-        postJson(url + "/update?&commitWithin=10000", json);
+        postJson(url + "/update?&commit=true", json);
     }
 
     @Override
