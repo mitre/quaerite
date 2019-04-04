@@ -53,8 +53,8 @@ public class ExperimentSet {
     }
 
 
-    public void addExperiment(String name, Experiment experiment) {
-        experiments.put(name, experiment);
+    public void addExperiment(Experiment experiment) {
+        experiments.put(experiment.getName(), experiment);
     }
 
     public void addScoreAggregator(ScoreAggregator scoreAggregator) {
@@ -90,7 +90,7 @@ public class ExperimentSet {
         for (String experimentName : experiments) {
             Experiment experiment = getExperiment(experimentName);
             if (experiment != null) {
-                tmpExperimentSet.addExperiment(experimentName, experiment);
+                tmpExperimentSet.addExperiment(experiment);
             }
         }
         return GSON.toJson(tmpExperimentSet);

@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.features.factories.QueryListFactory;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
@@ -113,5 +114,25 @@ public class ExperimentFactory {
 
     public Map<String, List<String>> getFixedParameters() {
         return fixedParameters;
+    }
+
+    public Experiment generateRandomExperiment() {
+        //TODO stub
+        throw new IllegalArgumentException("stub -- must develop");
+    }
+
+    public List<Experiment> permute(int maxExperiments) {
+        //TODO stub
+        throw new IllegalArgumentException("stub -- must develop");
+    }
+
+    public Pair<Experiment, Experiment> crossover(Experiment parentA, Experiment parentB) {
+        //TODO stub
+        throw new IllegalArgumentException("stub -- must develop");
+    }
+
+    public Experiment mutate(Experiment parent, float mutationProbability, float mutationAmplitude) {
+        //TODO stub
+        throw new IllegalArgumentException("stub -- must develop");
     }
 }

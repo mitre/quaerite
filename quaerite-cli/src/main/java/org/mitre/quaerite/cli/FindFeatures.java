@@ -48,6 +48,9 @@ import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.connectors.QueryRequest;
 import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientFactory;
+import org.mitre.quaerite.core.queries.LuceneQuery;
+import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
+import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.core.stats.ContrastResult;
 
@@ -144,10 +147,10 @@ public class FindFeatures extends AbstractCLI {
         String idField = searchClient.getIdField();
         for (String f : fields) {
             FacetResult targetCounts = getFacets(f, idField, ids, filterQuery, searchClient);
-            QueryRequest sq = new QueryRequest("*:*");
-            sq.addField(idField);
+            QueryRequest sq = new QueryRequest(new MatchAllDocsQuery());
+            sq.addFieldsToRetrieve(idField);
             if (filterQuery != null) {
-                sq.addParameter("fq", filterQuery);
+                sq.addFilterQueries(new LuceneQuery("", filterQuery));
             }
             FacetResult backgroundCounts = getFacets(f, sq, searchClient);
             List<ContrastResult> chis = getChis(targetCounts, backgroundCounts);
@@ -161,28 +164,27 @@ public class FindFeatures extends AbstractCLI {
         List<String> cache = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
 
-        int cnt = 0;
+        int len = 0;
+        List<String> idsToFetch = new ArrayList<>();
         for (String id : ids) {
-            if (cnt++ > 0) {
-                sb.append(" OR ");
-            }
-            sb.append(idField).append(":").append(id);
-            if (sb.length() > 1000) {
-                QueryRequest qr = new QueryRequest(sb.toString());
-                qr.addField(id);
+            idsToFetch.add(id);
+            len += id.length();
+            if (len > 1000) {
+                QueryRequest qr = new QueryRequest(new TermsQuery(idField, idsToFetch));
+                qr.addFieldsToRetrieve(id);
                 if (filterQuery != null) {
-                    qr.addParameter("fq", filterQuery);
+                    qr.addFilterQueries(new LuceneQuery("", filterQuery));
                 }
                 addAll(getFacets(f, qr, searchClient).getFacetCounts(), ret);
                 sb.setLength(0);
-                cnt = 0;
+                len = 0;
             }
         }
         if (sb.length() > 0) {
-            QueryRequest qr = new QueryRequest(sb.toString());
-            qr.addField(idField);
+            QueryRequest qr = new QueryRequest(new TermsQuery(idField, idsToFetch));
+            qr.addFieldsToRetrieve(idField);
             if (filterQuery != null) {
-                qr.addParameter("fq", filterQuery);
+                qr.addFilterQueries(new LuceneQuery("", filterQuery));
             }
             addAll(getFacets(f, qr, searchClient).getFacetCounts(), ret);
         }

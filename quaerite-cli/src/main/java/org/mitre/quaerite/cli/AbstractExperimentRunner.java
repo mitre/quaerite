@@ -59,6 +59,9 @@ import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.WeightableListFeature;
+import org.mitre.quaerite.core.queries.MultiMatchQuery;
+import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.scoreaggregators.DistributionalScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.SummingScoreAggregator;
@@ -215,21 +218,24 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
 
         Set<String> valid = new HashSet<>();
-        StringBuilder queryString = new StringBuilder();
 
         int expected = 0;
+        int len = 0;
+        List<String> ids = new ArrayList<>();
         for (String id : judgmentIds) {
-            if (expected++ > 0) {
-                queryString.append(" OR ");
-            }
-            queryString.append(experimentConfig.getIdField() + ":\"" + id + "\"");
-            if (queryString.length() > 1000) {
-                addValid(queryString.toString(), experimentConfig.getIdField(), searchClient, expected, valid);
-                queryString.setLength(0);
+            ids.add(id);
+            len += id.length();
+            if (len > 1000) {
+                addValid(new TermsQuery(experimentConfig.getIdField(), ids),
+                        experimentConfig.getIdField(), searchClient, ids.size(), valid);
                 expected = 0;
+                len = 0;
             }
         }
-        addValid(queryString.toString(), experimentConfig.getIdField(), searchClient, expected, valid);
+        if (ids.size() > 0) {
+            addValid(new TermsQuery(experimentConfig.getIdField(), ids),
+                    experimentConfig.getIdField(), searchClient, ids.size(), valid);
+        }
 
         int validIds = 0;
         int invalidIds = 0;
@@ -278,12 +284,12 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
     }
 
-    private static void addValid(String queryString, String idField, SearchClient searchClient, int expected, Set<String> valid) {
+    private static void addValid(TermsQuery termsQuery, String idField, SearchClient searchClient, int expected, Set<String> valid) {
         if (expected == 0) {
             return;
         }
-        QueryRequest q = new QueryRequest(queryString, null, idField);
-        q.addField(idField);
+        QueryRequest q = new QueryRequest(termsQuery, null, idField);
+        q.addFieldsToRetrieve(idField);
         q.setNumResults(expected * 2);
         ResultSet resultSet;
         try {
@@ -342,25 +348,15 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
 
         private void scoreEach(Judgments judgments, List<ScoreAggregator> scoreAggregators) {
-            QueryRequest queryRequest = new QueryRequest(judgments.getQuery(), experiment.getCustomHandler(), idField);
-            queryRequest.addField(idField);
-            for (Map.Entry<String, Feature> e : experiment.getParams().entrySet()) {
-                if (e.getValue() instanceof WeightableListFeature) {
-                    WeightableListFeature list = (WeightableListFeature) e.getValue();
-                    for (int i = 0; i < list.size(); i++) {
-                        queryRequest.addParameter(e.getKey(), list.get(i).toString());
-                    }
-                } else if (e.getValue() instanceof StringListFeature){
-                    StringListFeature list = (StringListFeature) e.getValue();
-                    for (int i = 0; i < list.size(); i++) {
-                        queryRequest.addParameter(e.getKey(), list.get(i));
-                    }
+            //TODO: fix this; ok to assume multimatch for now
+            MultiMatchQuery fullQuery = (MultiMatchQuery)experiment.getQuery();
+            fullQuery.setQueryString(judgments.getQuery());
 
-                } else {
-                    queryRequest.addParameter(e.getKey(), e.getValue().toString());
-                }
+            QueryRequest queryRequest = new QueryRequest(fullQuery, experiment.getCustomHandler(), idField);
+            queryRequest.addFieldsToRetrieve(idField);
+            if (experiment.getFilterQueries().size() > 0) {
+                queryRequest.addFilterQueries(experiment.getFilterQueries());
             }
-            List<String> results = new ArrayList<>();
             queryRequest.setNumResults(maxRows);
 
             ResultSet resultSet = null;

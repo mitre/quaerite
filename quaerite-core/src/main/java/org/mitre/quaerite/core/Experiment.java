@@ -45,11 +45,9 @@ public class Experiment {
         this.query = query;
     }
 
-
     public Experiment(String name, String searchServerUrl, Query query) {
         this(name, searchServerUrl, null, query);
     }
-
 
     //consider adding clone to experiment with a new name
     public void setName(String name) {
@@ -101,4 +99,9 @@ public class Experiment {
                 '}';
     }
 
+    public Experiment deepCopy() {
+        //TODO stub
+        throw new IllegalArgumentException("stub -- must develop");
+
+    }
 }

@@ -189,7 +189,10 @@ public class SolrClient extends SearchClient {
     }
 
     private void appendLuceneQuery(LuceneQuery q, StringBuilder sb) {
-        StringBuilder tmp = new StringBuilder("{!lucene df=");
+        StringBuilder tmp = new StringBuilder("{!lucene");
+        if (! StringUtils.isBlank(q.getDefaultField())) {
+            tmp.append("  df=").append(q.getDefaultField());
+        }
         tmp.append(q.getDefaultField());
         tmp.append(" q.op=");
         tmp.append(q.getQueryOperator()).append("}").append(q.getQueryString());

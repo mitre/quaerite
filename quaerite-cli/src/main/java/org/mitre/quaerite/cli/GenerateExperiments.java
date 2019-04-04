@@ -136,14 +136,14 @@ public class GenerateExperiments extends AbstractCLI {
             experimentSet.addScoreAggregator(scoreAggregator);
         }
         if (generateConfig.mode == MODE.PERMUTE) {
-            FeatureFactories featureFactories = experimentFactory.getFeatureFactories();
-            Set<String> featureKeySet = featureFactories.keySet();
-            List<String> featureKeys = new ArrayList<>(featureKeySet);
-            Map<String, Feature> instanceFeatures = new HashMap<>();
-            recurse(0, featureKeys, experimentFactory, instanceFeatures, experimentSet, generateConfig.max);
+            for (Experiment experiment : experimentFactory.permute(generateConfig.max)) {
+                experimentSet.addExperiment(experiment);
+            }
         } else {
-            generateRandom(experimentFactory,
-                    experimentSet, generateConfig.max);
+            for (int i = 0; i < generateConfig.max; i++) {
+                Experiment experiment = experimentFactory.generateRandomExperiment();
+                experimentSet.addExperiment(experiment);
+            }
         }
 
         try (Writer writer = Files.newBufferedWriter(output, StandardCharsets.UTF_8)) {
@@ -152,18 +152,7 @@ public class GenerateExperiments extends AbstractCLI {
         }
     }
 
-    private void generateRandom(ExperimentFactory experimentFactory, ExperimentSet experimentSet, int max) {
-        FeatureFactories featureFactories = experimentFactory.getFeatureFactories();
-        for (int i = 0; i < max; i++) {
-            Map<String, Feature> instanceFeatures = new HashMap<>();
-            for (String featureKey : featureFactories.keySet()) {
-                FeatureFactory featureFactory = featureFactories.get(featureKey);
-                instanceFeatures.put(featureKey, featureFactory.random());
-            }
-            addExperiments(instanceFeatures, experimentFactory.getFixedParameters(), experimentSet);
-        }
-    }
-
+/**
     private void recurse(int i, List<String> featureKeys,
                          ExperimentFactory experimentFactory,
                          Map<String, Feature> instanceFeatures,
@@ -188,49 +177,8 @@ public class GenerateExperiments extends AbstractCLI {
             recurse(i+1, featureKeys, experimentFactory, instanceFeatures, experimentSet, max);
         }
     }
+*/
 
-    private void addExperiments(Map<String, Feature> features,
-                                Map<String, List<String>> fixedParameters, ExperimentSet experimentSet) {
-        String experimentName = "experiment_"+experimentCount++;
-        String searchServerUrl = features.get(Experiment.URL_KEY).toString();
-
-        String customHandler = null;
-        if (features.containsKey(Experiment.CUSTOM_HANDLER_KEY)) {
-            customHandler = features.get(Experiment.CUSTOM_HANDLER_KEY).toString();
-        }
-
-        Experiment experiment = (customHandler == null) ?
-                new Experiment(experimentName, searchServerUrl) :
-                new Experiment(experimentName, searchServerUrl, customHandler);
-        for (Map.Entry<String, Feature> e : features.entrySet()) {
-            if (!e.getKey().equals(Experiment.URL_KEY)
-                    && !e.getKey().equals(Experiment.CUSTOM_HANDLER_KEY)) {
-                experiment.addParam(e.getKey(), e.getValue());
-            }
-        }
-        for (Map.Entry<String, List<String>> e : fixedParameters.entrySet()) {
-            if (experiment.getParams(e.getKey()) != null) {
-                throw new IllegalArgumentException("Can't overwrite dynamic params as of now: "+e.getKey());
-            }
-
-            experiment.addParam(e.getKey(), new SimpleStringListFeature(e.getKey(), e.getValue(), 0, e.getValue().size()));
-
-        }
-        experimentSet.addExperiment(experimentName, experiment);
-    }
-
-    private String getOnlyString(Set<Feature> features) {
-        if (features == null) {
-            return null;
-        }
-        if (features.size() != 1) {
-            throw new IllegalArgumentException("featuresets must have only one value: "+ features.size());
-        }
-        for (Feature f : features) {
-            return f.toString();
-        }
-        return "";
-    }
 
     private static class GenerateConfig {
         final MODE mode;
