@@ -18,18 +18,44 @@
 package org.mitre.quaerite.core.queries;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class TermsQuery extends TermQuery {
+public class TermsQuery extends Query {
 
+    private final String field;
     private final List<String> terms;
     public TermsQuery(String field, List<String> terms) {
-        super(field, null);
+        this.field = field;
         //defensive copy
         this.terms = new ArrayList<>(terms);
     }
     
     public List<String> getTerms() {
         return terms;
+    }
+
+    public String getField() {
+        return field;
+    }
+
+    /**
+     * This currently splits the query string on ','
+     * @param queryString
+     */
+    @Override
+    public void setQueryString(String queryString) {
+        terms.clear();
+        terms.addAll(Arrays.asList(queryString.split(",")));
+    }
+
+    @Override
+    public String getName() {
+        return "terms";
+    }
+
+    @Override
+    public Object deepCopy() {
+        return new TermsQuery(field, terms);
     }
 }

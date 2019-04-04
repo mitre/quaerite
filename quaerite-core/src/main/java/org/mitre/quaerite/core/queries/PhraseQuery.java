@@ -16,16 +16,25 @@
  */
 package org.mitre.quaerite.core.queries;
 
-import org.apache.commons.lang3.tuple.Pair;
 
 public class PhraseQuery extends MultiMatchQuery {
+
+    public PhraseQuery() {
+        super();
+    }
+    public PhraseQuery(String queryString) {
+        super(queryString);
+    }
+
     @Override
     public String getName() {
-        return null;
+        return "phrase";
     }
 
     @Override
     public Object deepCopy() {
-        return null;
+        return new PhraseQuery(getQueryString());
     }
+
+
 }

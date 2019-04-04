@@ -17,9 +17,17 @@
 package org.mitre.quaerite.core.queries;
 
 
-import org.apache.commons.lang3.tuple.Pair;
-
 public class MatchQuery extends Query {
+    String queryString;
+
+    public MatchQuery() {
+
+    }
+
+    public MatchQuery(String queryString) {
+        this.queryString = queryString;
+    }
+
     @Override
     public String getName() {
         return "match";
@@ -27,6 +35,11 @@ public class MatchQuery extends Query {
 
     @Override
     public Object deepCopy() {
-        return null;
+        return new MatchQuery(queryString);
+    }
+
+    @Override
+    public void setQueryString(String queryString) {
+        this.queryString = queryString;
     }
 }

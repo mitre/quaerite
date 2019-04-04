@@ -28,7 +28,7 @@ public class DisMaxQuery extends MultiMatchQuery {
     protected PF pf;
     protected BQ bq;
     protected BF bf;
-    protected TIE tie;
+
 
     public DisMaxQuery() {
        super();

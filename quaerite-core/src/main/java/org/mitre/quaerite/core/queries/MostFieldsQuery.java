@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.core.queries;
 
-import org.apache.commons.lang3.tuple.Pair;
 
 public class MostFieldsQuery extends MultiMatchQuery {
     @Override

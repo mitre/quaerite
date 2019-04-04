@@ -16,9 +16,19 @@
  */
 package org.mitre.quaerite.core.queries;
 
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class BooleanQuery extends Query {
+
+    List<BooleanClause> clauses = new ArrayList<>();
+
+
+    public void addClause(BooleanClause clause) {
+        clauses.add(clause);
+    }
+
     @Override
     public String getName() {
         return "boolean";
@@ -27,5 +37,10 @@ public class BooleanQuery extends Query {
     @Override
     public Object deepCopy() {
         return null;
+    }
+
+    @Override
+    public void setQueryString(String queryString) {
+        //TODO -- need to figure this one out.
     }
 }

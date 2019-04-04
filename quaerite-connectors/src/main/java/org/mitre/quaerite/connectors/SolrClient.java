@@ -43,6 +43,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.queries.DisMaxQuery;
@@ -59,7 +60,7 @@ import org.mitre.quaerite.core.stats.TokenDF;
  */
 public class SolrClient extends SearchClient {
 
-    private static final String DEFAULT_HANDLER = "select";
+    private static final CustomHandler DEFAULT_HANDLER = new CustomHandler("select", "q");
     protected static final String JSON_RESPONSE = "&wt=json";
     private static Set<String> SYS_INTERNAL_FIELDS;
 
@@ -119,9 +120,9 @@ public class SolrClient extends SearchClient {
         if (!url.endsWith("/")) {
             sb.append("/");
         }
-        String handler = queryRequest.getCustomHandler();
-        handler = StringUtils.isBlank(handler) ? DEFAULT_HANDLER : handler;
-        sb.append(handler);
+        CustomHandler handler = queryRequest.getCustomHandler();
+        handler = (handler == null) ? DEFAULT_HANDLER : handler;
+        sb.append(handler.getHandler());
         sb.append("?");
 
         /* TODO: make this configurable; turn off for now
@@ -130,10 +131,10 @@ public class SolrClient extends SearchClient {
             } else { */
         Query query = queryRequest.getQuery();
         if (query instanceof EDisMaxQuery) {
-            addEdisMaxParams((EDisMaxQuery) query, sb);
+            addEdisMaxParams((EDisMaxQuery) query, handler, sb);
         } else if (query instanceof DisMaxQuery) {
             sb.append("defType=dismax");
-            addDisMaxParams((DisMaxQuery) query, sb);
+            addDisMaxParams((DisMaxQuery) query, handler, sb);
         } else if (query instanceof MatchAllDocsQuery) {
             sb.append("&q=").append(encode("*:*"));
         } else if (query instanceof LuceneQuery) {
@@ -211,14 +212,15 @@ public class SolrClient extends SearchClient {
         sb.append(encode(tmp.toString()));
     }
 
-    private void addEdisMaxParams(EDisMaxQuery query, StringBuilder sb) {
+    private void addEdisMaxParams(EDisMaxQuery query, CustomHandler handler, StringBuilder sb) {
         sb.append("&defType=edismax");
         //TODO: stub ...need to add edismax stuff pf2, ps2
-        addDisMaxParams((DisMaxQuery) query, sb);
+        addDisMaxParams((DisMaxQuery) query, handler, sb);
     }
 
-    private void addDisMaxParams(DisMaxQuery query, StringBuilder sb) {
-        sb.append("&q=").append(query.getQueryString());
+    private void addDisMaxParams(DisMaxQuery query, CustomHandler handler, StringBuilder sb) {
+
+        sb.append("&").append(handler.getCustomQueryKey()).append("=").append(query.getQueryString());
         QF qf = query.getQF();
         sb.append("&qf=");
         int i = 0;

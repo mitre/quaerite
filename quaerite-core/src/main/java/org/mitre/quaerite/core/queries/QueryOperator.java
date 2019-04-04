@@ -17,7 +17,7 @@
 package org.mitre.quaerite.core.queries;
 
 public class QueryOperator {
-    enum OPERATOR {
+    public enum OPERATOR {
         AND,
         OR
     }

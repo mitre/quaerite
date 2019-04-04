@@ -17,15 +17,16 @@
 
 package org.mitre.quaerite.core.queries;
 
-import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.Objects;
 
 public class LuceneQuery extends Query {
 
-    private final static QueryOperator.OPERATOR
+    public final static QueryOperator.OPERATOR
             DEFAULT_QUERY_OPERATOR = QueryOperator.OPERATOR.AND;
 
     private final String defaultField;
-    private final String queryString;
+    private String queryString;
     private final QueryOperator.OPERATOR qop;
 
     public LuceneQuery(String defaultField, String queryString) {
@@ -57,6 +58,26 @@ public class LuceneQuery extends Query {
 
     @Override
     public Object deepCopy() {
-        return null;
+        return new LuceneQuery(defaultField, queryString, qop);
+    }
+
+    @Override
+    public void setQueryString(String queryString) {
+        this.queryString = queryString;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LuceneQuery that = (LuceneQuery) o;
+        return Objects.equals(defaultField, that.defaultField) &&
+                Objects.equals(queryString, that.queryString) &&
+                qop == that.qop;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(defaultField, queryString, qop);
     }
 }

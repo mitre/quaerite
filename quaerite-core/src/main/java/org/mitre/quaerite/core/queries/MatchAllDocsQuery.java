@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.core.queries;
 
-import org.apache.commons.lang3.tuple.Pair;
 
 public class MatchAllDocsQuery extends Query {
 
@@ -27,6 +26,11 @@ public class MatchAllDocsQuery extends Query {
 
     @Override
     public Object deepCopy() {
-        return null;
+        return this;
+    }
+
+    @Override
+    public void setQueryString(String queryString) {
+        //no-op
     }
 }

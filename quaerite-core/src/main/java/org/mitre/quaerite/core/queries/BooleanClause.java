@@ -14,41 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.mitre.quaerite.core.queries;
 
-import org.apache.commons.lang3.tuple.Pair;
+public class BooleanClause {
 
-public class TermQuery extends Query {
-
-    final String field;
-    String term;
-
-    public TermQuery(String field, String term) {
-        this.field = field;
-        this.term = term;
+    enum OCCUR {
+        SHOULD,
+        MUST,
+        NOT,
+        FILTER
     }
 
-    @Override
-    public void setQueryString(String queryString) {
-        this.term = queryString;
+    private OCCUR occur;
+    private Query query;
+
+
+    public BooleanClause(OCCUR occur, Query query) {
+        this.occur = occur;
+        this.query = query;
     }
 
-    @Override
-    public String getName() {
-        return "term";
+    public OCCUR getOccur() {
+        return occur;
     }
 
-    @Override
-    public Object deepCopy() {
-        return new TermQuery(field, term);
-    }
-
-    public String getField() {
-        return field;
-    }
-
-    public String getTerm() {
-        return  term;
+    public Query getQuery() {
+        return query;
     }
 }

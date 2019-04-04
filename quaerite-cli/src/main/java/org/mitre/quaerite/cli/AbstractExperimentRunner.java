@@ -352,6 +352,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             MultiMatchQuery fullQuery = (MultiMatchQuery)experiment.getQuery();
             fullQuery.setQueryString(judgments.getQuery());
 
+
             QueryRequest queryRequest = new QueryRequest(fullQuery, experiment.getCustomHandler(), idField);
             queryRequest.addFieldsToRetrieve(idField);
             if (experiment.getFilterQueries().size() > 0) {

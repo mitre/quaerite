@@ -230,7 +230,8 @@ public class ExperimentDB implements Closeable {
                 Timestamp timestamp = resultSet.getTimestamp(2);
                 String json = resultSet.getString(3);
                 Experiment ex = Experiment.fromJson(json);
-                experimentSet.addExperiment(name, ex);
+                ex.setName(name);//do we need this?
+                experimentSet.addExperiment(ex);
             }
         }
         try (ResultSet resultSet = selectScoreAggregators.executeQuery()) {

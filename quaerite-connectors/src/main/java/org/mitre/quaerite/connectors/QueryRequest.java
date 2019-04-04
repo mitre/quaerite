@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 
+import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.queries.Query;
 
 public class QueryRequest {
@@ -36,7 +37,7 @@ public class QueryRequest {
     private int facetLimit = 10;
     private final Query query;
     private final List<Query> filterQueries = new ArrayList<>();
-    private final String customHandler;
+    private final CustomHandler customHandler;
     private final String idField;
     private int start = 0;
     private int numResults = 10;
@@ -47,7 +48,7 @@ public class QueryRequest {
         this(query, null, null);
     }
 
-    public QueryRequest(Query query, String customHandler, String idField) {
+    public QueryRequest(Query query, CustomHandler customHandler, String idField) {
         this.query = query;
         this.customHandler = customHandler;
         this.idField = idField;
@@ -75,7 +76,7 @@ public class QueryRequest {
      *
      * @return the custom handler or null if it doesn't exist
      */
-    public String getCustomHandler() {
+    public CustomHandler getCustomHandler() {
         return customHandler;
     }
 

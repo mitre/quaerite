@@ -16,6 +16,8 @@
  */
 package org.mitre.quaerite.core.queries;
 
+import java.util.Objects;
+
 import org.mitre.quaerite.core.features.PF2;
 import org.mitre.quaerite.core.features.PF3;
 
@@ -29,5 +31,33 @@ public class EDisMaxQuery extends DisMaxQuery {
 
     public EDisMaxQuery(String queryString) {
         super(queryString);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EDisMaxQuery that = (EDisMaxQuery) o;
+        return Objects.equals(pf2, that.pf2) &&
+                Objects.equals(pf3, that.pf3);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pf2, pf3);
+    }
+
+    @Override
+    public String toString() {
+        return "EDisMaxQuery{" +
+                "pf2=" + pf2 +
+                ", pf3=" + pf3 +
+                ", pf=" + pf +
+                ", bq=" + bq +
+                ", bf=" + bf +
+                ", queryString='" + queryString + '\'' +
+                ", qf=" + qf +
+                ", tie=" + tie +
+                '}';
     }
 }

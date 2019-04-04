@@ -16,8 +16,6 @@
  */
 package org.mitre.quaerite.core.serializers;
 
-import static org.mitre.quaerite.core.serializers.FeatureFactorySerializer.MAX_SET_SIZE_KEY;
-import static org.mitre.quaerite.core.serializers.FeatureFactorySerializer.MIN_SET_SIZE_KEY;
 import static org.mitre.quaerite.core.serializers.FeatureFactorySerializer.VALUES_KEY;
 
 import java.lang.reflect.Constructor;
@@ -47,8 +45,10 @@ import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.queries.DisMaxQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
+import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.queries.QueryOperator;
 import org.mitre.quaerite.core.util.JsonUtil;
 
 public class QuerySerializer extends AbstractFeatureSerializer
@@ -65,6 +65,15 @@ public class QuerySerializer extends AbstractFeatureSerializer
             return buildEDisMax(root.get(queryType).getAsJsonObject());
         } else if (queryType.equals("dismax")) {
             return buildDisMax(root.get(queryType).getAsJsonObject());
+        } else if (queryType.equals("lucene")) {
+            JsonObject obj = root.get(queryType).getAsJsonObject();
+            String defaultField = (obj.has("defaultField")) ? obj.get("defaultField").getAsString() : "";
+            String qOpString = (obj.has("q.op"))? obj.get("q.op").getAsString() : null;
+            String queryString = obj.get("queryString").getAsString();
+
+            QueryOperator.OPERATOR qop = (qOpString == null) ? LuceneQuery.DEFAULT_QUERY_OPERATOR :
+                    (qOpString.equalsIgnoreCase("AND") ? QueryOperator.OPERATOR.AND : QueryOperator.OPERATOR.OR);
+            return new LuceneQuery(defaultField, queryString, qop);
         } else {
             throw new IllegalArgumentException("I regret I don't yet support: "+queryType);
         }
@@ -236,8 +245,20 @@ public class QuerySerializer extends AbstractFeatureSerializer
             jsonObject.add("edismax", serializeEDisMax((EDisMaxQuery)query));
         } else if (query instanceof DisMaxQuery) {
             jsonObject.add("dismax", serializeDisMax((DisMaxQuery)query));
+        } else if (query instanceof LuceneQuery) {
+            jsonObject.add("lucene", serializeLucene((LuceneQuery)query));
+        } else {
+            throw new IllegalArgumentException("I'm sorry, I don't yet support: "+query.getClass());
         }
         return jsonObject;
+    }
+
+    private JsonElement serializeLucene(LuceneQuery query) {
+        JsonObject object = new JsonObject();
+        object.addProperty("queryString", query.getQueryString());
+        object.addProperty("defaultField", query.getDefaultField());
+        object.addProperty("q.op", query.getQueryOperator().toString());
+        return object;
     }
 
     private JsonElement serializeDisMax(DisMaxQuery query) {
