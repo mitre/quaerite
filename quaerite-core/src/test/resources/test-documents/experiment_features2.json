@@ -16,15 +16,15 @@
     }
   ],
   "featureFactories" : {
-    "tie": [0.0, 0.1, 0.2],
-    "url" : [
+
+    "urls" : [
       "http://localhost:8983/solr/tmdb",
       "http://localhost:8983/solr/tmdb2"
     ],
-    "customHandler" : [
-      "custom1",
-      "custom2"
-    ],
+    "customHandlers" : {
+      "custom1" : {},
+      "custom2" : {}
+    },
     "queries" : [
       {
         "edismax": {

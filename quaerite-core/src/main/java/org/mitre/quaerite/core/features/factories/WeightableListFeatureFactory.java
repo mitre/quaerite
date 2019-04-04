@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.util.FastMath;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
@@ -224,6 +225,11 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
         T ret = (T)new WeightableListFeature(getName());
         ret.addAll(mutated);
         return ret;
+    }
+
+    @Override
+    public Pair<T, T> crossover(T parentA, T parentB) {
+        return null;
     }
 
     private void modify(List<WeightableField> mutated, double amplitude) {

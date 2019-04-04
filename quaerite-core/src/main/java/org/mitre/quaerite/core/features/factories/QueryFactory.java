@@ -19,6 +19,7 @@ package org.mitre.quaerite.core.features.factories;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.queries.Query;
 
 public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
@@ -41,6 +42,11 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
     @Override
     public T mutate(T feature, double probability, double amplitude) {
+        return null;
+    }
+
+    @Override
+    public Pair<T, T> crossover(T parentA, T parentB) {
         return null;
     }
 

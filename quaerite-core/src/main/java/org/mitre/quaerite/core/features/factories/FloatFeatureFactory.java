@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.features.FloatFeature;
 import org.mitre.quaerite.core.util.MathUtil;
 
@@ -81,6 +82,15 @@ public class FloatFeatureFactory<T extends FloatFeature>
                     floatFeature.getName(), MathUtil.calcMutatedWeight(floatFeature.getValue(), min, max, amplitude));
         } else {
             return floatFeature;
+        }
+    }
+
+    @Override
+    public Pair<T, T> crossover(T parentA, T parentB) {
+        if (MathUtil.RANDOM.nextFloat() > 0.5) {
+            return Pair.of(parentB, parentA);
+        } else {
+            return Pair.of(parentA, parentB);
         }
     }
 }

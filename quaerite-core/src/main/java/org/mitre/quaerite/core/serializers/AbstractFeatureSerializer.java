@@ -25,11 +25,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.PF;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.features.TIE;
 import org.mitre.quaerite.core.features.WeightableField;
+import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
 import org.mitre.quaerite.core.features.factories.QueryListFactory;
 import org.mitre.quaerite.core.queries.DisMaxQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
@@ -46,6 +48,9 @@ public class AbstractFeatureSerializer {
             } else {
                 clazzName = clazzName.substring(0,1).toUpperCase(Locale.US)+
                         clazzName.substring(1);
+            }
+            if (clazzName.endsWith("S")) {
+                clazzName = clazzName.substring(0, clazzName.length()-1);
             }
             return DEFAULT_CLASS_NAME_SPACE + clazzName;
         }
@@ -138,8 +143,10 @@ public class AbstractFeatureSerializer {
     }
 
     Class determineClass(String clazzName) {
-        if (clazzName.equals("queries")) {
+        if (clazzName.equals(QueryListFactory.NAME)) {
             return Query.class;
+        } else if (clazzName.equals(CustomHandlerFactory.NAME)) {
+            return CustomHandler.class;
         }
         if (!clazzName.contains(".")) {
             clazzName = getClassName(clazzName);

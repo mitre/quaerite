@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.util.MathUtil;
 
@@ -79,7 +80,15 @@ public class StringFeatureFactory<T extends StringFeature>
         return stringFeature;
     }
 
+    @Override
+    public Pair<T, T> crossover(T parentA, T parentB) {
+        return null;
+    }
+
+
     public List<StringFeature> getStrings() {
         return features;
     }
+
+
 }

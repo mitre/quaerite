@@ -32,18 +32,14 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.ExperimentFactory;
 import org.mitre.quaerite.core.GAConfig;
-import org.mitre.quaerite.core.features.AbstractFeature;
+import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.Feature;
-import org.mitre.quaerite.core.features.FloatFeature;
-import org.mitre.quaerite.core.features.QF;
-import org.mitre.quaerite.core.features.TIE;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
-import org.mitre.quaerite.core.queries.Query;
 
 
-public class TestFeatures {
+public class TestFeatureFactories {
     Gson gson = new Gson();
 
     @Test
@@ -110,12 +106,22 @@ public class TestFeatures {
     }
 
 
-        @Test
-    public void testQFDeserialization() throws Exception {
+    @Test
+    public void testDeserialization() throws Exception {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(newReader("/test-documents/experiment_features1.json"));
+
+        CustomHandlerFactory customHandlerFactory =
+                (CustomHandlerFactory)experimentFactory.getFeatureFactories().get(CustomHandlerFactory.NAME);
+
+        List<CustomHandler> customHandlers = customHandlerFactory.getCustomHandlers();
+        assertEquals("custom1", customHandlers.get(0).getHandler());
+        assertEquals(CustomHandlerFactory.DEFAULT_QUERY_KEY, customHandlers.get(0).getCustomQueryKey());
+
+        assertEquals("custom2", customHandlers.get(1).getHandler());
+        assertEquals("qq", customHandlers.get(1).getCustomQueryKey());
+
         QueryListFactory queryListFactory = (QueryListFactory)experimentFactory.getFeatureFactories().get("queries");
         QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)queryListFactory.get(0);
-
         FloatFeatureFactory tie = null;
         for (FeatureFactory f : qf.factories) {
             if (((AbstractFeatureFactory)f).getName().equals("tie")) {

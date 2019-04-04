@@ -28,25 +28,15 @@ import org.mitre.quaerite.core.util.MathUtil;
 public abstract class StringListFeature<T extends StringListFeature> extends AbstractFeature<T> {
 
     private final List<String> strings;
-    private final int minSetSize;
-    private final int maxSetSize;
 
-    public StringListFeature(String name, List<String> features, int minSetSize, int maxSetSize) {
+    public StringListFeature(String name, List<String> features) {
         super(name);
-        this.minSetSize = minSetSize;
-        this.maxSetSize = maxSetSize;
         this.strings = features;
-        if (minSetSize > features.size()) {
-            throw new IllegalArgumentException("features size must be >= minSetSize");
-        }
-        if (minSetSize > maxSetSize) {
-            throw new IllegalArgumentException("minSetSize must be > maxSetSize");
-        }
     }
     public int size() {
         return strings.size();
     }
-
+/*
     @Override
     public Pair<T, T> crossover(T parentB) {
         Set<String> union = new HashSet<>();
@@ -82,16 +72,16 @@ public abstract class StringListFeature<T extends StringListFeature> extends Abs
             return Pair.of(childA, childB);
         }
     }
-
+*/
     @Override
     public T deepCopy() {
         List<String> clone = new ArrayList<>();
         clone.addAll(strings);
         //deep copy
-        return build(clone, minSetSize, maxSetSize);
+        return build(clone);
     }
 
-    abstract T build(List<String> strings, int minSetSize, int maxSetSize);
+    public abstract T build(List<String> strings);
 
     public List<String> getAll() {
         List<String> ret = new ArrayList<>();
@@ -103,11 +93,4 @@ public abstract class StringListFeature<T extends StringListFeature> extends Abs
         return strings.get(i);
     }
 
-    public int getMinSetSize() {
-        return minSetSize;
-    }
-
-    public int getMaxSetSize() {
-        return maxSetSize;
-    }
 }

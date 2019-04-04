@@ -28,12 +28,12 @@ import org.mitre.quaerite.core.util.MathUtil;
 public class SimpleStringListFeature extends StringListFeature<SimpleStringListFeature> {
 
 
-    public SimpleStringListFeature(String name, List<String> features, int minSetSize, int maxSetSize) {
-        super(name, features, minSetSize, maxSetSize);
+    public SimpleStringListFeature(String name, List<String> features) {
+        super(name, features);
     }
 
-    SimpleStringListFeature build(List<String> strings, int minSetSize, int maxSetSize) {
-        return new SimpleStringListFeature(getName(), getAll(), minSetSize, maxSetSize);
+    public SimpleStringListFeature build(List<String> strings) {
+        return new SimpleStringListFeature(getName(), strings);
     }
 
 }

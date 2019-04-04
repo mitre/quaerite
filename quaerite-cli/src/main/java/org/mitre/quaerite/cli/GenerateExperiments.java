@@ -141,7 +141,7 @@ public class GenerateExperiments extends AbstractCLI {
             }
         } else {
             for (int i = 0; i < generateConfig.max; i++) {
-                Experiment experiment = experimentFactory.generateRandomExperiment();
+                Experiment experiment = experimentFactory.generateRandomExperiment("rand_"+i);
                 experimentSet.addExperiment(experiment);
             }
         }

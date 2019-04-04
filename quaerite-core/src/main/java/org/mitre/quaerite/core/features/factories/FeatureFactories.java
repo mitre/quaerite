@@ -21,7 +21,6 @@ import java.util.Set;
 
 public class FeatureFactories {
 
-
     Map<String, FeatureFactory> featureFactories;
 
     public FeatureFactories(Map<String, FeatureFactory> featureSetMap) {

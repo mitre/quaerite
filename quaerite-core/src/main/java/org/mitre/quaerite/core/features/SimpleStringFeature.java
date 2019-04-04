@@ -26,15 +26,6 @@ public class SimpleStringFeature extends StringFeature<SimpleStringFeature> {
     public SimpleStringFeature(String name, String feature) {
         super(name, feature);
     }
-    @Override
-    public Pair<SimpleStringFeature, SimpleStringFeature> crossover(SimpleStringFeature parentB) {
-        //order shouldn't matter
-        if (MathUtil.RANDOM.nextFloat() > 0.5) {
-            return Pair.of(this, parentB);
-        } else {
-            return Pair.of(parentB, this);
-        }
-    }
 
     @Override
     public SimpleStringFeature deepCopy() {

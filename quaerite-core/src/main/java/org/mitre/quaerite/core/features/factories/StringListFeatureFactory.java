@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.util.FastMath;
 import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.WeightableField;
@@ -46,7 +47,6 @@ public class StringListFeatureFactory<T extends StringListFeature>
         INSERT,
         REMOVE
     }
-
 
     final List<String> features;
 
@@ -75,18 +75,17 @@ public class StringListFeatureFactory<T extends StringListFeature>
         this.minSetSize = (minSetSize < 0) ? 0 : minSetSize;
         this.maxSetSize = (maxSetSize < 0) ? features.size() : maxSetSize;
 
-        constructor = clazz.getConstructor(List.class, int.class, int.class);
+        constructor = clazz.getConstructor(List.class);
 
     }
 
     public StringListFeature getFeatures() {
-        return newInstance(features, minSetSize, maxSetSize);
+        return newInstance(features);
     }
 
     @Override
     public T random() {
-        int numFields = (minSetSize == maxSetSize) ? minSetSize :
-            minSetSize + MathUtil.RANDOM.nextInt(maxSetSize-minSetSize);
+        int numFields = MathUtil.RANDOM.nextInt(minSetSize, maxSetSize);
 
         List<String> tmp = new ArrayList<>();
         tmp.addAll(features);
@@ -95,7 +94,7 @@ public class StringListFeatureFactory<T extends StringListFeature>
         for (int i = 0; i < numFields; i++) {
             ret.add(tmp.get(i));
         }
-        return newInstance(ret, minSetSize, maxSetSize);
+        return newInstance(ret);
     }
 
     @Override
@@ -127,7 +126,7 @@ public class StringListFeatureFactory<T extends StringListFeature>
 
         base.add(features.get(i));
         if (base.size() >= minSetSize) {
-            collector.add(newInstance(base, minSetSize, maxSize));
+            collector.add(newInstance(base));
         }
         recurse(i + 1, depth+1, maxSize, base, collector);
     }
@@ -168,7 +167,31 @@ public class StringListFeatureFactory<T extends StringListFeature>
         for (String s : mutated) {
             ret.add(s);
         }
-        return newInstance(ret, minSetSize, maxSetSize);
+        return newInstance(ret);
+    }
+
+    @Override
+    public Pair<T, T> crossover(T parentA, T parentB) {
+        Set<String> union = new HashSet<>();
+        union.addAll(parentA.getAll());
+        union.addAll(parentB.getAll());
+
+        //this crossover allows for more from one parent than another
+        //we can change if we want exclusive passing of traits
+        List<String> uniques = new ArrayList<>(union);
+        Collections.shuffle(uniques);
+        List<String> childA = new ArrayList<>();
+        int numA = MathUtil.RANDOM.nextInt(minSetSize, maxSetSize);
+        for (int i = 0; i < numA; i++) {
+            childA.add(uniques.get(i));
+        }
+        Collections.shuffle(uniques);
+        List<String> childB = new ArrayList<>();
+        int numB = MathUtil.RANDOM.nextInt(minSetSize, maxSetSize);
+        for (int i = 0; i < numB; i++) {
+            childB.add(uniques.get(i));
+        }
+        return Pair.of((T)parentA.build(childA), (T)parentB.build(childB));
     }
 
     private void insert(Set<String> mutated, double amplitude) {
@@ -198,9 +221,9 @@ public class StringListFeatureFactory<T extends StringListFeature>
         }
     }
 
-    private T newInstance(List<String> list, int minSetSize, int maxSetSize) {
+    private T newInstance(List<String> list) {
         try {
-            return constructor.newInstance(list, minSetSize, maxSetSize);
+            return constructor.newInstance(list);
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }

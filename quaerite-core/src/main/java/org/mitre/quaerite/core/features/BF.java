@@ -23,12 +23,12 @@ public class BF extends StringListFeature<BF> {
 
     private static final String NAME = "bf";
 
-    public BF(List<String> features, int minSetSize, int maxSetSize) {
-        super(NAME, features, minSetSize, maxSetSize);
+    public BF(List<String> features) {
+        super(NAME, features);
     }
 
     @Override
-    BF build(List<String> strings, int minSetSize, int maxSetSize) {
-        return new BF(strings, minSetSize, maxSetSize);
+    public BF build(List<String> strings) {
+        return new BF(strings);
     }
 }

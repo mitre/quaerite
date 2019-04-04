@@ -504,8 +504,7 @@ public class RunGA extends AbstractExperimentRunner {
     private void generateRandomSeeds(ExperimentFactory experimentFactory, GADB gadb) throws SQLException {
         for (int fold = 0; fold < gaConfig.getNFolds(); fold++) {
             for (int i = 0; i < gaConfig.getPopulation(); i++) {
-                Experiment ex = experimentFactory.generateRandomExperiment();
-                ex.setName(getSeedName(fold, i));
+                Experiment ex = experimentFactory.generateRandomExperiment(getSeedName(fold, i));
                 gadb.addExperiment(ex);
             }
         }

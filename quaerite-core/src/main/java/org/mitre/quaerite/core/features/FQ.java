@@ -21,12 +21,12 @@ import java.util.List;
 public class FQ extends StringListFeature<FQ> {
     private static final String NAME = "fq";
 
-    public FQ(List<String> features, int minSetSize, int maxSetSize) {
-        super(NAME, features, minSetSize, maxSetSize);
+    public FQ(List<String> features) {
+        super(NAME, features);
     }
 
     @Override
-    FQ build(List<String> strings, int minSetSize, int maxSetSize) {
-        return new FQ(strings, minSetSize, maxSetSize);
+    public FQ build(List<String> strings) {
+        return new FQ(strings);
     }
 }

@@ -20,15 +20,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.Query;
 
 public class QueryListFactory extends AbstractFeatureFactory<Query> {
 
+    public static String NAME = "queries";
+
     List<QueryFactory> queryFactories = new ArrayList<>();
 
     public QueryListFactory() {
-        super("queries");
+        super(NAME);
     }
 
     @Override
@@ -43,6 +46,11 @@ public class QueryListFactory extends AbstractFeatureFactory<Query> {
 
     @Override
     public Query mutate(Query feature, double probability, double amplitude) {
+        return null;
+    }
+
+    @Override
+    public Pair<Query, Query> crossover(Query parentA, Query parentB) {
         return null;
     }
 

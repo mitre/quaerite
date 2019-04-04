@@ -35,13 +35,15 @@ public class TestStringListFeatureFactory {
         lA.add("a");
         lA.add("b");
         lA.add("c");
-        FQ fqA = new FQ(lA, minSetSize, maxSetSize);
+        StringListFeatureFactory<FQ> factoryA = new StringListFeatureFactory<FQ>("fq", FQ.class, lA, minSetSize, maxSetSize);
 
         List<String> lB = new ArrayList<>();
         lB.addAll(lA);
-        FQ fqB = new FQ(lB, minSetSize, maxSetSize);
+        StringListFeatureFactory<FQ> factoryB = new StringListFeatureFactory<FQ>("fq", FQ.class, lB, minSetSize, maxSetSize);
+        FQ fqA = factoryA.random();
+        FQ fqB = factoryB.random();
         for (int i = 0; i < 100; i++) {
-            Pair<FQ, FQ> pair = fqA.crossover(fqB);
+            Pair<FQ, FQ> pair = factoryA.crossover(fqA, fqB);
             if (pair.getLeft().getAll().size() > maxSetSize || pair.getLeft().getAll().size() < minSetSize) {
                 fail(pair.getLeft().toString() + " not within set size range");
             }

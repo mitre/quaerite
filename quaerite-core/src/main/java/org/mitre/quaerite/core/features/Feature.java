@@ -28,8 +28,6 @@ public interface Feature<T> {
      */
     String getName();
 
-    Pair<T, T> crossover(T parentB);
-
     //this should be a deep copy
     T deepCopy();
 }

@@ -31,10 +31,12 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.FloatFeature;
 import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.features.WeightableListFeature;
+import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
 import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
 import org.mitre.quaerite.core.features.factories.FloatFeatureFactory;
@@ -81,15 +83,30 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         } else if (StringFeature.class.isAssignableFrom(clazz)) {
             return buildStringFeatureFactory(paramName, jsonFeatureFactory);
         } else if (StringListFeature.class.isAssignableFrom(clazz)) {
-            return buildStringListFeature(paramName, jsonFeatureFactory);
+            return buildStringListFeatureFactory(paramName, jsonFeatureFactory);
         } else if (Query.class.isAssignableFrom(clazz)) {
-            return buildQueryListFeature(jsonFeatureFactory);
-        } else {
+            return buildQueryFactory(jsonFeatureFactory);
+        } else if (CustomHandler.class.isAssignableFrom(clazz)) {
+            return buildCustomHandlerFactory(jsonFeatureFactory.getAsJsonObject());
+        }
             throw new IllegalArgumentException("Sorry, I can't yet handle: "+paramName);
         }
+
+    private FeatureFactory buildCustomHandlerFactory(JsonObject obj) {
+        CustomHandlerFactory customHandlerFactory = new CustomHandlerFactory();
+        for (String handler : obj.keySet()) {
+            JsonObject child = obj.get(handler).getAsJsonObject();
+            String customQueryKey = null;
+            if (child.has(CustomHandlerFactory.CUSTOM_QUERY_KEY)) {
+                customQueryKey = child.get(CustomHandlerFactory.CUSTOM_QUERY_KEY).getAsString();
+            }
+            customHandlerFactory.add(new CustomHandler(handler, customQueryKey));
+        }
+        return  customHandlerFactory;
     }
 
-    private FeatureFactory buildQueryListFeature(JsonElement obj) {
+
+    private FeatureFactory buildQueryFactory(JsonElement obj) {
         QueryListFactory queryListFactory = new QueryListFactory();
         for (JsonElement el : obj.getAsJsonArray()) {
             queryListFactory.add(createQueryFactory(el.getAsJsonObject()));
@@ -136,7 +153,7 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         }
     }
 
-    private FeatureFactory buildStringListFeature(String paramName, JsonElement jsonFeatureFactory) {
+    private FeatureFactory buildStringListFeatureFactory(String paramName, JsonElement jsonFeatureFactory) {
         List<String> fields = null;
         int minSetSize = -1;
         int maxSetSize = -1;

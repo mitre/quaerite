@@ -308,17 +308,7 @@ public class QuerySerializer extends AbstractFeatureSerializer
                     ((JsonArray)valuesElement).add(s);
                 }
             }
-            if (stringListFeature.getMinSetSize() == 0 &&
-                    stringListFeature.getMaxSetSize() == strings.size()) {
-                return valuesElement;
-            } else {
-                JsonObject obj = new JsonObject();
-                obj.add(MIN_SET_SIZE_KEY, new JsonPrimitive(stringListFeature.getMinSetSize()));
-                obj.add(MAX_SET_SIZE_KEY, new JsonPrimitive(stringListFeature.getMaxSetSize()));
-                obj.add(VALUES_KEY, valuesElement);
-                return obj;
-            }
-
+            return valuesElement;
         } else {
             throw new IllegalArgumentException("not yet implemented: "+feature);
         }

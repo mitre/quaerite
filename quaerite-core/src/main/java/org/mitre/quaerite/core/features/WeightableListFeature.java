@@ -34,7 +34,7 @@ public class WeightableListFeature extends AbstractFeature<WeightableListFeature
         super(name);
         weightableFields = new ArrayList<>();
     }
-
+/*
     @Override
     public Pair<WeightableListFeature, WeightableListFeature> crossover(WeightableListFeature parentB) {
         Map<String, WeightableField> parentAWeights = new HashMap<>();
@@ -75,6 +75,8 @@ public class WeightableListFeature extends AbstractFeature<WeightableListFeature
         }
         return Pair.of(childA, childB);
     }
+
+ */
 
     public void add(WeightableField weightableField) {
         weightableFields.add(weightableField);

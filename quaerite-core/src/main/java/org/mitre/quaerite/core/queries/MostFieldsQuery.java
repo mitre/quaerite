@@ -25,11 +25,6 @@ public class MostFieldsQuery extends MultiMatchQuery {
     }
 
     @Override
-    public Pair crossover(Object parentB) {
-        return null;
-    }
-
-    @Override
     public Object deepCopy() {
         return null;
     }

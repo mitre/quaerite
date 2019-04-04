@@ -14,11 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core.features;
+package org.mitre.quaerite.core.features.factories;
 
-import org.apache.commons.lang3.StringUtils;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
-import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
+import org.mitre.quaerite.core.features.CustomHandler;
+import org.mitre.quaerite.core.features.Feature;
 
 /**
  * For Solr...users can specify a custom handler
@@ -27,33 +30,43 @@ import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
  *
  * These custom handlers might use a different key for the query, e.g. "qq".
  */
-public class CustomHandler implements Feature<CustomHandler> {
+public class CustomHandlerFactory implements FeatureFactory<CustomHandler> {
 
-    private static final String NAME = "customHandler";
+    public static final String NAME = "customHandlers";
+    public static final String CUSTOM_QUERY_KEY = "customQueryKey";
+    public static final String DEFAULT_QUERY_KEY = "q";
 
-    private final String handler;
-    private final String customQueryKey;
-    public CustomHandler(String handler, String customQueryKey) {
-        this.handler = handler;
-        this.customQueryKey = StringUtils.isBlank(customQueryKey) ?
-                CustomHandlerFactory.DEFAULT_QUERY_KEY : customQueryKey;
+
+    List<CustomHandler> customHandlerList = new ArrayList<>();
+
+    public CustomHandlerFactory() {
     }
 
-    public String getHandler() {
-        return handler;
-    }
-
-    public String getCustomQueryKey() {
-        return customQueryKey;
+    public void add(CustomHandler ch) {
+        customHandlerList.add(ch);
     }
 
     @Override
-    public String getName() {
-        return NAME;
+    public List<CustomHandler> permute(int maxSize) {
+        return null;
     }
 
     @Override
-    public CustomHandler deepCopy() {
-        return new CustomHandler(getHandler(), getCustomQueryKey());
+    public CustomHandler random() {
+        return null;
+    }
+
+    @Override
+    public CustomHandler mutate(CustomHandler feature, double probability, double amplitude) {
+        return null;
+    }
+
+    @Override
+    public Pair<CustomHandler, CustomHandler> crossover(CustomHandler parentA, CustomHandler parentB) {
+        return null;
+    }
+
+    public List<CustomHandler> getCustomHandlers() {
+        return new ArrayList<>(customHandlerList);
     }
 }

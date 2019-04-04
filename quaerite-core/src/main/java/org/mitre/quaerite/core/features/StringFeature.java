@@ -40,14 +40,4 @@ public abstract class StringFeature<T extends StringFeature>
         return feature;
     }
 
-    @Override
-    public Pair<T, T> crossover(T parentB) {
-        //order shouldn't matter
-        if (MathUtil.RANDOM.nextFloat() > 0.5) {
-            return Pair.of(this.deepCopy(), parentB);
-        } else {
-            return Pair.of(parentB, this.deepCopy());
-        }
-    }
-
 }

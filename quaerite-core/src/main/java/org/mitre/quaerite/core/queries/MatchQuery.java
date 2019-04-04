@@ -26,11 +26,6 @@ public class MatchQuery extends Query {
     }
 
     @Override
-    public Pair crossover(Object parentB) {
-        return null;
-    }
-
-    @Override
     public Object deepCopy() {
         return null;
     }

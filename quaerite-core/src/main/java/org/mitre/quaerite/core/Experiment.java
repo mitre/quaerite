@@ -22,23 +22,23 @@ import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.serializers.QuerySerializer;
 
 
 public class Experiment {
 
-
     private static Gson GSON = new GsonBuilder().setPrettyPrinting()
             .registerTypeAdapter(Query.class, new QuerySerializer())
             .create();
     private String name;
-    private final String searchServerUrl;
-    private final String customHandler;
-    private final Query query;
+    private String searchServerUrl;
+    private CustomHandler customHandler;
+    private Query query;
     private final List<Query> filterQueries = new ArrayList<>();
 
-    public Experiment(String name, String searchServerUrl, String customHandler, Query query) {
+    public Experiment(String name, String searchServerUrl, CustomHandler customHandler, Query query) {
         this.customHandler = customHandler;
         this.name = name;
         this.searchServerUrl = searchServerUrl;
@@ -60,7 +60,7 @@ public class Experiment {
     }
 
 
-    public String getCustomHandler() {
+    public CustomHandler getCustomHandler() {
         return customHandler;
     }
 
@@ -89,6 +89,11 @@ public class Experiment {
         return filterQueries;
     }
 
+    public void addFilterQueries(List<Query> queries) {
+        filterQueries.addAll(queries);
+    }
+
+
     @Override
     public String toString() {
         return "Experiment{" +
@@ -100,8 +105,20 @@ public class Experiment {
     }
 
     public Experiment deepCopy() {
-        //TODO stub
+        //TODO stub -- consider adding a new name as a parameter
         throw new IllegalArgumentException("stub -- must develop");
 
+    }
+
+    public void setSearchServerUrl(String serverUrl) {
+        this.searchServerUrl = serverUrl;
+    }
+
+    public void setCustomHandler(CustomHandler customHandler) {
+        this.customHandler = customHandler;
+    }
+
+    public void setQuery(Query query) {
+        this.query = query;
     }
 }
