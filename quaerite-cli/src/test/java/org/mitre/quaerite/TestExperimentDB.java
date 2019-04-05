@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -35,9 +34,6 @@ import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
-import org.mitre.quaerite.core.features.FQ;
-import org.mitre.quaerite.core.features.SimpleStringFeature;
-import org.mitre.quaerite.core.features.SimpleStringListFeature;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;

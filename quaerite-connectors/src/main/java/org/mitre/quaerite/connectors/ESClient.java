@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +37,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.features.WeightableField;
+import org.mitre.quaerite.core.queries.DisMaxQuery;
+import org.mitre.quaerite.core.queries.LuceneQuery;
+import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
+import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.queries.TermQuery;
+import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.stats.TokenDF;
 import org.mitre.quaerite.core.util.JsonUtil;
 
@@ -113,23 +121,64 @@ public class ESClient extends SearchClient {
         return GSON.toJson(queryMap);
     }
 
-    private Map<String, Object> getQueryMap(QueryRequest query, List<String> fieldsToRetrieve) {
-        Map<String, Object> multiMatchParams = new HashMap<>();
-        multiMatchParams.put("query", query.getQuery());
-        //parameterize this
-        multiMatchParams.put("type", "best_fields");
-        /** TODO FIX THIS
-        multiMatchParams.put("fields", query.getParameters().get("qf"));
-        if (query.getParameters().get("tie") != null) {
-            multiMatchParams.put("tie_breaker", query.getParameters().get("tie"));
-        }*/
-        Map<String, Object> multiMatch = wrapAMap("multi_match", multiMatchParams);
-        Map<String, Object> queryMap = wrapAMap("query", multiMatch);
+    private Map<String, Object> getQueryMap(QueryRequest queryRequest, List<String> fieldsToRetrieve) {
+        Map<String, Object> queryMap;
+        Query query = queryRequest.getQuery();
+        if (query instanceof MultiMatchQuery) {
+            queryMap = getMultiMatchMap((MultiMatchQuery)query);
+        } else if (query instanceof TermsQuery) {
+            Map<String, List<String>> tQ = new HashMap<>();
+            TermsQuery termsQuery = (TermsQuery)query;
+            tQ.put(termsQuery.getField(), termsQuery.getTerms());
+            queryMap = wrapAMap("terms", tQ);
+        } else if (query instanceof TermQuery) {
+            Map<String, String> tQ = new HashMap<>();
+            TermQuery termQuery = (TermQuery)query;
+            tQ.put(termQuery.getField(), termQuery.getTerm());
+            queryMap = wrapAMap("term", tQ);
+        } else if (query instanceof MatchAllDocsQuery) {
+            queryMap = wrapAMap("match_all", Collections.EMPTY_MAP);
+        } else if (query instanceof LuceneQuery) {
+            //TODO -- replace this with a true query_string query
+            //that allows multiple fields, etc.
+            Map<String, String> lQ = new HashMap<>();
+            LuceneQuery luceneQuery = (LuceneQuery) query;
+            lQ.put("default_field", luceneQuery.getDefaultField());
+            lQ.put("query", luceneQuery.getQueryString());
+            lQ.put("default_operator", luceneQuery.getQueryOperator().toString());
+            queryMap = wrapAMap("query_string", lQ);
+        } else {
+            throw new IllegalArgumentException("I regret I don't yet know how to handle queries of type: "+ query.getClass());
+        }
+        Map<String, Object> overallMap = wrapAMap("query", queryMap);
 
         if (fieldsToRetrieve.size() > 0) {
-            queryMap.put("_source", fieldsToRetrieve);
+            overallMap.put("_source", fieldsToRetrieve);
         }
-        return queryMap;
+        return overallMap;
+    }
+
+
+    private Map<String, Object> getMultiMatchMap(MultiMatchQuery query) {
+        Map<String, Object> queryMap = new LinkedHashMap<>();
+        queryMap.put("query", query.getQueryString());
+        queryMap.put("type", query.getType().toString());
+        List<String> fields = new ArrayList<>();
+        for (WeightableField f : query.getQF().getWeightableFields()) {
+            fields.add(f.toString());
+        }
+        queryMap.put("fields", fields);
+        if (query.getTie().getValue() > 0.0f) {
+            queryMap.put("tie_breaker", query.getTie().getValue());
+        }
+        if (query.getBoost() != 1.0f) {
+            queryMap.put("boost", query.getBoost());
+        }
+        if (query.getFuzziness() > 0.0f) {
+            queryMap.put("fuzziness", query.getFuzziness());
+        }
+
+        return wrapAMap("multi_match", queryMap);
     }
 
     @Override
@@ -167,13 +216,11 @@ public class ESClient extends SearchClient {
                         )
                 );
         aggsMap.put("size", "0");
-        /* TODO
-        if (!(StringUtils.isBlank(query.getQuery()) ||
-                "*:*".equals(query.getQuery()))) {
 
+        if (query.getQuery() != null && ! (query.getQuery() instanceof MatchAllDocsQuery)) {
             Map<String, Object> queryMap = getQueryMap(query, Collections.EMPTY_LIST);
             aggsMap.put("query", queryMap.get("query"));
-        }*/
+        }
         return GSON.toJson(aggsMap);
     }
 

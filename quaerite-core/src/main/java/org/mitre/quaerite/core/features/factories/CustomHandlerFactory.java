@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.Feature;
+import org.mitre.quaerite.core.util.MathUtil;
 
 /**
  * For Solr...users can specify a custom handler
@@ -48,22 +49,23 @@ public class CustomHandlerFactory implements FeatureFactory<CustomHandler> {
 
     @Override
     public List<CustomHandler> permute(int maxSize) {
-        return null;
+        return new ArrayList<>(customHandlerList);
     }
 
     @Override
     public CustomHandler random() {
-        return null;
+        int i = MathUtil.RANDOM.nextInt(0, customHandlerList.size());
+        return customHandlerList.get(i);
     }
 
     @Override
     public CustomHandler mutate(CustomHandler feature, double probability, double amplitude) {
-        return null;
+        return feature;
     }
 
     @Override
     public Pair<CustomHandler, CustomHandler> crossover(CustomHandler parentA, CustomHandler parentB) {
-        return null;
+        return Pair.of(parentA.deepCopy(), parentB.deepCopy());
     }
 
     public List<CustomHandler> getCustomHandlers() {

@@ -34,6 +34,7 @@ import org.mitre.quaerite.core.ExperimentFactory;
 import org.mitre.quaerite.core.GAConfig;
 import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.Feature;
+import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
@@ -54,7 +55,7 @@ public class TestFeatureFactories {
         defaultWeights.add(1.0f);
         defaultWeights.add(2.0f);
 
-        WeightableListFeatureFactory qf = new WeightableListFeatureFactory("qf", fields, defaultWeights, -1);
+        WeightableListFeatureFactory qf = new WeightableListFeatureFactory<QF>("qf", QF.class, fields, defaultWeights, -1);
         //test random
         for (int i = 0; i < 10; i++) {
             boolean foundAuthor = false;
@@ -93,14 +94,14 @@ public class TestFeatureFactories {
         defaultWeights.add(0.0f);
         defaultWeights.add(1.0f);
 
-        WeightableListFeatureFactory<WeightableListFeature> qf =
-                new WeightableListFeatureFactory<>("qf", fields, defaultWeights, -1);
+        WeightableListFeatureFactory<QF> qf =
+                new WeightableListFeatureFactory<>("qf", QF.class, fields, defaultWeights, -1);
         assertEquals(15, qf.permute(1000).size());
         defaultWeights.add(2.0f);
-        qf = new WeightableListFeatureFactory("qf", fields, defaultWeights, -1);
+        qf = new WeightableListFeatureFactory("qf", QF.class, fields, defaultWeights, -1);
         assertEquals(80, qf.permute(1000).size());
 
-        qf = new WeightableListFeatureFactory("qf", fields, defaultWeights, 2);
+        qf = new WeightableListFeatureFactory("qf", QF.class, fields, defaultWeights, 2);
 
         assertEquals(32, qf.permute(1000).size());
     }
@@ -124,7 +125,8 @@ public class TestFeatureFactories {
         QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)queryListFactory.get(0);
         FloatFeatureFactory tie = null;
         for (FeatureFactory f : qf.factories) {
-            if (((AbstractFeatureFactory)f).getName().equals("tie")) {
+
+            if (((AbstractFeatureFactory)f).getName().equals("TIE")) {
                 tie = (FloatFeatureFactory)f;
             }
         }

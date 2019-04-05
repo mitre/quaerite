@@ -18,6 +18,7 @@ package org.mitre.quaerite.core;
 
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +38,7 @@ import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregatorListSerializer;
 import org.mitre.quaerite.core.serializers.FeatureFactorySerializer;
+import org.mitre.quaerite.core.serializers.QuerySerializer;
 import org.mitre.quaerite.core.util.MathUtil;
 
 public class ExperimentFactory {
@@ -46,7 +48,7 @@ public class ExperimentFactory {
 
     private GAConfig gaConfig = new GAConfig();
 
-    Map<String, List<String>> fixedParameters;
+    List<Query> filterQueries = new ArrayList<>();
     List<ScoreAggregator> scoreAggregators;
     FeatureFactories featureFactories;
 
@@ -54,6 +56,7 @@ public class ExperimentFactory {
         Gson gson = new GsonBuilder().setPrettyPrinting()
                 .registerTypeHierarchyAdapter(ScoreAggregator.class, new ScoreAggregatorListSerializer.ScoreAggregatorSerializer())
                 .registerTypeAdapter(FeatureFactories.class, new FeatureFactorySerializer())
+                .registerTypeAdapter(Query.class, new QuerySerializer())
                 .create();
         return gson.fromJson(reader, ExperimentFactory.class);
     }
@@ -68,7 +71,7 @@ public class ExperimentFactory {
     public String toString() {
         return "ExperimentFactory{" +
                 "gaConfig=" + gaConfig +
-                ", fixedParameters=" + fixedParameters +
+                ", filterQueries=" + filterQueries +
                 ", scoreAggregators=" + scoreAggregators +
                 ", featureFactories=" + featureFactories +
                 ", trainScoreAggregator=" + trainScoreAggregator +
@@ -124,9 +127,6 @@ public class ExperimentFactory {
         return gaConfig;
     }
 
-    public Map<String, List<String>> getFixedParameters() {
-        return fixedParameters;
-    }
 
     public Experiment generateRandomExperiment(String name) {
         FeatureFactory urlFactory = featureFactories.get(SEARCH_SERVER_URLS);
@@ -143,11 +143,7 @@ public class ExperimentFactory {
     }
 
     private void addFilterQueries(Experiment experiment) {
-        if (fixedParameters.containsKey("filterQueries")) {
-            List<Query> filterQueries = new ArrayList<>();
-            for (String q : fixedParameters.get("filterQueries")) {
-                filterQueries.add(new LuceneQuery("", q));
-            }
+        if (filterQueries != null) {
             experiment.addFilterQueries(filterQueries);
         }
     }
@@ -166,14 +162,13 @@ public class ExperimentFactory {
                 }
             }
         }
-        //TODO stub
-        throw new IllegalArgumentException("stub -- must develop");
+        return experiments;
     }
 
     private List<CustomHandler> permuteHandlers(int maxSize) {
         if (featureFactories.get(CustomHandlerFactory.NAME) == null) {
             List<CustomHandler> customHandlers = new ArrayList<>();
-            customHandlers.add(null);
+            customHandlers.add(CustomHandler.DEFAULT_HANDLER);
             return customHandlers;
         }
 

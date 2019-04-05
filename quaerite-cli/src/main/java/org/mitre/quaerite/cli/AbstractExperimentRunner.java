@@ -56,11 +56,7 @@ import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.ResultSet;
-import org.mitre.quaerite.core.features.Feature;
-import org.mitre.quaerite.core.features.StringListFeature;
-import org.mitre.quaerite.core.features.WeightableListFeature;
-import org.mitre.quaerite.core.queries.MultiMatchQuery;
-import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.queries.MultiFieldQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.scoreaggregators.DistributionalScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
@@ -349,7 +345,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
         private void scoreEach(Judgments judgments, List<ScoreAggregator> scoreAggregators) {
             //TODO: fix this; ok to assume multimatch for now
-            MultiMatchQuery fullQuery = (MultiMatchQuery)experiment.getQuery();
+            MultiFieldQuery fullQuery = (MultiFieldQuery)experiment.getQuery();
             fullQuery.setQueryString(judgments.getQuery());
 
 

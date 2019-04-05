@@ -17,7 +17,7 @@
 package org.mitre.quaerite.core.queries;
 
 
-public class PhraseQuery extends MultiMatchQuery {
+public class PhraseQuery extends MultiFieldQuery {
 
     public PhraseQuery() {
         super();

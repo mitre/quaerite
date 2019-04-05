@@ -16,6 +16,8 @@
  */
 package org.mitre.quaerite.core.features.factories;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,9 +58,10 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
     final List<String> fields;
     final List<Float> defaultWeights;
     final int maxSetSize;
-
-    public WeightableListFeatureFactory(String name, List<String> fields, List<Float> defaultWeights, int maxSetSize) {
+    final Class clazz;
+    public WeightableListFeatureFactory(String name, Class clazz, List<String> fields, List<Float> defaultWeights, int maxSetSize) {
         super(name);
+        this.clazz = clazz;
         this.maxSetSize = maxSetSize;
         this.fields = fields;
         this.defaultWeights = defaultWeights;
@@ -87,7 +90,7 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
     }
 
     private T convert(List<String> fields) {
-        T ret = (T)new WeightableListFeature(getName());
+        T ret = newInstance(getName());
 
         for (String f : fields) {
             ret.add(new WeightableField(f));
@@ -154,7 +157,8 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
         if (collector.size() >= maxSize) {
             return;
         }
-        WeightableListFeature base = new WeightableListFeature(getName());
+
+        T base = newInstance(getName());
         if (currFeatures.getWeightableFields().size() > 0) {
             base.addAll(currFeatures.getWeightableFields());
         }
@@ -167,7 +171,7 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
             int newDepth = depth+1;
             for (Float f : defaultWeights) {
                 if (f > 0.0f) {
-                    T tmp = (T)new WeightableListFeature(getName());
+                    T tmp = (T)newInstance(getName());
                     tmp.addAll(base.getWeightableFields());
                     tmp.add(
                             new WeightableField(features.get(i).getFeature(), f));
@@ -177,6 +181,17 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
                     recurse(i + 1, depth, maxSize, base, collector);
                 }
             }
+        }
+    }
+
+    private T newInstance(String name) {
+        Constructor constructor = null;
+        try {
+            constructor = clazz.getConstructor();
+            return (T)constructor.newInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException();
         }
     }
 

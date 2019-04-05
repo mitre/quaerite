@@ -482,12 +482,6 @@ public class RunGA extends AbstractExperimentRunner {
         experimentDB.addExperiment(pair.getRight());
     }
 
-
-    static int calcListLength(int population) {
-        return (int)FastMath.ceil((1.0 + Math.sqrt(1.0+
-                (8.0*(double)population)))/2.0);
-    }
-
     private String getSeedName(int fold, int i) {
         return TRAIN_PREFIX + FOLD_PREFIX + fold + "_seed_exp_" + i;
     }

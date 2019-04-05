@@ -23,19 +23,13 @@ import java.util.Locale;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
 import org.mitre.quaerite.core.features.CustomHandler;
-import org.mitre.quaerite.core.features.PF;
-import org.mitre.quaerite.core.features.QF;
-import org.mitre.quaerite.core.features.StringFeature;
-import org.mitre.quaerite.core.features.TIE;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
 import org.mitre.quaerite.core.features.factories.QueryListFactory;
-import org.mitre.quaerite.core.queries.DisMaxQuery;
-import org.mitre.quaerite.core.queries.EDisMaxQuery;
-import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
 
 public class AbstractFeatureSerializer {
@@ -125,13 +119,18 @@ public class AbstractFeatureSerializer {
         }
     }
 
-
-    JsonArray featureListJsonArr(List<Object> features) {
-        JsonArray arr = new JsonArray();
-        for (Object w : features) {
-            arr.add(w.toString());
+    JsonElement stringListJsonArr(List<String> strings) {
+        if (strings.size() == 0) {
+            return JsonNull.INSTANCE;
+        } else if (strings.size() == 1) {
+            return new JsonPrimitive(strings.get(0));
+        } else {
+            JsonArray arr = new JsonArray();
+            for (String s : strings) {
+                arr.add(s);
+            }
+            return arr;
         }
-        return arr;
     }
 
     JsonArray floatListToJsonArr(List<Float> defaultWeights) {

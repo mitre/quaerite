@@ -29,6 +29,9 @@ import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
  */
 public class CustomHandler implements Feature<CustomHandler> {
 
+    public static final CustomHandler DEFAULT_HANDLER =
+            new CustomHandler("select", "q");
+
     private static final String NAME = "customHandler";
 
     private final String handler;

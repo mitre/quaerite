@@ -16,16 +16,44 @@
  */
 package org.mitre.quaerite.core.queries;
 
-import org.apache.commons.lang3.tuple.Pair;
 
-public class CrossFieldsQuery extends MultiMatchQuery {
-    @Override
-    public String getName() {
-        return "cross_fields";
+import org.mitre.quaerite.core.features.QF;
+import org.mitre.quaerite.core.features.TIE;
+
+public abstract class MultiFieldQuery extends Query {
+    protected String queryString;
+    protected QF qf = new QF();
+    protected TIE tie = new TIE(0.0f);
+    protected QueryOperator.OPERATOR qOp = QueryOperator.OPERATOR.OR;
+
+    public MultiFieldQuery() {
+
     }
 
-    @Override
-    public Object deepCopy() {
-        return null;
+    public MultiFieldQuery(String queryString) {
+        this.queryString = queryString;
+    }
+    public QF getQF() {
+        return qf;
+    }
+
+    public void setQF(QF qf) {
+        this.qf = qf;
+    }
+
+    public void setTie(TIE tie) {
+        this.tie = tie;
+    }
+
+    public TIE getTie() {
+        return tie;
+    }
+
+    public String getQueryString() {
+        return queryString;
+    }
+
+    public void setQueryString(String queryString) {
+        this.queryString = queryString;
     }
 }

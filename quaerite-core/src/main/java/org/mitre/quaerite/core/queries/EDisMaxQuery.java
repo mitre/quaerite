@@ -18,8 +18,13 @@ package org.mitre.quaerite.core.queries;
 
 import java.util.Objects;
 
+import org.mitre.quaerite.core.features.BF;
+import org.mitre.quaerite.core.features.BQ;
+import org.mitre.quaerite.core.features.PF;
 import org.mitre.quaerite.core.features.PF2;
 import org.mitre.quaerite.core.features.PF3;
+import org.mitre.quaerite.core.features.QF;
+import org.mitre.quaerite.core.features.TIE;
 
 public class EDisMaxQuery extends DisMaxQuery {
 
@@ -59,5 +64,17 @@ public class EDisMaxQuery extends DisMaxQuery {
                 ", qf=" + qf +
                 ", tie=" + tie +
                 '}';
+    }
+
+    @Override
+    public EDisMaxQuery deepCopy() {
+        EDisMaxQuery cp = new EDisMaxQuery();
+        cp.pf = (pf != null ) ? (PF)pf.deepCopy() : null;
+        cp.bq = (bq != null) ? (BQ)bq.deepCopy() : null;
+        cp.bf = (bf != null) ? (BF)bf.deepCopy() : null;
+        cp.qf = (qf != null) ? (QF)qf.deepCopy() : null;
+        cp.tie = (tie != null) ? new TIE(tie.getValue()) : null;
+        cp.queryString = queryString;
+        return cp;
     }
 }

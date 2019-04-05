@@ -47,7 +47,7 @@ import org.mitre.quaerite.core.features.factories.StringFeatureFactory;
 import org.mitre.quaerite.core.features.factories.WeightableListFeatureFactory;
 import org.mitre.quaerite.core.queries.DisMaxQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
-import org.mitre.quaerite.core.queries.MultiMatchQuery;
+import org.mitre.quaerite.core.queries.MultiFieldQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.util.JsonUtil;
 
@@ -146,7 +146,7 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         addMultimatchFeatures(factory, obj);
     }
 
-    private void addMultimatchFeatures(QueryFactory<? extends MultiMatchQuery> factory, JsonObject obj) {
+    private void addMultimatchFeatures(QueryFactory<? extends MultiFieldQuery> factory, JsonObject obj) {
         factory.add(buildWeightableFeatureFactory("qf", obj.get("qf").getAsJsonObject()));
         if (obj.has("tie")) {
             factory.add(buildFloatFeatureFactory("tie", obj.get("tie")));
@@ -189,11 +189,16 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
 
     private FeatureFactory buildFloatFeatureFactory(String name, JsonElement floatArr) {
         List<Float> values = toFloatList(floatArr);
-        return new FloatFeatureFactory(name, values);
+        Class clazz = null;
+        try {
+            clazz = Class.forName(getClassName(name));
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException(e);
+        }
+        return new FloatFeatureFactory(clazz, values);
     }
 
     private FeatureFactory buildStringFeatureFactory(String paramName, JsonElement valuesElement) {
-        //TODO -- pick up here
         List<String> values = toStringList(valuesElement);
         try {
             return new StringFeatureFactory(paramName,
@@ -267,7 +272,13 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
                 sz = maxSetSize.getAsInt();
             }
         }
-        return new WeightableListFeatureFactory(paramName, fields, defaultWeights, sz);
+        Class clazz = null;
+        try {
+            clazz = Class.forName(getClassName(paramName));
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException();
+        }
+        return new WeightableListFeatureFactory(paramName, clazz, fields, defaultWeights, sz);
     }
 }
 

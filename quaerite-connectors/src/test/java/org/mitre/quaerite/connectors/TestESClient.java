@@ -33,19 +33,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.mitre.quaerite.connectors.ESClient;
-import org.mitre.quaerite.connectors.IdGrabber;
-import org.mitre.quaerite.connectors.QueryRequest;
-import org.mitre.quaerite.connectors.SearchClient;
-import org.mitre.quaerite.connectors.SearchClientFactory;
-import org.mitre.quaerite.connectors.StoredDocument;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.features.WeightableField;
-import org.mitre.quaerite.core.queries.DisMaxQuery;
-import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
+import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.TermQuery;
 
@@ -132,10 +125,10 @@ public class TestESClient {
         assertTrue(hits.contains("539"));
         assertTrue(hits.contains("35683"));
 
-        DisMaxQuery disMaxQuery = new DisMaxQuery("psycho");
-        disMaxQuery.getQF().add(new WeightableField("title"));
-
-        queryRequest = new QueryRequest(disMaxQuery,
+        MultiMatchQuery query = new MultiMatchQuery("psycho");
+        query.getQF().add(new WeightableField("title"));
+        query.setType(MultiMatchQuery.TYPE.best_fields);
+        queryRequest = new QueryRequest(query,
                 null, client.getIdField());
         result = client.search(queryRequest);
         hits = new HashSet<>();

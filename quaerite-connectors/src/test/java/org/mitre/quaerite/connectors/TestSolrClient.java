@@ -28,11 +28,6 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.mitre.quaerite.connectors.QueryRequest;
-import org.mitre.quaerite.connectors.SearchClient;
-import org.mitre.quaerite.connectors.SearchClientFactory;
-import org.mitre.quaerite.connectors.SolrClient;
-import org.mitre.quaerite.connectors.StoredDocument;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.features.WeightableField;

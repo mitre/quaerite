@@ -16,13 +16,14 @@
  */
 package org.mitre.quaerite.core.queries;
 
-import org.apache.commons.lang3.tuple.Pair;
+
 import org.mitre.quaerite.core.features.BF;
 import org.mitre.quaerite.core.features.BQ;
 import org.mitre.quaerite.core.features.PF;
+import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.TIE;
 
-public class DisMaxQuery extends MultiMatchQuery {
+public class DisMaxQuery extends MultiFieldQuery {
 
 
     protected PF pf;
@@ -38,7 +39,7 @@ public class DisMaxQuery extends MultiMatchQuery {
         super(queryString);
     }
 
-    public void setPF(PF pf) {
+    public void setPf(PF pf) {
         this.pf = pf;
     }
 
@@ -48,7 +49,14 @@ public class DisMaxQuery extends MultiMatchQuery {
     }
 
     @Override
-    public Object deepCopy() {
-        return null;
+    public DisMaxQuery deepCopy() {
+        DisMaxQuery cp = new DisMaxQuery();
+        cp.pf = (PF)pf.deepCopy();
+        cp.bq = (BQ)bq.deepCopy();
+        cp.bf = (BF)bf.deepCopy();
+        cp.qf = (QF)qf.deepCopy();
+        cp.tie = (TIE)tie.deepCopy();
+        cp.queryString = queryString;
+        return cp;
     }
 }

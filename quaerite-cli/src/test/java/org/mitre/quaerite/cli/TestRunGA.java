@@ -23,12 +23,4 @@ import org.junit.jupiter.api.Test;
 
 public class TestRunGA {
 
-    @Test
-    public void testListLength() {
-        assertEquals(5, RunGA.calcListLength(10));
-        assertEquals(15, RunGA.calcListLength(100));
-        assertEquals(46, RunGA.calcListLength(1000));
-        assertEquals(142, RunGA.calcListLength(10000));
-        assertEquals(448, RunGA.calcListLength(100000));
-    }
 }

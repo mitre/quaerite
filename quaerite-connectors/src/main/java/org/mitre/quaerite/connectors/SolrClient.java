@@ -16,6 +16,8 @@
  */
 package org.mitre.quaerite.connectors;
 
+import static org.mitre.quaerite.core.features.CustomHandler.DEFAULT_HANDLER;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -60,7 +62,6 @@ import org.mitre.quaerite.core.stats.TokenDF;
  */
 public class SolrClient extends SearchClient {
 
-    private static final CustomHandler DEFAULT_HANDLER = new CustomHandler("select", "q");
     protected static final String JSON_RESPONSE = "&wt=json";
     private static Set<String> SYS_INTERNAL_FIELDS;
 
@@ -192,9 +193,8 @@ public class SolrClient extends SearchClient {
     private void appendLuceneQuery(LuceneQuery q, StringBuilder sb) {
         StringBuilder tmp = new StringBuilder("{!lucene");
         if (! StringUtils.isBlank(q.getDefaultField())) {
-            tmp.append("  df=").append(q.getDefaultField());
+            tmp.append(" df=").append(q.getDefaultField());
         }
-        tmp.append(q.getDefaultField());
         tmp.append(" q.op=");
         tmp.append(q.getQueryOperator()).append("}").append(q.getQueryString());
         sb.append(encode(tmp.toString()));
@@ -230,8 +230,8 @@ public class SolrClient extends SearchClient {
             }
             sb.append(encode(f.toString()));
         }
-        if (query.getTIE() != null) {
-            sb.append("&tie=").append(query.getTIE().toString());
+        if (query.getTie() != null) {
+            sb.append("&tie=").append(query.getTie().toString());
         }
     }
 

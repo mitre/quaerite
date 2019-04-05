@@ -25,9 +25,9 @@ public class LuceneQuery extends Query {
     public final static QueryOperator.OPERATOR
             DEFAULT_QUERY_OPERATOR = QueryOperator.OPERATOR.AND;
 
-    private final String defaultField;
+    private String defaultField;
     private String queryString;
-    private final QueryOperator.OPERATOR qop;
+    private QueryOperator.OPERATOR qop;
 
     public LuceneQuery(String defaultField, String queryString) {
         this(defaultField, queryString, DEFAULT_QUERY_OPERATOR);

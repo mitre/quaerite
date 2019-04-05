@@ -16,43 +16,71 @@
  */
 package org.mitre.quaerite.core.queries;
 
-import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.TIE;
 
-public abstract class MultiMatchQuery extends Query {
-    protected String queryString;
-    protected QF qf = new QF();
-    protected TIE tie;
+public class MultiMatchQuery extends MultiFieldQuery {
+
+    public enum TYPE  {
+        best_fields,
+        cross_fields,
+        most_fields,
+        phrase
+    };
+
+    private static final TYPE DEFAULT_TYPE = TYPE.best_fields;
+
+    private TYPE type = DEFAULT_TYPE;
+    private float boost = 1.0f;
+    private float fuzziness = 0.0f;
 
     public MultiMatchQuery() {
-
+        super(null);
     }
 
     public MultiMatchQuery(String queryString) {
-        this.queryString = queryString;
-    }
-    public QF getQF() {
-        return qf;
+        super(queryString);
     }
 
-    public void setQF(QF qf) {
-        this.qf = qf;
+
+    public TYPE getType() {
+        return type;
     }
 
-    public void setTie(TIE tie) {
-        this.tie = tie;
+    public void setType(TYPE type) {
+        this.type = type;
     }
 
-    public Feature getTIE() {
-        return tie;
+    public float getBoost() {
+        return boost;
     }
 
-    public String getQueryString() {
-        return queryString;
+    public void setBoost(float boost) {
+        this.boost = boost;
     }
 
-    public void setQueryString(String queryString) {
-        this.queryString = queryString;
+    public float getFuzziness() {
+        return fuzziness;
+    }
+
+    public void setFuzziness(float fuzziness) {
+        this.fuzziness = fuzziness;
+    }
+
+    @Override
+    public String getName() {
+        return "multi_match";
+    }
+
+    @Override
+    public MultiMatchQuery deepCopy() {
+        MultiMatchQuery cp = new MultiMatchQuery();
+        cp.type = this.type;
+        cp.qf = (qf != null) ? (QF)qf.deepCopy() : null;
+        cp.tie = (tie != null) ? (TIE)tie.deepCopy() : null;
+        cp.boost = this.boost;
+        cp.fuzziness = this.fuzziness;
+        cp.queryString = queryString;
+        return cp;
     }
 }

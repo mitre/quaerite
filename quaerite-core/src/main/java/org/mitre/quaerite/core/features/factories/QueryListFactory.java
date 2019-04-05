@@ -36,7 +36,14 @@ public class QueryListFactory extends AbstractFeatureFactory<Query> {
 
     @Override
     public List<Query> permute(int maxSize) {
-        return null;
+        List<Query> ret = new ArrayList<>();
+        for (QueryFactory qf : queryFactories) {
+            ret.addAll(qf.permute(maxSize));
+            if (ret.size() > maxSize) {
+                return ret;
+            }
+        }
+        return ret;
     }
 
     @Override
