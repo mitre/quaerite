@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.features.MultiMatchType;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
@@ -127,7 +128,7 @@ public class TestESClient {
 
         MultiMatchQuery query = new MultiMatchQuery("psycho");
         query.getQF().add(new WeightableField("title"));
-        query.setType(MultiMatchQuery.TYPE.best_fields);
+        query.setMultiMatchType(new MultiMatchType("best_fields"));
         queryRequest = new QueryRequest(query,
                 null, client.getIdField());
         result = client.search(queryRequest);

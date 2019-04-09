@@ -1,0 +1,36 @@
+{
+  "scoreAggregators": [
+	{
+      "class": "NDCGAggregator",
+      "params": {
+        "atK": 10,
+        "useForTrain": true,
+        "useForTest": true,
+        "exportPMatrix": true
+      }
+    }
+  ],
+  "featureFactories" : {
+    "urls": [
+      "http://localhost:8983/solr/tmdb"
+    ],
+    "queries": [
+      {
+        "edismax": {
+          "qf": {
+            "fields": [
+              "title",
+              "overview",
+              "people"
+            ],
+            "defaultWeights": [
+              "0.0",
+              "1.0"
+            ],
+            "maxSetSize": 1
+          }
+        }
+      }
+    ]
+  }
+}

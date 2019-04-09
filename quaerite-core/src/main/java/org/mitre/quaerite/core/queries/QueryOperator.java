@@ -16,7 +16,11 @@
  */
 package org.mitre.quaerite.core.queries;
 
+import java.util.Locale;
+
 public class QueryOperator {
+
+
     public enum OPERATOR {
         AND,
         OR
@@ -36,6 +40,10 @@ public class QueryOperator {
 
     public QueryOperator(OPERATOR operator, float mm) {
         this(operator, mm, null);
+    }
+
+    public String getOperatorString() {
+        return operator.toString().toLowerCase(Locale.US);
     }
 
     private QueryOperator(OPERATOR operator, Float mmFloat, Integer mmInt) {

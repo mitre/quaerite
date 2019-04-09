@@ -82,7 +82,12 @@ public class StringFeatureFactory<T extends StringFeature>
 
     @Override
     public Pair<T, T> crossover(T parentA, T parentB) {
-        return null;
+        if (MathUtil.RANDOM.nextFloat() < 0.5) {
+            return Pair.of((T)parentB.deepCopy(), (T)parentA.deepCopy());
+        } else {
+            return Pair.of((T)parentA.deepCopy(), (T)parentB.deepCopy());
+
+        }
     }
 
 

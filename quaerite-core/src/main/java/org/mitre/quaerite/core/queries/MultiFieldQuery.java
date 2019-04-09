@@ -24,7 +24,7 @@ public abstract class MultiFieldQuery extends Query {
     protected String queryString;
     protected QF qf = new QF();
     protected TIE tie = new TIE(0.0f);
-    protected QueryOperator.OPERATOR qOp = QueryOperator.OPERATOR.OR;
+    protected QueryOperator qOp = new QueryOperator(QueryOperator.OPERATOR.AND);
 
     public MultiFieldQuery() {
 
@@ -55,5 +55,13 @@ public abstract class MultiFieldQuery extends Query {
 
     public void setQueryString(String queryString) {
         this.queryString = queryString;
+    }
+
+    public QueryOperator getQOp() {
+        return qOp;
+    }
+
+    public void setQOp(QueryOperator qOp) {
+        this.qOp = qOp;
     }
 }

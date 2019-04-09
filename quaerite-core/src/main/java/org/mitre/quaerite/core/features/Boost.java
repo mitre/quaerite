@@ -16,16 +16,14 @@
  */
 package org.mitre.quaerite.core.features;
 
-public class TIE extends FloatFeature {
+public class Boost extends FloatFeature {
 
-    private static final String NAME = "tie";
+    private static final String NAME = "boost";
 
-    public TIE(float value) {
-        super(NAME, value);
+    public Boost() {
+        super(NAME, 1.0f);
     }
-
-    @Override
-    public TIE deepCopy() {
-        return new TIE(getValue());
+    public Boost(float value) {
+        super(NAME, value);
     }
 }

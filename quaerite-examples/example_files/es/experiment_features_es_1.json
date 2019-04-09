@@ -1,0 +1,65 @@
+{
+  "gaConfig" : {
+    "numThreads" : 20,
+    "idField" : "_id",
+    "population" : 50,
+    "generations" : 100,
+    "crossoverProbability" : 0.1,
+    "mutationProbability" : 0.2,
+    "mutationAmplitude" : 0.001,
+    "reproductionProbability" : 0.7,
+    "nFolds" : 2
+  },
+  "scoreAggregators": [
+    {
+      "class": "NDCGAggregator",
+      "params": {
+        "atK": 10,
+        "useForTrain": true,
+        "useForTest": true,
+        "exportPMatrix": true
+      }
+    }
+  ],
+  "featureFactories" : {
+
+    "urls": [
+      "http://localhost:9200/tmdb"
+    ],
+    "queries": [
+      {
+        "multi_match": {
+          "type": [
+            "best_fields",
+            "cross_fields",
+            "most_fields",
+            "phrase"
+          ],
+          "qf": {
+            "fields": [
+              "title",
+              "overview",
+              "people",
+              "all_text"
+            ],
+            "defaultWeights": [
+              "0.0",
+              "1.0",
+              "7.0"
+            ],
+            "minSetSize": 1,
+            "maxSetSize": 4
+          },
+          "tie": [
+            0.0,
+            0.1,
+            0.2
+          ],
+          "fuzziness": [
+            0,1,2
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -31,8 +31,11 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import org.mitre.quaerite.core.features.Boost;
 import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.FloatFeature;
+import org.mitre.quaerite.core.features.Fuzziness;
+import org.mitre.quaerite.core.features.MultiMatchType;
 import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.features.WeightableListFeature;
@@ -48,6 +51,7 @@ import org.mitre.quaerite.core.features.factories.WeightableListFeatureFactory;
 import org.mitre.quaerite.core.queries.DisMaxQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.MultiFieldQuery;
+import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.util.JsonUtil;
 
@@ -121,19 +125,41 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             return buildEDisMaxFactory(childRoot);
         } else if (name.equals("dismax")) {
             return buildDisMaxFactory(childRoot);
-        } else {
+        } else if (name.equals("multi_match")) {
+            return buildMultiMatchFactory(childRoot);
+        }else {
             throw new IllegalArgumentException("I regret I don't yet support: "+name);
         }
     }
 
+    private QueryFactory buildMultiMatchFactory(JsonObject childRoot) {
+        QueryFactory<MultiMatchQuery> factory = new QueryFactory<>("multi_match", MultiMatchQuery.class);
+        addMultiFieldFeatures(factory, childRoot);
+        List<String> types = toStringList(childRoot.get("type"));
+        if (types.size() == 0) {
+            throw new IllegalArgumentException("Must specify at least one type for a multi_match: 'best_match', etc.");
+        }
+
+        StringFeatureFactory<MultiMatchType> typeFactory =
+                new StringFeatureFactory<>("multiMatchType", MultiMatchType.class, types);
+        factory.add(typeFactory);
+        FloatFeatureFactory<Boost> boostFactory =
+                new FloatFeatureFactory<>(Boost.class, toFloatList(childRoot.get("boost")));
+        factory.add(boostFactory);
+        FloatFeatureFactory<Fuzziness> fuzzFactory =
+                new FloatFeatureFactory<>(Fuzziness.class, toFloatList(childRoot.get("fuzziness")));
+        factory.add(fuzzFactory);
+        return factory;
+    }
+
     private QueryFactory buildDisMaxFactory(JsonObject object) {
-        QueryFactory<DisMaxQuery> factory = new QueryFactory<>("dismax");
+        QueryFactory<DisMaxQuery> factory = new QueryFactory<>("dismax", DisMaxQuery.class);
         addDismaxFeatures(factory, object);
         return factory;
     }
 
     private QueryFactory buildEDisMaxFactory(JsonObject obj) {
-        QueryFactory<EDisMaxQuery> factory = new  QueryFactory<>("edismax");
+        QueryFactory<EDisMaxQuery> factory = new  QueryFactory<>("edismax", EDisMaxQuery.class);
         if (obj.has("pf2")) {
             factory.add(buildWeightableFeatureFactory("pf2", obj.getAsJsonObject("pf2")));
         }
@@ -148,10 +174,10 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         if (obj.has("pf")) {
             factory.add(buildWeightableFeatureFactory("pf", obj.getAsJsonObject("pf")));
         }
-        addMultimatchFeatures(factory, obj);
+        addMultiFieldFeatures(factory, obj);
     }
 
-    private void addMultimatchFeatures(QueryFactory<? extends MultiFieldQuery> factory, JsonObject obj) {
+    private void addMultiFieldFeatures(QueryFactory<? extends MultiFieldQuery> factory, JsonObject obj) {
         factory.add(buildWeightableFeatureFactory("qf", obj.get("qf").getAsJsonObject()));
         if (obj.has("tie")) {
             factory.add(buildFloatFeatureFactory("tie", obj.get("tie")));

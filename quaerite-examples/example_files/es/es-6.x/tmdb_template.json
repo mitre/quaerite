@@ -1,8 +1,4 @@
 {
-  "template": "tmdb",
-  "index_patterns": [
-    "tmdb"
-  ],
   "mappings": {
     "_doc": {
       "_meta": {
@@ -16,7 +12,7 @@
         "@timestamp": {
           "type": "date"
         },
-        "text": {
+        "all_text": {
           "type": "text",
           "analyzer": "text_en"
         },
@@ -36,11 +32,13 @@
         },
         "title": {
           "type": "text",
-          "analyzer": "text_en"
+          "analyzer": "text_en",
+          "copy_to": "all_text"
         },
         "overview": {
           "type": "text",
-          "analyzer": "text_en"
+          "analyzer": "text_en",
+          "copy_to": "all_text"
         },
         "genres": {
           "type": "text",
@@ -65,12 +63,12 @@
         "cast": {
           "type": "text",
           "analyzer": "text_en",
-          "copy_to": "people"
+          "copy_to": ["people", "all_text"]
         },
         "directors": {
           "type": "text",
           "analyzer": "text_en",
-          "copy_to": "people"
+          "copy_to": ["people", "all_text"]
         },
         "people": {
           "type": "text",

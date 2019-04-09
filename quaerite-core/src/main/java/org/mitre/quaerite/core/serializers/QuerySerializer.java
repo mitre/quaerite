@@ -34,8 +34,11 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import org.apache.log4j.Logger;
+import org.mitre.quaerite.core.features.Boost;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.FloatFeature;
+import org.mitre.quaerite.core.features.Fuzziness;
+import org.mitre.quaerite.core.features.MultiMatchType;
 import org.mitre.quaerite.core.features.PF;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.StringFeature;
@@ -47,11 +50,13 @@ import org.mitre.quaerite.core.queries.DisMaxQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.MultiFieldQuery;
+import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.QueryOperator;
 import org.mitre.quaerite.core.queries.TermQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.util.JsonUtil;
+import org.mitre.quaerite.core.util.MathUtil;
 
 public class QuerySerializer extends AbstractFeatureSerializer
         implements JsonSerializer<Query>, JsonDeserializer<Query> {
@@ -64,6 +69,7 @@ public class QuerySerializer extends AbstractFeatureSerializer
     private final static String QUERY_OPERATOR = "q.op";
     private final static String AND = "AND";
     private final static String OR = "OR";
+    private final static String MULTI_MATCH = "multi_match";
     private final static String EDISMAX = "edismax";
     private final static String DISMAX = "dismax";
     private final static String LUCENE = "lucene";
@@ -100,11 +106,26 @@ public class QuerySerializer extends AbstractFeatureSerializer
             String term = obj.get(TERM).getAsString();
             String field = obj.get(FIELD).getAsString();
             return new TermQuery(field, term);
+        } else if (queryType.equals(MULTI_MATCH)) {
+            return buildMultiMatch(root.get(queryType).getAsJsonObject());
         } else {
             throw new IllegalArgumentException("I regret I don't yet support: "+queryType);
         }
     }
 
+    Query buildMultiMatch(JsonObject obj) {
+        MultiMatchQuery q = new MultiMatchQuery();
+        deserializeMultiField((MultiFieldQuery)q, obj);
+        if (obj.has("boost")) {
+            q.setBoost(new Boost(obj.getAsJsonPrimitive("boost").getAsFloat()));
+        }
+        String type = obj.get("type").getAsString();
+        if (obj.has("fuzziness") && ! type.equals("phrase") && ! type.equals("cross_fields")) {
+            q.setFuzziness(new Fuzziness(obj.getAsJsonPrimitive("fuzziness").getAsFloat()));
+        }
+        q.setMultiMatchType(new MultiMatchType(obj.get("type").getAsString()));
+        return q;
+    }
 
     Query buildEDisMax(JsonObject obj) {
         Query q = new EDisMaxQuery();
@@ -132,10 +153,10 @@ public class QuerySerializer extends AbstractFeatureSerializer
 
         BF bf = new BF();
         */
-        deserializeMultiMatch((MultiFieldQuery)q, obj);
+        deserializeMultiField((MultiFieldQuery)q, obj);
     }
 
-    void deserializeMultiMatch(MultiFieldQuery q, JsonObject obj) {
+    void deserializeMultiField(MultiFieldQuery q, JsonObject obj) {
         QF qf = new QF();
         int fields = 0;
         for (String f : toStringList(obj.get("qf"))) {
@@ -277,10 +298,25 @@ public class QuerySerializer extends AbstractFeatureSerializer
             jsonObject.add(TERMS, serializeTerms((TermsQuery)query));
         } else if (query instanceof TermQuery) {
             jsonObject.add(TERM, serializeTerm((TermQuery)query));
+        } else if (query instanceof MultiMatchQuery) {
+            jsonObject.add(MULTI_MATCH, serializeMultiMatchQuery((MultiMatchQuery)query));
         } else {
             throw new IllegalArgumentException("I'm sorry, I don't yet support: "+query.getClass());
         }
         return jsonObject;
+    }
+
+    private JsonElement serializeMultiMatchQuery(MultiMatchQuery query) {
+        JsonObject obj = new JsonObject();
+        obj.add("type", new JsonPrimitive(query.getMultiMatchType().getFeature()));
+        if (!MathUtil.equals(query.getBoost().getValue(), 1.0f, 0.01f)) {
+            obj.add("boost", new JsonPrimitive(query.getBoost().getValue()));
+        }
+        if (!MathUtil.equals(query.getFuzziness().getValue(), 0.0f, 0.1f)) {
+            obj.add("fuzziness", new JsonPrimitive(query.getFuzziness().getValue()));
+        }
+        serializeMultiFieldComponents(query, obj);
+        return obj;
     }
 
     private JsonElement serializeTerm(TermQuery query) {
@@ -309,7 +345,7 @@ public class QuerySerializer extends AbstractFeatureSerializer
     private JsonElement serializeDisMax(DisMaxQuery query) {
         JsonObject obj = new JsonObject();
         serializeDisMaxComponents(query, obj);
-        serializeMultiMatchComponents((MultiFieldQuery)query, obj);
+        serializeMultiFieldComponents((MultiFieldQuery)query, obj);
         return obj;
     }
 
@@ -317,7 +353,7 @@ public class QuerySerializer extends AbstractFeatureSerializer
         JsonObject obj = new JsonObject();
         serializeEDisMaxComponents(query, obj);
         serializeDisMaxComponents((DisMaxQuery)query, obj);
-        serializeMultiMatchComponents((MultiFieldQuery)query, obj);
+        serializeMultiFieldComponents((MultiFieldQuery)query, obj);
         return obj;
     }
 
@@ -327,9 +363,10 @@ public class QuerySerializer extends AbstractFeatureSerializer
 
     private void serializeDisMaxComponents(DisMaxQuery query, JsonObject obj) {
         //stub
+//        throw new IllegalArgumentException("not yet supported");
     }
 
-    private void serializeMultiMatchComponents(MultiFieldQuery query, JsonObject obj) {
+    private void serializeMultiFieldComponents(MultiFieldQuery query, JsonObject obj) {
         obj.add("qf", serializeFeature(query.getQF()));
         if (query.getTie() != null) {
             obj.add(TIE, serializeFeature(query.getTie()));

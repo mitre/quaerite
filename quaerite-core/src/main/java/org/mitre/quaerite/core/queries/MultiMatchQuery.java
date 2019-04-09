@@ -16,23 +16,19 @@
  */
 package org.mitre.quaerite.core.queries;
 
+import org.mitre.quaerite.core.features.Boost;
+import org.mitre.quaerite.core.features.Fuzziness;
+import org.mitre.quaerite.core.features.MultiMatchType;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.TIE;
 
 public class MultiMatchQuery extends MultiFieldQuery {
 
-    public enum TYPE  {
-        best_fields,
-        cross_fields,
-        most_fields,
-        phrase
-    };
+    private static final MultiMatchType DEFAULT_TYPE = new MultiMatchType("best_fields");
 
-    private static final TYPE DEFAULT_TYPE = TYPE.best_fields;
-
-    private TYPE type = DEFAULT_TYPE;
-    private float boost = 1.0f;
-    private float fuzziness = 0.0f;
+    private MultiMatchType type = DEFAULT_TYPE;
+    private Boost boost = new Boost();
+    private Fuzziness fuzziness = new Fuzziness();
 
     public MultiMatchQuery() {
         super(null);
@@ -43,27 +39,27 @@ public class MultiMatchQuery extends MultiFieldQuery {
     }
 
 
-    public TYPE getType() {
+    public MultiMatchType getMultiMatchType() {
         return type;
     }
 
-    public void setType(TYPE type) {
+    public void setMultiMatchType(MultiMatchType type) {
         this.type = type;
     }
 
-    public float getBoost() {
+    public Boost getBoost() {
         return boost;
     }
 
-    public void setBoost(float boost) {
+    public void setBoost(Boost boost) {
         this.boost = boost;
     }
 
-    public float getFuzziness() {
+    public Fuzziness getFuzziness() {
         return fuzziness;
     }
 
-    public void setFuzziness(float fuzziness) {
+    public void setFuzziness(Fuzziness fuzziness) {
         this.fuzziness = fuzziness;
     }
 
@@ -82,5 +78,18 @@ public class MultiMatchQuery extends MultiFieldQuery {
         cp.fuzziness = this.fuzziness;
         cp.queryString = queryString;
         return cp;
+    }
+
+    @Override
+    public String toString() {
+        return "MultiMatchQuery{" +
+                "type=" + type +
+                ", boost=" + boost +
+                ", fuzziness=" + fuzziness +
+                ", queryString='" + queryString + '\'' +
+                ", qf=" + qf +
+                ", tie=" + tie +
+                ", qOp=" + qOp +
+                '}';
     }
 }

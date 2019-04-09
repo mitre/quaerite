@@ -16,16 +16,15 @@
  */
 package org.mitre.quaerite.core.features;
 
-public class TIE extends FloatFeature {
+public class Fuzziness extends FloatFeature {
 
-    private static final String NAME = "tie";
+    private static final float DEFAULT_FUZZINESS = 0.0f;
+    private static final String NAME = "fuzziness";
 
-    public TIE(float value) {
-        super(NAME, value);
+    public Fuzziness() {
+        super(NAME, DEFAULT_FUZZINESS);
     }
-
-    @Override
-    public TIE deepCopy() {
-        return new TIE(getValue());
+    public Fuzziness(float value) {
+        super(NAME, value);
     }
 }

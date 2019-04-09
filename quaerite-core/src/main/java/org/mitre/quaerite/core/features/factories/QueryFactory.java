@@ -36,15 +36,17 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
     Map<String, Method> methodCache = new HashMap<>();
     List<FeatureFactory> factories = new ArrayList<>();
-    public QueryFactory(String name) {
+    private final Class clazz;
+    public QueryFactory(String name, Class clazz) {
         super(name);
+        this.clazz = clazz;
     }
 
 
     @Override
     public List<T> permute(int maxSize) {
         List<T> queries = new ArrayList<>();
-        EDisMaxQuery q = new EDisMaxQuery();
+        T q = newInstance();
         recurseFactory(0, factories, queries, q, maxSize);
         return queries;
 
@@ -71,7 +73,7 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
     @Override
     public T random() {
-        EDisMaxQuery q = new EDisMaxQuery();
+        T q = newInstance();
         for (FeatureFactory factory : factories) {
             Feature f = factory.random();
             setFeature(q, f);
@@ -124,17 +126,6 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
     public void add(FeatureFactory factory) {
         factories.add(factory);
-    }
-
-    private T buildQuery(Map<String, Object> params) {
-        if (getName().equals("edismax")) {
-            EDisMaxQuery q = new EDisMaxQuery();
-            for (Map.Entry<String, Object> e : params.entrySet()) {
-                setFeature(q, e.getKey());
-            }
-            return (T)q;
-        }
-        throw new IllegalArgumentException("only supports edismax for now");
     }
 
     private void setFeature(Query q, Object obj) {
@@ -203,5 +194,13 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
             throw new RuntimeException(e);
         }
         return ret;
+    }
+
+    T newInstance() {
+        try {
+            return (T)clazz.newInstance();
+        } catch (InstantiationException|IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

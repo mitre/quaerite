@@ -272,7 +272,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
                 invalidQueries++;
             }
         }
-        if (validQueries > 0) {
+        if (invalidQueries > 0) {
             LOG.warn("I had to remove "+invalidQueries+" queries because there were no judgments for them. "+
                     " There were " + validQueries + " valid queries.");
         }

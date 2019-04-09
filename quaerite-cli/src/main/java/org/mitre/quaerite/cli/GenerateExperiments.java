@@ -131,7 +131,7 @@ public class GenerateExperiments extends AbstractCLI {
         try (Reader reader = Files.newBufferedReader(input, StandardCharsets.UTF_8)) {
              experimentFactory = ExperimentFactory.fromJson(reader);
         }
-        ExperimentSet experimentSet = new ExperimentSet();
+        ExperimentSet experimentSet = new ExperimentSet(experimentFactory.getGAConfig());
         for (ScoreAggregator scoreAggregator : experimentFactory.getScoreAggregators()) {
             experimentSet.addScoreAggregator(scoreAggregator);
         }

@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.util.MathUtil;
 
 public class QueryListFactory extends AbstractFeatureFactory<Query> {
 
@@ -48,7 +49,8 @@ public class QueryListFactory extends AbstractFeatureFactory<Query> {
 
     @Override
     public Query random() {
-        throw new IllegalArgumentException("not yet implemented");
+        int index = MathUtil.RANDOM.nextInt(0, queryFactories.size());
+        return queryFactories.get(index).random();
     }
 
     @Override

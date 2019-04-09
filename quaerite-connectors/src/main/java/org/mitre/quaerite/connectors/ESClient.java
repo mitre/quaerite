@@ -155,14 +155,17 @@ public class ESClient extends SearchClient {
         if (fieldsToRetrieve.size() > 0) {
             overallMap.put("_source", fieldsToRetrieve);
         }
+        overallMap.put("size", queryRequest.getNumResults());
+        overallMap.put("from", queryRequest.getStart());
         return overallMap;
     }
 
 
     private Map<String, Object> getMultiMatchMap(MultiMatchQuery query) {
+        String type = query.getMultiMatchType().getFeature();
         Map<String, Object> queryMap = new LinkedHashMap<>();
         queryMap.put("query", query.getQueryString());
-        queryMap.put("type", query.getType().toString());
+        queryMap.put("type", type);
         List<String> fields = new ArrayList<>();
         for (WeightableField f : query.getQF().getWeightableFields()) {
             fields.add(f.toString());
@@ -171,11 +174,13 @@ public class ESClient extends SearchClient {
         if (query.getTie().getValue() > 0.0f) {
             queryMap.put("tie_breaker", query.getTie().getValue());
         }
-        if (query.getBoost() != 1.0f) {
-            queryMap.put("boost", query.getBoost());
+        if (query.getBoost().getValue() != 1.0f) {
+            queryMap.put("boost", query.getBoost().getValue());
         }
-        if (query.getFuzziness() > 0.0f) {
-            queryMap.put("fuzziness", query.getFuzziness());
+        if (!"phrase".equals(type) && !"cross_fields".equals(type)) {
+            if (query.getFuzziness().getValue() > 0.0f) {
+                queryMap.put("fuzziness", query.getFuzziness().getValue());
+            }
         }
 
         return wrapAMap("multi_match", queryMap);

@@ -51,11 +51,11 @@ public class DisMaxQuery extends MultiFieldQuery {
     @Override
     public DisMaxQuery deepCopy() {
         DisMaxQuery cp = new DisMaxQuery();
-        cp.pf = (PF)pf.deepCopy();
-        cp.bq = (BQ)bq.deepCopy();
-        cp.bf = (BF)bf.deepCopy();
-        cp.qf = (QF)qf.deepCopy();
-        cp.tie = (TIE)tie.deepCopy();
+        cp.pf = (pf == null) ? null : pf.deepCopy();
+        cp.bq = (bq == null) ? null : bq.deepCopy();
+        cp.bf = (bf == null) ? null : bf.deepCopy();
+        cp.qf = (qf == null) ? null : qf.deepCopy();
+        cp.tie = (tie == null) ? null : tie.deepCopy();
         cp.queryString = queryString;
         return cp;
     }
