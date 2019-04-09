@@ -20,8 +20,10 @@ package org.mitre.quaerite.cli;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Disabled
 public class TestExamples {
 
 
