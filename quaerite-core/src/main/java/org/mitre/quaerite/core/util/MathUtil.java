@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.commons.math3.util.FastMath;
 import org.mitre.quaerite.core.Experiment;
 import org.mitre.quaerite.core.GAConfig;
 import org.mitre.quaerite.core.stats.ExperimentScorePair;
@@ -95,6 +96,19 @@ public class MathUtil {
         return select(fitnessProportions, RANDOM);
     }
 
+    public static boolean equals(float f1, float f2, float delta) {
+        if (FastMath.abs(f1-f2) < delta) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean equals(double d1, double d2, float delta) {
+        if (FastMath.abs(d1-d2) < delta) {
+            return true;
+        }
+        return false;
+    }
     static Experiment select(List<ExperimentScorePair> fitnessProportions, Random random) {
         double r = random.nextDouble();
         for (ExperimentScorePair p : fitnessProportions) {

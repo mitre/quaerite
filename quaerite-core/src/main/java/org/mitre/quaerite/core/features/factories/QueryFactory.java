@@ -16,16 +16,21 @@
  */
 package org.mitre.quaerite.core.features.factories;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.mitre.quaerite.core.features.AbstractFeature;
+import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.util.MathUtil;
 
 public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
@@ -47,10 +52,14 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
     private void recurseFactory(int factoryIndex, List<FeatureFactory> factories, List<T> queries,
                                 Query query, int maxSize) {
+        if (queries.size() >= maxSize) {
+            return;
+        }
         if (factoryIndex == factories.size()) {
             queries.add((T)query);
             return;
         }
+
         FeatureFactory featureFactory = factories.get(factoryIndex);
         for (Object feature : featureFactory.permute(maxSize)) {
             Query cp = (Query)query.deepCopy();
@@ -62,17 +71,55 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
     @Override
     public T random() {
-        throw new IllegalArgumentException("not yet implemented");
+        EDisMaxQuery q = new EDisMaxQuery();
+        for (FeatureFactory factory : factories) {
+            Feature f = factory.random();
+            setFeature(q, f);
+        }
+        return (T)q;
     }
 
     @Override
-    public T mutate(T feature, double probability, double amplitude) {
-        throw new IllegalArgumentException("not yet implemented");
+    public T mutate(T query, double probability, double amplitude) {
+        int numMods = (int)Math.ceil(factories.size()*probability);
+        List<FeatureFactory> tmp = new ArrayList<>(factories);
+        Collections.shuffle(tmp);
+        T cp = (T)query.deepCopy();
+        for (int i = 0; i < numMods; i++) {
+            FeatureFactory fact = factories.get(i);
+            fact.mutate(getFeature(cp, (AbstractFeatureFactory)fact), probability, amplitude);
+        }
+        return cp;
     }
 
     @Override
     public Pair<T, T> crossover(T parentA, T parentB) {
-        throw new IllegalArgumentException("not yet implemented");
+        T childA = (T)parentA.deepCopy();
+        T childB = (T)parentB.deepCopy();
+        for (int i = 0; i < factories.size(); i++) {
+            FeatureFactory fact = factories.get(i);
+            Feature featA = getFeature(childA, (AbstractFeatureFactory)fact);
+            Feature featB = getFeature(childB, (AbstractFeatureFactory)fact);
+            Pair<Feature, Feature> p = fact.crossover(featA, featB);
+            if (MathUtil.RANDOM.nextFloat() < 0.5) {
+                setFeature(childA, p.getLeft());
+                setFeature(childB, p.getRight());
+            } else {
+                setFeature(childA, p.getRight());
+                setFeature(childB, p.getLeft());
+            }
+        }
+        return Pair.of(childA, childB);
+    }
+
+    private List<Method> getFeaturesFromGetters(T parentB) {
+        List<Method> ret = new ArrayList<>();
+        for (Method m : parentB.getClass().getMethods()) {
+            if (m.getName().startsWith("get")) {
+                ret.add(m);
+            }
+        }
+        return ret;
     }
 
     public void add(FeatureFactory factory) {
@@ -123,4 +170,38 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
         }
     }
 
+    private Feature getFeature(Query q, AbstractFeatureFactory obj) {
+        String className = obj.getName();
+        String name = "get"+className.substring(0,1).toUpperCase(Locale.US)+className.substring(1);
+        Method method = null;
+        if (! methodCache.containsKey(name)) {
+            try {
+                method = q.getClass().getMethod(name);
+            } catch (NoSuchMethodException e) {
+                for (Method m : q.getClass().getMethods()) {
+                    if (m.getName().equalsIgnoreCase(name)) {
+                        try {
+                            method = q.getClass().getMethod(m.getName());
+                            break;
+                        } catch (NoSuchMethodException ex) {
+                            //
+                        }
+                    }
+                }
+            }
+        } else {
+            method = methodCache.get(name);
+        }
+        if (method == null) {
+            throw new RuntimeException("I regret I couldn't find a method for: "+name);
+        }
+        Feature ret = null;
+        try {
+            ret = (Feature)method.invoke(q);
+            methodCache.put(name, method);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return ret;
+    }
 }

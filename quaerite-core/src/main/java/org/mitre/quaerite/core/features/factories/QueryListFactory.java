@@ -48,17 +48,17 @@ public class QueryListFactory extends AbstractFeatureFactory<Query> {
 
     @Override
     public Query random() {
-        return null;
+        throw new IllegalArgumentException("not yet implemented");
     }
 
     @Override
     public Query mutate(Query feature, double probability, double amplitude) {
-        return null;
+        throw new IllegalArgumentException("not yet implemented");
     }
 
     @Override
     public Pair<Query, Query> crossover(Query parentA, Query parentB) {
-        return null;
+        throw new IllegalArgumentException("not yet implemented");
     }
 
     public void add(QueryFactory queryFactory) {

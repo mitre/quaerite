@@ -23,4 +23,18 @@ public class PF2 extends WeightableListFeature {
     public PF2() {
         super(NAME);
     }
+
+    @Override
+    public PF2 deepCopy() {
+
+        PF2 deepCopy = new PF2();
+        for (WeightableField field : weightableFields) {
+            if (field.hasWeight()) {
+                deepCopy.add(new WeightableField(field.getFeature(), field.getWeight()));
+            } else {
+                deepCopy.add(new WeightableField(field.getFeature()));
+            }
+        }
+        return deepCopy;
+    }
 }

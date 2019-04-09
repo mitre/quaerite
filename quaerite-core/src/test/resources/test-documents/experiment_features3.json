@@ -43,8 +43,53 @@
               "1.0",
               "7.0"
             ],
-            "minSetSize": 2,
+            "minSetSize": 1,
             "maxSetSize": 4
+          },
+          "pf": {
+            "fields": [
+              "title",
+              "overview",
+              "people",
+              "content"
+            ],
+            "defaultWeights": [
+              "0.0",
+              "1.0",
+              "7.0"
+            ],
+            "minSetSize": 0,
+            "maxSetSize": 3
+          },
+          "pf2": {
+            "fields": [
+              "title",
+              "overview",
+              "people",
+              "content"
+            ],
+            "defaultWeights": [
+              "0.0",
+              "1.0",
+              "7.0"
+            ],
+            "minSetSize": 0,
+            "maxSetSize": 2
+          },
+          "pf3": {
+            "fields": [
+              "title",
+              "overview",
+              "people",
+              "content"
+            ],
+            "defaultWeights": [
+              "0.0",
+              "1.0",
+              "7.0"
+            ],
+            "minSetSize": 0,
+            "maxSetSize": 1
           },
           "tie": [
             0.0,

@@ -132,16 +132,21 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         return factory;
     }
 
-    private QueryFactory buildEDisMaxFactory(JsonObject childRoot) {
+    private QueryFactory buildEDisMaxFactory(JsonObject obj) {
         QueryFactory<EDisMaxQuery> factory = new  QueryFactory<>("edismax");
-        //TODO stub pf2, etc.
-        addDismaxFeatures(factory, childRoot);
+        if (obj.has("pf2")) {
+            factory.add(buildWeightableFeatureFactory("pf2", obj.getAsJsonObject("pf2")));
+        }
+        if (obj.has("pf3")) {
+            factory.add(buildWeightableFeatureFactory("pf3", obj.getAsJsonObject("pf3")));
+        }
+        addDismaxFeatures(factory, obj);
         return factory;
     }
 
     private void addDismaxFeatures(QueryFactory<? extends DisMaxQuery> factory, JsonObject obj) {
         if (obj.has("pf")) {
-            factory.add(buildWeightableFeatureFactory("pf", obj));
+            factory.add(buildWeightableFeatureFactory("pf", obj.getAsJsonObject("pf")));
         }
         addMultimatchFeatures(factory, obj);
     }
@@ -265,11 +270,18 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         List<String> fields = toStringList(obj.get(FIELDS_KEY).getAsJsonArray());
 
         List<Float> defaultWeights = toFloatList(obj.get(DEFAULT_WEIGHT_KEY));
-        int sz = -1;
+        int maxSetSizeInt = -1;
         if (obj.has(MAX_SET_SIZE_KEY)) {
             JsonElement maxSetSize = obj.get(MAX_SET_SIZE_KEY);
             if (!maxSetSize.isJsonNull() && maxSetSize.isJsonPrimitive()) {
-                sz = maxSetSize.getAsInt();
+                maxSetSizeInt = maxSetSize.getAsInt();
+            }
+        }
+        int minSetSizeInt = -1;
+        if (obj.has(MIN_SET_SIZE_KEY)) {
+            JsonElement minSetSize = obj.get(MIN_SET_SIZE_KEY);
+            if (!minSetSize.isJsonNull() && minSetSize.isJsonPrimitive()) {
+                minSetSizeInt = minSetSize.getAsInt();
             }
         }
         Class clazz = null;
@@ -278,7 +290,7 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         } catch (ClassNotFoundException e) {
             throw new RuntimeException();
         }
-        return new WeightableListFeatureFactory(paramName, clazz, fields, defaultWeights, sz);
+        return new WeightableListFeatureFactory(paramName, clazz, fields, defaultWeights, minSetSizeInt, maxSetSizeInt);
     }
 }
 

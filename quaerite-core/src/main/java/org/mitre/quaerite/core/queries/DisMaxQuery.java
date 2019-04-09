@@ -59,4 +59,8 @@ public class DisMaxQuery extends MultiFieldQuery {
         cp.queryString = queryString;
         return cp;
     }
+
+    public PF getPF() {
+        return pf;
+    }
 }

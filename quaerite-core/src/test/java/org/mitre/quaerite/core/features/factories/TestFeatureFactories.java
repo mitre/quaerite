@@ -17,8 +17,11 @@
 package org.mitre.quaerite.core.features.factories;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import javax.swing.text.EditorKit;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -28,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.ExperimentFactory;
@@ -55,7 +59,7 @@ public class TestFeatureFactories {
         defaultWeights.add(1.0f);
         defaultWeights.add(2.0f);
 
-        WeightableListFeatureFactory qf = new WeightableListFeatureFactory<QF>("qf", QF.class, fields, defaultWeights, -1);
+        WeightableListFeatureFactory qf = new WeightableListFeatureFactory<QF>("qf", QF.class, fields, defaultWeights, 1,-1);
         //test random
         for (int i = 0; i < 10; i++) {
             boolean foundAuthor = false;
@@ -95,13 +99,13 @@ public class TestFeatureFactories {
         defaultWeights.add(1.0f);
 
         WeightableListFeatureFactory<QF> qf =
-                new WeightableListFeatureFactory<>("qf", QF.class, fields, defaultWeights, -1);
+                new WeightableListFeatureFactory<>("qf", QF.class, fields, defaultWeights, 1,  -1);
         assertEquals(15, qf.permute(1000).size());
         defaultWeights.add(2.0f);
-        qf = new WeightableListFeatureFactory("qf", QF.class, fields, defaultWeights, -1);
+        qf = new WeightableListFeatureFactory("qf", QF.class, fields, defaultWeights, 1, -1);
         assertEquals(80, qf.permute(1000).size());
 
-        qf = new WeightableListFeatureFactory("qf", QF.class, fields, defaultWeights, 2);
+        qf = new WeightableListFeatureFactory("qf", QF.class, fields, defaultWeights, 1, 2);
 
         assertEquals(32, qf.permute(1000).size());
     }
@@ -158,7 +162,137 @@ public class TestFeatureFactories {
                 List<Feature> features = f.permute(1000);
                 assertEquals(80, features.size());
             }
+            if (((AbstractFeatureFactory)f).getName().equals("pf")) {
+                List<Feature> features = f.permute(1000);
+                assertEquals(64, features.size());
+            }
+            if (((AbstractFeatureFactory)f).getName().equals("pf2")) {
+                List<Feature> features = f.permute(1000);
+                assertEquals(32, features.size());
+            }
+            if (((AbstractFeatureFactory)f).getName().equals("pf3")) {
+                List<Feature> features = f.permute(1000);
+                assertEquals(8, features.size());
+            }
         }
+        List<EDisMaxQuery> queries = qfactory.permute(50000);
+        assertEquals(50000, queries.size());
+    }
+
+    @Test
+    public void testRandomization() throws Exception {
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features3.json")
+        );
+        QueryListFactory qlf = (QueryListFactory) experimentFactory.getFeatureFactories().get("queries");
+        QueryFactory<EDisMaxQuery> qfactory = (QueryFactory<EDisMaxQuery>) qlf.get(0);
+
+        List<EDisMaxQuery> queries = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            queries.add(qfactory.random());
+        }
+        assertWithinBounds(queries);
+    }
+
+
+
+    @Test
+    public void testMutate() throws Exception {
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features3.json")
+        );
+        QueryListFactory qlf = (QueryListFactory) experimentFactory.getFeatureFactories().get("queries");
+        QueryFactory<EDisMaxQuery> qfactory = (QueryFactory<EDisMaxQuery>) qlf.get(0);
+        List<EDisMaxQuery> queries = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            EDisMaxQuery q = qfactory.random();
+            EDisMaxQuery mutated = qfactory.mutate(q, 0.20, 0.9);
+            assertNotEquals(q, mutated);
+            assertTrue(q != mutated);
+            queries.add(mutated);
+        }
+        assertWithinBounds(queries);
+    }
+
+    @Test
+    public void testCrossover() throws Exception {
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features3.json")
+        );
+        QueryListFactory qlf = (QueryListFactory) experimentFactory.getFeatureFactories().get("queries");
+        QueryFactory<EDisMaxQuery> qfactory = (QueryFactory<EDisMaxQuery>) qlf.get(0);
+        List<EDisMaxQuery> queries = new ArrayList<>();
+        for (int i = 0; i < 500; i++) {
+            EDisMaxQuery p1 = qfactory.random();
+            EDisMaxQuery p2 = qfactory.random();
+            Pair<EDisMaxQuery, EDisMaxQuery> children = qfactory.crossover(p1, p2);
+
+            assertTrue(p1 != children.getLeft());
+            assertTrue(p1 != children.getRight());
+            assertTrue(p2 != children.getLeft());
+            assertTrue(p2 != children.getRight());
+            queries.add(children.getLeft());
+            queries.add(children.getRight());
+        }
+        assertWithinBounds(queries);
+    }
+
+    private void assertWithinBounds(List<EDisMaxQuery> queries) {
+
+        int minQf = 100;
+        int maxQf = -1;
+        int minPf = 100;
+        int maxPf = -1;
+        int minPf2 = 100;
+        int maxPf2 = -1;
+        int minPf3 = 100;
+        int maxPf3 = -1;
+        float minTie = 100;
+        float maxTie = -1.0f;
+
+        for (EDisMaxQuery q : queries) {
+            if (q.getQF().size() < minQf) {
+                minQf = q.getQF().size();
+            }
+            if (q.getQF().size() > maxQf) {
+                maxQf = q.getQF().size();
+            }
+            if (q.getPF().size() < minPf) {
+                minPf = q.getPF().size();
+            }
+            if (q.getPF().size() > maxPf) {
+                maxPf = q.getPF().size();
+            }
+            if (q.getPF2().size() < minPf2) {
+                minPf2 = q.getPF2().size();
+            }
+            if (q.getPF2().size() > maxPf2) {
+                maxPf2 = q.getPF2().size();
+            }
+            if (q.getPF3().size() < minPf3) {
+                minPf3 = q.getPF3().size();
+            }
+            if (q.getPF3().size() > maxPf3) {
+                maxPf3 = q.getPF3().size();
+            }
+            if (q.getTie().getValue() < minTie) {
+                minTie = q.getTie().getValue();
+            }
+            if (q.getTie().getValue() > maxTie) {
+                maxTie = q.getTie().getValue();
+            }
+        }
+        assertEquals(1, minQf);
+        assertEquals(4, maxQf);
+        assertEquals(0, minPf);
+        assertEquals(3, maxPf);
+        assertEquals(0, minPf2);
+        assertEquals(2, maxPf2);
+        assertEquals(0, minPf3);
+        assertEquals(1, maxPf3);
+        assertEquals(0.0, minTie, 0.01);
+        assertEquals(0.2, maxTie, 0.01);
+
     }
 
     @Test
