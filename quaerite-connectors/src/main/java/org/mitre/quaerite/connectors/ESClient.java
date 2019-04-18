@@ -35,6 +35,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.mitre.quaerite.core.ExperimentConfig;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.features.WeightableField;
@@ -105,7 +106,7 @@ public class ESClient extends SearchClient {
         List<String> ids = new ArrayList<>();
         for (JsonElement el : hitArray) {
             JsonObject hit = (JsonObject) el;
-            String id = JsonUtil.getPrimitive(hit, getIdField(), "");
+            String id = JsonUtil.getPrimitive(hit, getDefaultIdField(), "");
             if (!StringUtils.isBlank(id)) {
                 ids.add(id);
             }
@@ -315,6 +316,11 @@ public class ESClient extends SearchClient {
         return destFields;
     }
 
+    @Override
+    public String getDefaultIdField() throws IOException, SearchClientException {
+        return _ID;
+    }
+
     private void addValuesForKey(JsonObject mappings, String key, Set<String> values) {
         if (mappings == null || mappings.isJsonNull()) {
             return;
@@ -329,10 +335,6 @@ public class ESClient extends SearchClient {
         }
     }
 
-    @Override
-    public String getIdField() throws IOException, SearchClientException {
-        return _ID;
-    }
 
 
     @Override
@@ -348,7 +350,7 @@ public class ESClient extends SearchClient {
     @Override
     public IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids,
                                   int batchSize, int copierThreads, Collection<Query> filterQueries) throws IOException, SearchClientException {
-        return new ESIdGrabber(getIdField(), ids, batchSize, copierThreads, filterQueries);
+        return new ESIdGrabber(getDefaultIdField(), ids, batchSize, copierThreads, filterQueries);
     }
 
     @Override

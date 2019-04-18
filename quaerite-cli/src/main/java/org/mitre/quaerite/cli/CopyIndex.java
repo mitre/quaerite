@@ -184,8 +184,8 @@ public class CopyIndex extends AbstractCLI {
 
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads+1);
         ExecutorCompletionService<Integer> executorCompletionService = new ExecutorCompletionService<>(executorService);
-        String srcIdField = srcClient.getIdField();
-        String destIdField = destClient.getIdField();
+        String srcIdField = srcClient.getDefaultIdField();
+        String destIdField = destClient.getDefaultIdField();
 
         executorCompletionService.submit(srcClient.getIdGrabber(idQueue,
                 batchSize, numThreads, filterQueries));
@@ -227,8 +227,8 @@ public class CopyIndex extends AbstractCLI {
         private Copier(ArrayBlockingQueue<Set<String>> ids,
                        SearchClient src, SearchClient dest,
                        Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
-            this.srcIdField = src.getIdField();
-            this.destIdField = dest.getIdField();
+            this.srcIdField = src.getDefaultIdField();
+            this.destIdField = dest.getDefaultIdField();
             this.ids = ids;
             this.src = src;
             this.dest = dest;

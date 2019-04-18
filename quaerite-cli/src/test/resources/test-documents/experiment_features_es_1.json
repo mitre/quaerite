@@ -18,6 +18,31 @@
       }
     }
   ],
+  "filterQueries": [
+    {
+      "lucene": {
+        "queryString": "xyz:fox",
+        "defaultField": "text",
+        "q.op": "AND"
+      }
+    },
+    {
+      "terms": {
+        "terms": [
+          "abc",
+          "efg",
+          "hij"
+        ],
+        "field": "myId"
+      }
+    },
+    {
+      "term": {
+        "term" : "xyz",
+        "field": "myId"
+      }
+    }
+  ],
   "featureFactories" : {
 
     "urls": [

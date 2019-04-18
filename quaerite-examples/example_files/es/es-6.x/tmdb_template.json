@@ -33,12 +33,40 @@
         "title": {
           "type": "text",
           "analyzer": "text_en",
-          "copy_to": "all_text"
+          "copy_to": "all_text",
+          "fields": {
+            "min": {
+              "type": "text",
+              "analyzer": "text_minimal_en"
+            },
+            "porter": {
+              "type": "text",
+              "analyzer": "text_porter_en"
+            },
+            "shingle": {
+              "type": "text",
+              "analyzer": "text_shingle_en"
+            }
+          }
         },
         "overview": {
           "type": "text",
           "analyzer": "text_en",
-          "copy_to": "all_text"
+          "copy_to": "all_text",
+          "fields": {
+            "min": {
+              "type": "text",
+              "analyzer": "text_minimal_en"
+            },
+            "porter": {
+              "type": "text",
+              "analyzer": "text_porter_en"
+            },
+            "shingle": {
+              "type": "text",
+              "analyzer": "text_shingle_en"
+            }
+          }
         },
         "genres": {
           "type": "text",
@@ -63,16 +91,58 @@
         "cast": {
           "type": "text",
           "analyzer": "text_en",
-          "copy_to": ["people", "all_text"]
+          "copy_to": ["people", "all_text"],
+          "fields": {
+            "min": {
+              "type": "text",
+              "analyzer": "text_minimal_en"
+            },
+            "porter": {
+              "type": "text",
+              "analyzer": "text_porter_en"
+            },
+            "shingle": {
+              "type": "text",
+              "analyzer": "text_shingle_en"
+            }
+          }
         },
         "directors": {
           "type": "text",
           "analyzer": "text_en",
+          "fields": {
+            "min": {
+              "type": "text",
+              "analyzer": "text_minimal_en"
+            },
+            "porter": {
+              "type": "text",
+              "analyzer": "text_porter_en"
+            },
+            "shingle": {
+              "type": "text",
+              "analyzer": "text_shingle_en"
+            }
+          },
           "copy_to": ["people", "all_text"]
         },
         "people": {
           "type": "text",
-          "analyzer": "text_en"
+          "analyzer": "text_en",
+          "fields": {
+            "min": {
+              "type": "text",
+              "analyzer": "text_minimal_en"
+            },
+            "porter": {
+              "type": "text",
+              "analyzer": "text_porter_en"
+            },
+            "shingle": {
+              "type": "text",
+              "analyzer": "text_shingle_en"
+            }
+          }
         },
         "budget": {
           "type": "double"
@@ -113,6 +183,15 @@
             "type": "pattern_replace",
             "pattern": "\\.$",
             "replacement": ""
+          },
+          "minimal_english": {
+            "type": "stemmer",
+            "name": "minimal_english"
+          },
+          "shingle": {
+            "max_shingle_size": "3",
+            "min_shingle_size": "2",
+            "type": "shingle"
           }
         },
         "analyzer": {
@@ -124,7 +203,35 @@
               "trim_final_period"
             ],
             "type": "custom"
+          },
+
+          "text_porter_en": {
+            "tokenizer": "standard",
+            "filter": [
+              "lowercase",
+              "porter_stem"
+            ],
+            "type": "custom"
+          },
+          "text_minimal_en": {
+            "tokenizer": "standard",
+            "filter": [
+              "lowercase",
+              "asciifolding",
+              "minimal_english"
+            ],
+            "type": "custom"
+          },
+          "text_shingle_en": {
+            "tokenizer": "standard",
+            "filter": [
+              "lowercase",
+              "asciifolding",
+              "shingle"
+            ],
+            "type": "custom"
           }
+
         }
       },
       "number_of_replicas": "1",

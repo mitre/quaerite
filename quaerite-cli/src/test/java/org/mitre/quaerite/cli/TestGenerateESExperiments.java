@@ -16,6 +16,8 @@
  */
 package org.mitre.quaerite.cli;
 
+
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.Reader;
@@ -41,6 +43,7 @@ import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 public class TestGenerateESExperiments {
     static Path JSON;
     static Path EXPERIMENTS;
+
     @BeforeAll
     public static void setUp() throws Exception {
         JSON = Files.createTempFile("quaerite-features", ".json");
@@ -53,8 +56,7 @@ public class TestGenerateESExperiments {
     @AfterAll
     public static void tearDown() throws Exception {
         Files.delete(JSON);
-        System.out.println(EXPERIMENTS);
-        //Files.delete(EXPERIMENTS);
+        Files.delete(EXPERIMENTS);
     }
 
     @Test
@@ -67,8 +69,9 @@ public class TestGenerateESExperiments {
         try (Reader reader = Files.newBufferedReader(EXPERIMENTS, StandardCharsets.UTF_8)) {
             set = ExperimentSet.fromJson(reader);
         }
-        /*
-        assertEquals(1920, set.getExperiments().size());
+
+
+        assertEquals(8640, set.getExperiments().size());
         assertEquals(1, set.getScoreAggregators().size());
 
         ScoreAggregator scoreAggregator = set.getScoreAggregators().get(0);
@@ -84,7 +87,5 @@ public class TestGenerateESExperiments {
             assertEquals("text", q.getDefaultField());
             assertEquals(QueryOperator.OPERATOR.AND, q.getQueryOperator());
         }
-
-         */
     }
 }

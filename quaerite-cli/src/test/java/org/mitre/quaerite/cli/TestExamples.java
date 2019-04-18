@@ -25,14 +25,15 @@ import org.junit.jupiter.api.Test;
 
 @Disabled
 public class TestExamples {
-
+    //TODO -- make all the working files tmp files/put in tmp directory
+    //turn these into actual tests that check the output
+    static Path CWD = Paths.get("../quaerite-examples/example_files");
 
     @Test
-    public void testES1() throws Exception {
-        Path cwd = Paths.get("../quaerite-examples/example_files");
+    public void testGenerateRunESRand() throws Exception {
 
         GenerateExperiments.main(new String[]{
-                "-f", cwd.resolve("es/experiment_features_es_1.json").toAbsolutePath().toString(),
+                "-f", CWD.resolve("es/experiment_features_es_1.json").toAbsolutePath().toString(),
                 "-e", "C:/data/quaerite/examples/experiments_es_1.json",
                 "-r", "10"
         });
@@ -40,9 +41,87 @@ public class TestExamples {
                 new String[]{
                         "-db", "C:/data/quaerite/test_db3",
                         "-e", "C:/data/quaerite/examples/experiments_es_1.json",
-                        "-j", cwd.resolve("movie_judgments.csv").toAbsolutePath().toString(),
+                        "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
                         "-r", "C:/data/quaerite/examples/reports"
                 }
         );
+    }
+    @Test
+    public void testGenerateRunESPermute() throws Exception {
+
+        GenerateExperiments.main(new String[]{
+                "-f", CWD.resolve("es/experiment_features_es_1.json").toAbsolutePath().toString(),
+                "-e", "C:/data/quaerite/examples/experiments_es_1.json",
+                "-p",
+                "-m", "50"
+        });
+        RunExperiments.main(
+                new String[]{
+                        "-db", "C:/data/quaerite/test_db3",
+                        "-e", "C:/data/quaerite/examples/experiments_es_1.json",
+                        "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
+                        "-r", "C:/data/quaerite/examples/reports"
+                }
+        );
+    }
+
+    @Test
+    public void runGAES1() throws Exception {
+        RunGA.main(
+                new String[] {
+                        "-db", "C:/data/quaerite/test_db4",
+                        "-f", CWD.resolve("es/experiment_features_es_1.json").toAbsolutePath().toString(),
+                        "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
+                        "-o", "C:/data/quaerite/examples/ga_output_es"
+                }
+        );
+    }
+
+    @Test
+    public void runGASolr() throws Exception {
+        for (int i = 1; i <= 5; i++) {
+            Path featuresPath = CWD.resolve("solr/experiment_features_solr_"+i+".json");
+            System.out.println("running: "+featuresPath);
+            RunGA.main(
+                    new String[]{
+                            "-db", "C:/data/quaerite/test_db5",
+                            "-f", featuresPath.toAbsolutePath().toString(),
+                            "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
+                            "-o", "C:/data/quaerite/examples/ga_output_solr_"+i
+                    }
+            );
+        }
+    }
+
+    @Test
+    public void runExperimentsSolr() throws Exception {
+        for (int i = 1; i <= 2; i++) {
+            Path experimentsPath = CWD.resolve("solr/experiments_solr_"+i+".json");
+            System.out.println("running: " + experimentsPath);
+            RunExperiments.main(
+                    new String[]{
+                            "-db", "C:/data/quaerite/test_db5",
+                            "-e", experimentsPath.toAbsolutePath().toString(),
+                            "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
+                            "-r", "C:/data/quaerite/examples/experiments_output_solr_"+i
+                    }
+            );
+        }
+    }
+
+    @Test
+    public void runExperimentsES() throws Exception {
+        for (int i = 1; i <= 4; i++) {
+            Path experimentsPath = CWD.resolve("es/experiments_es_"+i+".json");
+            System.out.println("running: " + experimentsPath);
+            RunExperiments.main(
+                    new String[]{
+                            "-db", "C:/data/quaerite/test_db5",
+                            "-e", experimentsPath.toAbsolutePath().toString(),
+                            "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
+                            "-r", "C:/data/quaerite/examples/experiments_output_es_"+i
+                    }
+            );
+        }
     }
 }

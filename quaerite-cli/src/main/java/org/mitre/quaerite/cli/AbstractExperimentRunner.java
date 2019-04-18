@@ -206,8 +206,8 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
      * @param judgmentList
      * @return
      */
-    private JudgmentList validate(SearchClient searchClient, JudgmentList judgmentList) {
-
+    private JudgmentList validate(SearchClient searchClient, JudgmentList judgmentList) throws IOException, SearchClientException {
+        String idField = searchClient.getIdField(experimentConfig);
         Set<String> judgmentIds = new HashSet<>();
         for (Judgments j : judgmentList.getJudgmentsList()) {
             judgmentIds.addAll(j.getSortedJudgments().keySet());
@@ -215,22 +215,21 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
         Set<String> valid = new HashSet<>();
 
-        int expected = 0;
         int len = 0;
         List<String> ids = new ArrayList<>();
         for (String id : judgmentIds) {
             ids.add(id);
             len += id.length();
             if (len > 1000) {
-                addValid(new TermsQuery(experimentConfig.getIdField(), ids),
-                        experimentConfig.getIdField(), searchClient, ids.size(), valid);
-                expected = 0;
+                addValid(new TermsQuery(idField, ids),
+                        idField, searchClient, ids.size(), valid);
                 len = 0;
+                ids.clear();
             }
         }
         if (ids.size() > 0) {
-            addValid(new TermsQuery(experimentConfig.getIdField(), ids),
-                    experimentConfig.getIdField(), searchClient, ids.size(), valid);
+            addValid(new TermsQuery(idField, ids),
+                    idField, searchClient, ids.size(), valid);
         }
 
         int validIds = 0;

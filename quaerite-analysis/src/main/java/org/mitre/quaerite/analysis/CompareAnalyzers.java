@@ -178,7 +178,7 @@ public class CompareAnalyzers {
                 }
             }
         }
-        System.out.println("\n\nQUERIES...\n\n\n");
+        System.out.println("\n\nQUERY...\n\n\n");
 
         int maxEquivalences = 10;
         for (QueryTokenPair q : queryTokenPairs) {

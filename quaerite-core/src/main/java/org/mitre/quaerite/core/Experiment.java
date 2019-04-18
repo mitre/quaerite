@@ -18,6 +18,7 @@ package org.mitre.quaerite.core;
 
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -86,6 +87,10 @@ public class Experiment {
     }
 
     public List<Query> getFilterQueries() {
+        //workaround for serialization that can leave a null filterqueries -- fix this at some point
+        if (filterQueries == null) {
+            return Collections.EMPTY_LIST;
+        }
         return filterQueries;
     }
 
@@ -99,15 +104,20 @@ public class Experiment {
         return "Experiment{" +
                 "name='" + name + '\'' +
                 ", searchServerUrl='" + searchServerUrl + '\'' +
-                ", customHandler='" + customHandler + '\'' +
+                ", customHandler=" + customHandler +
                 ", query=" + query +
+                ", filterQueries=" + filterQueries +
                 '}';
     }
 
     public Experiment deepCopy() {
-        //TODO stub -- consider adding a new name as a parameter
-        throw new IllegalArgumentException("stub -- must develop");
-
+        Experiment cp = new Experiment(getName(), getSearchServerUrl(), getCustomHandler(), getQuery());
+        List<Query> cpFq = new ArrayList<>();
+        for (Query q : filterQueries) {
+            cpFq.add((Query)q.deepCopy());
+        }
+        cp.addFilterQueries(cpFq);
+        return cp;
     }
 
     public void setSearchServerUrl(String serverUrl) {

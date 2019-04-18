@@ -74,6 +74,7 @@ public class SolrClient extends SearchClient {
     static Logger LOG = Logger.getLogger(SolrClient.class);
 
     static final Gson GSON = new Gson();
+    private static String DEFAULT_ID_FIELD = "id";
 
     final String url;
     String idField;
@@ -213,20 +214,20 @@ public class SolrClient extends SearchClient {
     }
 
     private void addEdisMaxParams(EDisMaxQuery query, CustomHandler handler, StringBuilder sb) {
-        sb.append("&defType=edismax");
+        sb.append("defType=edismax");
         //TODO: stub ...need to add edismax stuff pf2, ps2
         addDisMaxParams((DisMaxQuery) query, handler, sb);
     }
 
     private void addDisMaxParams(DisMaxQuery query, CustomHandler handler, StringBuilder sb) {
 
-        sb.append("&").append(handler.getCustomQueryKey()).append("=").append(query.getQueryString());
+        sb.append("&").append(handler.getCustomQueryKey()).append("=").append(encode(query.getQueryString()));
         QF qf = query.getQF();
         sb.append("&qf=");
         int i = 0;
         for (WeightableField f : qf.getWeightableFields()) {
             if (i++ > 0) {
-                sb.append(",");
+                sb.append(encode(" "));
             }
             sb.append(encode(f.toString()));
         }
@@ -360,8 +361,9 @@ public class SolrClient extends SearchClient {
         return dests;
     }
 
+
     @Override
-    public synchronized String getIdField() throws IOException, SearchClientException {
+    public synchronized String getDefaultIdField() throws IOException, SearchClientException {
         if (idField == null) {
             JsonResponse jsonResponse = getJson(url + "/schema/uniquekey");
             if (jsonResponse.getStatus() != 200) {
@@ -382,7 +384,7 @@ public class SolrClient extends SearchClient {
     @Override
     public IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids, int batchSize,
                                   int copierThreads, Collection<Query> filterQueries) throws IOException, SearchClientException {
-        return new SolrIdGrabber(getIdField(), ids, batchSize, copierThreads, filterQueries);
+        return new SolrIdGrabber(getDefaultIdField(), ids, batchSize, copierThreads, filterQueries);
     }
 
     @Override

@@ -42,7 +42,7 @@ public class TestQueryFactory {
 
     @Test
     public void testDeserialization() throws Exception {
-        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(newReader("/test-documents/experiment_features1.json"));
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(newReader("/test-documents/experiment_features_solr_1.json"));
 
         CustomHandlerFactory customHandlerFactory =
                 (CustomHandlerFactory)experimentFactory.getFeatureFactories().get(CustomHandlerFactory.NAME);
@@ -54,8 +54,7 @@ public class TestQueryFactory {
         assertEquals("custom2", customHandlers.get(1).getHandler());
         assertEquals("qq", customHandlers.get(1).getCustomQueryKey());
 
-        QueryListFactory queryListFactory = (QueryListFactory)experimentFactory.getFeatureFactories().get("queries");
-        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)queryListFactory.get(0);
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
         FloatFeatureFactory tie = null;
         for (FeatureFactory f : qf.factories) {
 
@@ -71,14 +70,13 @@ public class TestQueryFactory {
     @Test
     public void testQFDepthSerialization() throws Exception {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
-                newReader("/test-documents/experiment_features3.json")
+                newReader("/test-documents/experiment_features_solr_3.json")
         );
 
         FeatureFactories featureFactories = experimentFactory.getFeatureFactories();
-        QueryListFactory qlf = (QueryListFactory)featureFactories.get("queries");
-        QueryFactory<EDisMaxQuery> qfactory = (QueryFactory<EDisMaxQuery>)qlf.get(0);
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
 
-        for (FeatureFactory f : qfactory.factories) {
+        for (FeatureFactory f : qf.factories) {
             if (((AbstractFeatureFactory)f).getName().equals("qf")) {
                 List<Feature> features = f.permute(1000);
                 assertEquals(80, features.size());
@@ -96,21 +94,20 @@ public class TestQueryFactory {
                 assertEquals(8, features.size());
             }
         }
-        List<EDisMaxQuery> queries = qfactory.permute(50000);
+        List<EDisMaxQuery> queries = qf.permute(50000);
         assertEquals(50000, queries.size());
     }
 
     @Test
     public void testEdismaxRandomization() throws Exception {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
-                newReader("/test-documents/experiment_features3.json")
+                newReader("/test-documents/experiment_features_solr_3.json")
         );
-        QueryListFactory qlf = (QueryListFactory) experimentFactory.getFeatureFactories().get("queries");
-        QueryFactory<EDisMaxQuery> qfactory = (QueryFactory<EDisMaxQuery>) qlf.get(0);
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
 
         List<EDisMaxQuery> queries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
-            queries.add(qfactory.random());
+            queries.add(qf.random());
         }
         assertWithinBounds(queries);
     }
@@ -118,14 +115,13 @@ public class TestQueryFactory {
     @Test
     public void testEdismaxMutate() throws Exception {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
-                newReader("/test-documents/experiment_features3.json")
+                newReader("/test-documents/experiment_features_solr_3.json")
         );
-        QueryListFactory qlf = (QueryListFactory) experimentFactory.getFeatureFactories().get("queries");
-        QueryFactory<EDisMaxQuery> qfactory = (QueryFactory<EDisMaxQuery>) qlf.get(0);
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
         List<EDisMaxQuery> queries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
-            EDisMaxQuery q = qfactory.random();
-            EDisMaxQuery mutated = qfactory.mutate(q, 0.20, 0.9);
+            EDisMaxQuery q = qf.random();
+            EDisMaxQuery mutated = qf.mutate(q, 0.20, 0.9);
             assertNotEquals(q, mutated);
             assertTrue(q != mutated);
             queries.add(mutated);
@@ -136,15 +132,14 @@ public class TestQueryFactory {
     @Test
     public void testEdismaxCrossover() throws Exception {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
-                newReader("/test-documents/experiment_features3.json")
+                newReader("/test-documents/experiment_features_solr_3.json")
         );
-        QueryListFactory qlf = (QueryListFactory) experimentFactory.getFeatureFactories().get("queries");
-        QueryFactory<EDisMaxQuery> qfactory = (QueryFactory<EDisMaxQuery>) qlf.get(0);
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
         List<EDisMaxQuery> queries = new ArrayList<>();
         for (int i = 0; i < 500; i++) {
-            EDisMaxQuery p1 = qfactory.random();
-            EDisMaxQuery p2 = qfactory.random();
-            Pair<EDisMaxQuery, EDisMaxQuery> children = qfactory.crossover(p1, p2);
+            EDisMaxQuery p1 = qf.random();
+            EDisMaxQuery p2 = qf.random();
+            Pair<EDisMaxQuery, EDisMaxQuery> children = qf.crossover(p1, p2);
 
             assertTrue(p1 != children.getLeft());
             assertTrue(p1 != children.getRight());
@@ -162,12 +157,12 @@ public class TestQueryFactory {
                 newReader("/test-documents/experiment_features_es_1.json")
         );
         experimentFactory.getFeatureFactories().get("queries");
-        QueryListFactory qlf = (QueryListFactory) experimentFactory.getFeatureFactories().get("queries");
-        QueryFactory<MultiMatchQuery> qfactory = (QueryFactory<MultiMatchQuery>) qlf.get(0);
+        QueryFactory<MultiMatchQuery> qf = (QueryFactory<MultiMatchQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+
 
         List<MultiMatchQuery> multiMatchQueries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
-            MultiMatchQuery mmq = qfactory.random();
+            MultiMatchQuery mmq = qf.random();
             multiMatchQueries.add(mmq);
         }
 
@@ -179,14 +174,12 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_es_1.json")
         );
-        experimentFactory.getFeatureFactories().get("queries");
-        QueryListFactory qlf = (QueryListFactory) experimentFactory.getFeatureFactories().get("queries");
-        QueryFactory<MultiMatchQuery> qfactory = (QueryFactory<MultiMatchQuery>) qlf.get(0);
+        QueryFactory<MultiMatchQuery> qf = (QueryFactory<MultiMatchQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
 
         List<MultiMatchQuery> multiMatchQueries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
-            MultiMatchQuery mmq = qfactory.random();
-            multiMatchQueries.add(qfactory.mutate(mmq, 0.2, 0.9));
+            MultiMatchQuery mmq = qf.random();
+            multiMatchQueries.add(qf.mutate(mmq, 0.2, 0.9));
         }
 
         assertMulitMatchWithinBounds(multiMatchQueries);
@@ -197,15 +190,13 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_es_1.json")
         );
-        experimentFactory.getFeatureFactories().get("queries");
-        QueryListFactory qlf = (QueryListFactory) experimentFactory.getFeatureFactories().get("queries");
-        QueryFactory<MultiMatchQuery> qfactory = (QueryFactory<MultiMatchQuery>) qlf.get(0);
+        QueryFactory<MultiMatchQuery> qf = (QueryFactory<MultiMatchQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
 
         List<MultiMatchQuery> multiMatchQueries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
-            MultiMatchQuery mA = qfactory.random();
-            MultiMatchQuery mB = qfactory.random();
-            Pair<MultiMatchQuery, MultiMatchQuery> pair = qfactory.crossover(mA, mB);
+            MultiMatchQuery mA = qf.random();
+            MultiMatchQuery mB = qf.random();
+            Pair<MultiMatchQuery, MultiMatchQuery> pair = qf.crossover(mA, mB);
             multiMatchQueries.add(pair.getLeft());
             multiMatchQueries.add(pair.getRight());
         }

@@ -124,7 +124,7 @@ public class FindFeatures extends AbstractCLI {
         SearchClient searchClient = SearchClientFactory.getClient(searchServerUrl);
         String[] fields = commandLine.getOptionValue("f").split(",");
         String idField = getString(commandLine, "id",
-                ExperimentConfig.DEFAULT_SEARCH_SERVER_ID_FIELD);
+                StringUtils.EMPTY);
         String filterQuery = null;
         if (commandLine.hasOption("fq")) {
             filterQuery = commandLine.getOptionValue("fq");
@@ -144,7 +144,7 @@ public class FindFeatures extends AbstractCLI {
             Set<String> localIds = j.getSortedJudgments().keySet();
             ids.addAll(localIds);
         }
-        String idField = searchClient.getIdField();
+        String idField = searchClient.getDefaultIdField();
         for (String f : fields) {
             FacetResult targetCounts = getFacets(f, idField, ids, filterQuery, searchClient);
             QueryRequest sq = new QueryRequest(new MatchAllDocsQuery());

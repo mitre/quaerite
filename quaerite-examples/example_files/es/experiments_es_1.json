@@ -49,31 +49,39 @@
   "experiments": {
     "title": {
       "name": "title",
-      "searchServerUrl": "http://localhost:8983/solr/tmdb",
-      "params": {
-        "qf": [
-          "title"        
-		  ]
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "title"
+          ]
+        }
       }
     },
     "overview": {
       "name": "overview",
-      "searchServerUrl": "http://localhost:8983/solr/tmdb",
-      "params": {
-        "qf": [
-          "overview"
-        ],
-        "bq": []
-      },
-      "filterQueries": []
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "overview"
+          ],
+          "bq": []
+        }
+      }
     },
 	"people": {
       "name": "people",
-      "searchServerUrl": "http://localhost:8983/solr/tmdb",
-      "params": {
-        "qf": [
-          "people"
-        ]
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "people"
+          ]
+        }
       }
     }
   }

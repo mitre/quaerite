@@ -29,7 +29,7 @@ import com.google.gson.JsonPrimitive;
 import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
-import org.mitre.quaerite.core.features.factories.QueryListFactory;
+import org.mitre.quaerite.core.features.factories.QueryFactory;
 import org.mitre.quaerite.core.queries.Query;
 
 public class AbstractFeatureSerializer {
@@ -142,7 +142,7 @@ public class AbstractFeatureSerializer {
     }
 
     Class determineClass(String clazzName) {
-        if (clazzName.equals(QueryListFactory.NAME)) {
+        if (clazzName.equals(QueryFactory.NAME)) {
             return Query.class;
         } else if (clazzName.equals(CustomHandlerFactory.NAME)) {
             return CustomHandler.class;

@@ -432,6 +432,7 @@ public class RunGA extends AbstractExperimentRunner {
         Experiment parent = MathUtil.select(fitnessProportions);
         Experiment mutated = experimentFactory.mutate(parent, gaConfig.getMutationProbability(), gaConfig.getMutationAmplitude());
         String name = getTrainExperimentName(fold, generation, nextGenExpNames.size());
+        mutated.setName(name);
         nextGenExpNames.add(name);
         experimentDB.addExperiment(mutated);
     }

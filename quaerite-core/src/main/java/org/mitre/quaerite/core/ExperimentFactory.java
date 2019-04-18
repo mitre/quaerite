@@ -18,22 +18,18 @@ package org.mitre.quaerite.core;
 
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.features.CustomHandler;
-import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.features.URL;
 import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
 import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
-import org.mitre.quaerite.core.features.factories.QueryListFactory;
+import org.mitre.quaerite.core.features.factories.QueryFactory;
 import org.mitre.quaerite.core.features.factories.StringFeatureFactory;
-import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregatorListSerializer;
@@ -44,7 +40,6 @@ import org.mitre.quaerite.core.util.MathUtil;
 public class ExperimentFactory {
 
     public static  final String SEARCH_SERVER_URLS = "urls";
-    public static  final String QUERIES = "queries";
 
     private GAConfig gaConfig = new GAConfig();
 
@@ -136,7 +131,7 @@ public class ExperimentFactory {
         if (customHandlerfactory != null) {
             customHandler = customHandlerfactory.random();
         }
-        QueryListFactory queryListFactory = (QueryListFactory)featureFactories.get(QUERIES);
+        QueryFactory queryListFactory = (QueryFactory)featureFactories.get(QueryFactory.NAME);
         Experiment rand = new Experiment(name, searchUrl, customHandler, queryListFactory.random());
         addFilterQueries(rand);
         return rand;
@@ -151,7 +146,8 @@ public class ExperimentFactory {
     public List<Experiment> permute(int maxExperiments) {
         List<Experiment> experiments = new ArrayList<>();
         for (URL url : ((StringFeatureFactory<URL>)(featureFactories.get(SEARCH_SERVER_URLS))).permute(maxExperiments)) {
-            for (Query q : ((QueryListFactory)(featureFactories.get(QueryListFactory.NAME))).permute(maxExperiments)) {
+            List<Query> queries =(featureFactories.get(QueryFactory.NAME)).permute(maxExperiments);
+            for (Query q : queries) {
                 for (CustomHandler handler : permuteHandlers(maxExperiments)) {
                     if (experiments.size() >= maxExperiments) {
                         return experiments;
@@ -185,9 +181,9 @@ public class ExperimentFactory {
                             parentB.getCustomHandler());
         }
 
-        QueryListFactory queryListFactory = (QueryListFactory)featureFactories.get(QueryListFactory.NAME);
+        QueryFactory queryFactory = (QueryFactory)featureFactories.get(QueryFactory.NAME);
 
-        Pair<Query, Query> queries = queryListFactory.crossover(parentA.getQuery(), parentB.getQuery());
+        Pair<Query, Query> queries = queryFactory.crossover(parentA.getQuery(), parentB.getQuery());
 
         URL urlA = (MathUtil.RANDOM.nextFloat() <= 0.5) ? urls.getLeft() : urls.getRight();
         CustomHandler customHandlerA = (MathUtil.RANDOM.nextFloat() <= 0.5) ? customHandlers.getLeft() : customHandlers.getRight();
@@ -223,7 +219,7 @@ public class ExperimentFactory {
         if (MathUtil.RANDOM.nextFloat() < mutationProbability) {
             Query q = mutated.getQuery();
             Query mutatedQuery =
-                    ((QueryListFactory)featureFactories.get(QueryListFactory.NAME)).mutate(q, mutationProbability, mutationAmplitude);
+                    ((QueryFactory)featureFactories.get(QueryFactory.NAME)).mutate(q, mutationProbability, mutationAmplitude);
             mutated.setQuery(mutatedQuery);
         }
         addFilterQueries(mutated);

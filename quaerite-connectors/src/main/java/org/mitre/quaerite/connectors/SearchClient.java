@@ -44,6 +44,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
+import org.mitre.quaerite.core.ExperimentConfig;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.queries.Query;
@@ -148,7 +149,14 @@ public abstract class SearchClient implements Closeable {
      */
     public abstract Collection<? extends String> getCopyFields() throws IOException, SearchClientException;
 
-    public abstract String getIdField() throws IOException, SearchClientException;
+    public String getIdField(ExperimentConfig config) throws IOException, SearchClientException {
+        if (!StringUtils.isBlank(config.getIdField())) {
+            return config.getIdField();
+        }
+        return getDefaultIdField();
+    }
+
+    public abstract String getDefaultIdField() throws IOException, SearchClientException;
 
     public abstract void deleteAll() throws SearchClientException, IOException;
 

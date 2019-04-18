@@ -44,7 +44,6 @@ import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
 import org.mitre.quaerite.core.features.factories.FloatFeatureFactory;
 import org.mitre.quaerite.core.features.factories.QueryFactory;
-import org.mitre.quaerite.core.features.factories.QueryListFactory;
 import org.mitre.quaerite.core.features.factories.StringListFeatureFactory;
 import org.mitre.quaerite.core.features.factories.StringFeatureFactory;
 import org.mitre.quaerite.core.features.factories.WeightableListFeatureFactory;
@@ -89,7 +88,7 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         } else if (StringListFeature.class.isAssignableFrom(clazz)) {
             return buildStringListFeatureFactory(paramName, jsonFeatureFactory);
         } else if (Query.class.isAssignableFrom(clazz)) {
-            return buildQueryFactory(jsonFeatureFactory);
+            return createQueryFactory((JsonObject)jsonFeatureFactory);
         } else if (CustomHandler.class.isAssignableFrom(clazz)) {
             return buildCustomHandlerFactory(jsonFeatureFactory.getAsJsonObject());
         }
@@ -110,13 +109,7 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
     }
 
 
-    private FeatureFactory buildQueryFactory(JsonElement obj) {
-        QueryListFactory queryListFactory = new QueryListFactory();
-        for (JsonElement el : obj.getAsJsonArray()) {
-            queryListFactory.add(createQueryFactory(el.getAsJsonObject()));
-        }
-        return queryListFactory;
-    }
+
 
     private QueryFactory createQueryFactory(JsonObject qRoot) {
         String name = JsonUtil.getSingleChildName(qRoot);
@@ -143,12 +136,16 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         StringFeatureFactory<MultiMatchType> typeFactory =
                 new StringFeatureFactory<>("multiMatchType", MultiMatchType.class, types);
         factory.add(typeFactory);
-        FloatFeatureFactory<Boost> boostFactory =
-                new FloatFeatureFactory<>(Boost.class, toFloatList(childRoot.get("boost")));
-        factory.add(boostFactory);
-        FloatFeatureFactory<Fuzziness> fuzzFactory =
-                new FloatFeatureFactory<>(Fuzziness.class, toFloatList(childRoot.get("fuzziness")));
-        factory.add(fuzzFactory);
+        if (childRoot.has("boost")) {
+            FloatFeatureFactory<Boost> boostFactory =
+                    new FloatFeatureFactory<>(Boost.class, toFloatList(childRoot.get("boost")));
+            factory.add(boostFactory);
+        }
+        if (childRoot.has("fuzziness")) {
+            FloatFeatureFactory<Fuzziness> fuzzFactory =
+                    new FloatFeatureFactory<>(Fuzziness.class, toFloatList(childRoot.get("fuzziness")));
+            factory.add(fuzzFactory);
+        }
         return factory;
     }
 

@@ -26,14 +26,13 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.mitre.quaerite.core.features.AbstractFeature;
 import org.mitre.quaerite.core.features.Feature;
-import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.util.MathUtil;
 
 public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
+    public static final String NAME = "query";
     Map<String, Method> methodCache = new HashMap<>();
     List<FeatureFactory> factories = new ArrayList<>();
     private final Class clazz;

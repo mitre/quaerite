@@ -21,8 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import javax.swing.text.EditorKit;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -31,17 +29,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.ExperimentFactory;
 import org.mitre.quaerite.core.GAConfig;
-import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
-import org.mitre.quaerite.core.queries.EDisMaxQuery;
 
 
 public class TestFeatureFactories {
@@ -115,7 +110,7 @@ public class TestFeatureFactories {
     @Test
     public void testMultipleTrainScorers() throws Exception {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            ExperimentFactory.fromJson(newReader("/test-documents/experiment_features2.json")).getTrainScoreAggregator();
+            ExperimentFactory.fromJson(newReader("/test-documents/experiment_features_solr_2.json")).getTrainScoreAggregator();
         });
     }
 
@@ -123,7 +118,7 @@ public class TestFeatureFactories {
     @Test
     public void testGAConfigSerialization() throws Exception {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
-                newReader("/test-documents/experiment_features3.json")
+                newReader("/test-documents/experiment_features_solr_3.json")
         );
         GAConfig gaConfig = experimentFactory.getGAConfig();
         assertEquals(20, gaConfig.getNumThreads());

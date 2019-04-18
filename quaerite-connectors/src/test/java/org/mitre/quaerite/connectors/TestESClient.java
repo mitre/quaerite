@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.mitre.quaerite.core.ExperimentConfig;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.features.MultiMatchType;
@@ -54,7 +55,7 @@ import org.mitre.quaerite.core.queries.TermQuery;
  */
 
 
-@Disabled("need to have ES tmdb instance running")
+//@Disabled("need to have ES tmdb instance running")
 public class TestESClient {
 
 
@@ -116,7 +117,7 @@ public class TestESClient {
         SearchClient client = SearchClientFactory.getClient(TMDB_URL);
         QueryRequest queryRequest = new QueryRequest(
                 new LuceneQuery("title", "psycho"),
-                null, client.getIdField());
+                null, client.getDefaultIdField());
         ResultSet result = client.search(queryRequest);
         Set<String> hits = new HashSet<>();
         for (int i = 0; i < result.size(); i++) {
@@ -130,7 +131,7 @@ public class TestESClient {
         query.getQF().add(new WeightableField("title"));
         query.setMultiMatchType(new MultiMatchType("best_fields"));
         queryRequest = new QueryRequest(query,
-                null, client.getIdField());
+                null, client.getDefaultIdField());
         result = client.search(queryRequest);
         hits = new HashSet<>();
         for (int i = 0; i < result.size(); i++) {

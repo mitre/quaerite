@@ -22,41 +22,23 @@
   ],
   "featureFactories": {
     "urls": [
-      "http://localhost:9200/tmdb"
+      "http://localhost:8983/solr/tmdb"
     ],
     "query": {
-      "multi_match": {
-        "type": [
-          "best_fields",
-          "cross_fields",
-          "most_fields",
-          "phrase"
-        ],
+      "edismax": {
         "qf": {
           "fields": [
             "title",
             "overview",
-            "people",
-            "all_text"
+            "people"
           ],
           "defaultWeights": [
             "0.0",
-            "1.0",
-            "7.0"
+            "1.0"
           ],
           "minSetSize": 1,
-          "maxSetSize": 4
-        },
-        "tie": [
-          0.0,
-          0.1,
-          0.2
-        ],
-        "fuzziness": [
-          0,
-          1,
-          2
-        ]
+          "maxSetSize": 3
+        }
       }
     }
   }

@@ -1,15 +1,14 @@
 {
-  "gaConfig" : {
-    "numThreads" : 6,
-    "population" : 15,
-    "generations" : 10,
-    "crossoverProbability" : 0.45,
-    "mutationProbability" : 0.5,
-    "mutationAmplitude" : 0.5,
-    "reproductionProbability" : 0.05,
-    "nFolds" : 4
+  "gaConfig": {
+    "numThreads": 6,
+    "population": 20,
+    "generations": 5,
+    "crossoverProbability": 0.2,
+    "mutationProbability": 0.7,
+    "mutationAmplitude": 0.1,
+    "reproductionProbability": 0.1,
+    "nFolds": 3
   },
-
   "scoreAggregators": [
     {
       "class": "AtLeastOneHitAtKAggregator",
@@ -35,13 +34,13 @@
         "atK": "10"
       }
     },
-	{
+    {
       "class": "AtLeastOneHitAtKAggregator",
       "params": {
         "atK": "20"
       }
     },
-	{
+    {
       "class": "NDCGAggregator",
       "params": {
         "atK": 10,
@@ -51,32 +50,34 @@
       }
     }
   ],
-  "featureFactories" : {
-    "tie": [ 0.0, 0.1, 0.2, 0.8 ],
-    "url" : [
+  "featureFactories": {
+    "urls": [
       "http://localhost:8983/solr/tmdb"
     ],
-    "qf": {
-      "fields": [
-        "title",
-        "tb_title",
-        "tss_title",
-        "overview",
-        "tb_overview",
-        "tss_overview",
-		"people",
-		"tb_people",
-		"tss_people",
-        "text",
-        "tb_text",
-        "tss_text"
-      ],
-      "defaultWeights": [
-        "0.0",
-        "1.0",
-        "5.0",
-		"10.0"
-      ]
+    "query": {
+      "edismax": {
+        "qf": {
+          "fields": [
+            "title",
+            "tb_title",
+            "tss_title",
+            "overview",
+            "tb_overview",
+            "tss_overview",
+            "people",
+            "tb_people",
+            "tss_people"
+          ],
+          "defaultWeights": [
+            "0.0",
+            "1.0",
+            "5.0",
+            "10.0"
+          ],
+          "minSetSize": 1,
+          "maxSetSize": 3
+        }
+      }
     }
   }
 }
