@@ -66,7 +66,7 @@ public class TestGenerateSolrExperiments {
         try (Reader reader = Files.newBufferedReader(EXPERIMENTS, StandardCharsets.UTF_8)) {
             set = ExperimentSet.fromJson(reader);
         }
-        assertEquals(1920, set.getExperiments().size());
+        assertEquals(960, set.getExperiments().size());
         assertEquals(1, set.getScoreAggregators().size());
 
         ScoreAggregator scoreAggregator = set.getScoreAggregators().get(0);

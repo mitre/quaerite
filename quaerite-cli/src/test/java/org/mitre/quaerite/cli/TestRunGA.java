@@ -17,10 +17,25 @@
 package org.mitre.quaerite.cli;
 
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Disabled("turn this into a real test")
 public class TestRunGA {
+
+    @Test
+    public void testOneOff() throws Exception {
+        Path CWD = Paths.get("C:/users/tallison/Desktop/today/experiments");
+        RunGA.main(new String[]{
+                "-j", CWD.resolve("movie_judgments.csv").toString(),
+                "-f", CWD.resolve("experiment_features_es_1.json").toString(),
+                "-db", CWD.resolve("my_db3").toString()
+
+        });
+    }
 
 }

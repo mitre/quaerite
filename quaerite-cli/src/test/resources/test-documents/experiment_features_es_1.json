@@ -1,14 +1,14 @@
 {
-  "gaConfig" : {
-    "numThreads" : 20,
-    "idField" : "_id",
-    "population" : 50,
-    "generations" : 100,
-    "crossoverProbability" : 0.1,
-    "mutationProbability" : 0.2,
-    "mutationAmplitude" : 0.001,
-    "reproductionProbability" : 0.7,
-    "nFolds" : 2
+  "gaConfig": {
+    "numThreads": 20,
+    "idField": "_id",
+    "population": 50,
+    "generations": 100,
+    "crossoverProbability": 0.1,
+    "mutationProbability": 0.2,
+    "mutationAmplitude": 0.001,
+    "reproductionProbability": 0.7,
+    "nFolds": 2
   },
   "scoreAggregators": [
     {
@@ -38,55 +38,54 @@
     },
     {
       "term": {
-        "term" : "xyz",
+        "term": "xyz",
         "field": "myId"
       }
     }
   ],
-  "featureFactories" : {
-
+  "featureFactories": {
     "urls": [
       "http://localhost:9300/tmdb"
     ],
-    "queries": [
-      {
-        "multi_match": {
-          "type": [
-            "best_fields",
-            "cross_fields",
-            "most_fields",
-            "phrase"
+    "query": {
+      "multi_match": {
+        "type": [
+          "best_fields",
+          "cross_fields",
+          "most_fields",
+          "phrase"
+        ],
+        "qf": {
+          "fields": [
+            "title",
+            "overview",
+            "people",
+            "content"
           ],
-          "qf": {
-            "fields": [
-              "title",
-              "overview",
-              "people",
-              "content"
-            ],
-            "defaultWeights": [
-              "0.0",
-              "1.0",
-              "7.0"
-            ],
-            "minSetSize": 1,
-            "maxSetSize": 4
-          },
-          "fuzziness": [
-            0,1,2
+          "defaultWeights": [
+            "0.0",
+            "1.0",
+            "7.0"
           ],
-          "boost": [
-            0.1,
-            10.0,
-            30.0
-          ],
-          "tie": [
-            0.0,
-            0.1,
-            0.2
-          ]
-        }
+          "minSetSize": 1,
+          "maxSetSize": 4
+        },
+        "fuzziness": [
+          0,
+          1,
+          2
+        ],
+        "boost": [
+          0.1,
+          10.0,
+          30.0
+        ],
+        "tie": [
+          0.0,
+          0.1,
+          0.2
+        ]
       }
-    ]
+    }
   }
 }

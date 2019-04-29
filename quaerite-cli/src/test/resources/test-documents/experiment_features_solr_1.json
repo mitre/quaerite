@@ -27,7 +27,7 @@
     },
     {
       "term": {
-        "term" : "xyz",
+        "term": "xyz",
         "field": "myId"
       }
     }
@@ -43,51 +43,27 @@
         "customQueryKey": "qq"
       }
     },
-    "queries": [
-      {
-        "edismax": {
-          "qf": {
-            "fields": [
-              "title",
-              "overview",
-              "people",
-              "content"
-            ],
-            "defaultWeights": [
-              "0.0",
-              "1.0",
-              "7.0"
-            ]
-          },
-          "tie": [
-            0.0,
-            0.1,
-            0.2
+    "query": {
+      "edismax": {
+        "qf": {
+          "fields": [
+            "title",
+            "overview",
+            "people",
+            "content"
+          ],
+          "defaultWeights": [
+            "0.0",
+            "1.0",
+            "7.0"
           ]
-        }
-      },
-      {
-        "dismax": {
-          "qf": {
-            "fields": [
-              "title",
-              "overview",
-              "people",
-              "content"
-            ],
-            "defaultWeights": [
-              "0.0",
-              "1.0",
-              "7.0"
-            ]
-          },
-          "tie": [
-            0.0,
-            0.1,
-            0.2
-          ]
-        }
+        },
+        "tie": [
+          0.0,
+          0.1,
+          0.2
+        ]
       }
-    ]
+    }
   }
 }

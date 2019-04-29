@@ -22,6 +22,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
@@ -46,6 +48,8 @@ import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.TIE;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
+import org.mitre.quaerite.core.queries.BooleanClause;
+import org.mitre.quaerite.core.queries.BooleanQuery;
 import org.mitre.quaerite.core.queries.DisMaxQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.LuceneQuery;
@@ -63,19 +67,21 @@ public class QuerySerializer extends AbstractFeatureSerializer
 
     static Logger LOG = Logger.getLogger(QuerySerializer.class);
 
-    private final static String DEFAULT_FIELD = "defaultField";
-    private final static String FIELD = "field";
-    private final static String QUERY_STRING = "queryString";
-    private final static String QUERY_OPERATOR = "q.op";
-    private final static String AND = "AND";
-    private final static String OR = "OR";
-    private final static String MULTI_MATCH = "multi_match";
-    private final static String EDISMAX = "edismax";
-    private final static String DISMAX = "dismax";
-    private final static String LUCENE = "lucene";
-    private final static String TERMS = "terms";
-    private final static String TERM = "term";
-    private final static String TIE = "tie";
+    private static final String DEFAULT_FIELD = "defaultField";
+    private static final String FIELD = "field";
+    private static final String QUERY_STRING = "queryString";
+    private static final String QUERY_OPERATOR = "q.op";
+    private static final String AND = "AND";
+    private static final String OR = "OR";
+    private static final String MULTI_MATCH = "multi_match";
+    private static final String EDISMAX = "edismax";
+    private static final String DISMAX = "dismax";
+    private static final String LUCENE = "lucene";
+    private static final String TERMS = "terms";
+    private static final String TERM = "term";
+    private static final String TIE = "tie";
+    private static final String BOOL = "bool";
+    private static final String BOOLEAN = "boolean";
 
 
     @Override
@@ -83,34 +89,53 @@ public class QuerySerializer extends AbstractFeatureSerializer
                          JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
         JsonObject root = jsonElement.getAsJsonObject();
         String queryType = JsonUtil.getSingleChildName(root);
+        return buildQuery(queryType, root.get(queryType).getAsJsonObject());
+    }
+
+    private Query buildQuery(String queryType, JsonObject jsonObj) {
         if (queryType.equals(EDISMAX)) {
-            return buildEDisMax(root.get(queryType).getAsJsonObject());
+            return buildEDisMax(jsonObj);
         } else if (queryType.equals(DISMAX)) {
-            return buildDisMax(root.get(queryType).getAsJsonObject());
+            return buildDisMax(jsonObj);
         } else if (queryType.equals(LUCENE)) {
-            JsonObject obj = root.get(queryType).getAsJsonObject();
-            String defaultField = (obj.has(DEFAULT_FIELD)) ? obj.get(DEFAULT_FIELD).getAsString() : "";
-            String qOpString = (obj.has(QUERY_OPERATOR))? obj.get(QUERY_OPERATOR).getAsString() : null;
-            String queryString = obj.get(QUERY_STRING).getAsString();
+            String defaultField = (jsonObj.has(DEFAULT_FIELD)) ? jsonObj.get(DEFAULT_FIELD).getAsString() : "";
+            String qOpString = (jsonObj.has(QUERY_OPERATOR))? jsonObj.get(QUERY_OPERATOR).getAsString() : null;
+            String queryString = jsonObj.get(QUERY_STRING).getAsString();
 
             QueryOperator.OPERATOR qop = (qOpString == null) ? LuceneQuery.DEFAULT_QUERY_OPERATOR :
                     (qOpString.equalsIgnoreCase(AND) ? QueryOperator.OPERATOR.AND : QueryOperator.OPERATOR.OR);
             return new LuceneQuery(defaultField, queryString, qop);
-        } else if (queryType.equals(TERMS)) {
-            JsonObject obj = root.get(queryType).getAsJsonObject();
-            List<String> terms = toStringList(obj.get(TERMS));
-            String field = obj.get("field").getAsString();
+        } else if (queryType.equals(TERMS)) { ;
+            List<String> terms = toStringList(jsonObj.get(TERMS));
+            String field = jsonObj.get(FIELD).getAsString();
             return new TermsQuery(field, terms);
         } else if (queryType.equals(TERM)) {
-            JsonObject obj = root.get(queryType).getAsJsonObject();
-            String term = obj.get(TERM).getAsString();
-            String field = obj.get(FIELD).getAsString();
+            String term = jsonObj.get(TERM).getAsString();
+            String field = jsonObj.get(FIELD).getAsString();
             return new TermQuery(field, term);
         } else if (queryType.equals(MULTI_MATCH)) {
-            return buildMultiMatch(root.get(queryType).getAsJsonObject());
+            return buildMultiMatch(jsonObj);
+        } else if (queryType.equals(BOOL) || queryType.equals(BOOLEAN)) {
+            return buildBoolean(jsonObj);
         } else {
             throw new IllegalArgumentException("I regret I don't yet support: "+queryType);
         }
+
+    }
+
+    private Query buildBoolean(JsonObject obj) {
+        BooleanQuery bq = new BooleanQuery();
+        for (BooleanClause.OCCUR occur : BooleanClause.OCCUR.values()) {
+            JsonArray qArr = obj.getAsJsonArray(occur.toString().toLowerCase(Locale.US));
+            if (qArr != null) {
+                for (JsonElement el : qArr) {
+                    String childType = JsonUtil.getSingleChildName((JsonObject)el);
+                    Query child = buildQuery(childType, (JsonObject)((JsonObject)el).get(childType));
+                    bq.addClause(new BooleanClause(occur, child));
+                }
+            }
+        }
+        return bq;
     }
 
     Query buildMultiMatch(JsonObject obj) {
@@ -287,6 +312,10 @@ public class QuerySerializer extends AbstractFeatureSerializer
 
     @Override
     public JsonElement serialize(Query query, Type type, JsonSerializationContext jsonSerializationContext) {
+        return serializeQuery(query);
+    }
+
+    private JsonElement serializeQuery(Query query) {
         JsonObject jsonObject = new JsonObject();
         if (query instanceof EDisMaxQuery) {
             jsonObject.add(EDISMAX, serializeEDisMax((EDisMaxQuery)query));
@@ -300,10 +329,24 @@ public class QuerySerializer extends AbstractFeatureSerializer
             jsonObject.add(TERM, serializeTerm((TermQuery)query));
         } else if (query instanceof MultiMatchQuery) {
             jsonObject.add(MULTI_MATCH, serializeMultiMatchQuery((MultiMatchQuery)query));
+        } else if (query instanceof BooleanQuery) {
+            jsonObject.add(BOOL, serializeBoolean((BooleanQuery)query));
         } else {
             throw new IllegalArgumentException("I'm sorry, I don't yet support: "+query.getClass());
         }
         return jsonObject;
+    }
+
+    private JsonElement serializeBoolean(BooleanQuery bq) {
+        JsonObject ret = new JsonObject();
+        for (BooleanClause.OCCUR occur : BooleanClause.OCCUR.values()) {
+            JsonArray jsonArray = new JsonArray();
+            for (Query q : bq.get(occur)) {
+                jsonArray.add(serializeQuery(q));
+            }
+            ret.add(occur.toString().toLowerCase(Locale.US), jsonArray);
+        }
+        return ret;
     }
 
     private JsonElement serializeMultiMatchQuery(MultiMatchQuery query) {

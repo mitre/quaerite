@@ -35,12 +35,37 @@ public class BooleanQuery extends Query {
     }
 
     @Override
-    public Object deepCopy() {
-        return null;
+    public BooleanQuery deepCopy() {
+        BooleanQuery bq = new BooleanQuery();
+        for (BooleanClause c : clauses) {
+            bq.addClause(new BooleanClause(c.getOccur(), c.getQuery()));
+        }
+        return bq;
     }
 
     @Override
     public void setQueryString(String queryString) {
         //TODO -- need to figure this one out.
+    }
+
+    public List<Query> get(BooleanClause.OCCUR occur) {
+        List<Query> ret = new ArrayList<>();
+        for (BooleanClause clause : clauses) {
+            if (clause.getOccur().equals(occur)) {
+                ret.add(clause.getQuery());
+            }
+        }
+        return ret;
+    }
+
+    public List<BooleanClause> getClauses() {
+        return clauses;
+    }
+
+    @Override
+    public String toString() {
+        return "BooleanQuery{" +
+                "clauses=" + clauses +
+                '}';
     }
 }

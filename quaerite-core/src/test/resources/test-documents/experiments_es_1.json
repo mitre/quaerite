@@ -48,37 +48,31 @@
   ],
   "experiments": {
     "title": {
+      "name": "title",
       "searchServerUrl": "http://localhost:9200/tmdb",
       "query": {
-        "multi_match": {
-          "type": "best_fields",
-          "qf": [
-            "title",
-			"people",
-			"box_scores"
-          ]
-        }
-      }
-    },
-    "title_min": {
-      "searchServerUrl": "http://localhost:9200/tmdb",
-      "query": {
-        "multi_match": {
-          "type": "best_fields",
-          "qf": [
-            "title.min"
+        "bool": {
+          "should": [
+            {
+              "multi_match": {
+                "type": "best_fields",
+                "qf": [
+                  "title"
+                ]
+              }
+            }
           ],
-          "bq": []
-        }
-      }
-    },
-	"title_porter": {
-      "searchServerUrl": "http://localhost:9200/tmdb",
-      "query": {
-        "multi_match": {
-          "type": "best_fields",
-          "qf": [
-            "title.porter"
+          "must_not": [
+            {
+              "terms": {
+                "field": "not_field",
+                "terms": [
+                  "good",
+                  "bad",
+                  "ugly"
+                ]
+              }
+            }
           ]
         }
       }

@@ -33,11 +33,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.mitre.quaerite.core.ExperimentConfig;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.features.MultiMatchType;
+import org.mitre.quaerite.core.features.TIE;
 import org.mitre.quaerite.core.features.WeightableField;
+import org.mitre.quaerite.core.queries.BooleanClause;
+import org.mitre.quaerite.core.queries.BooleanQuery;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
@@ -144,6 +146,62 @@ public class TestESClient {
     }
 
     @Test
+    public void testFilterQuery() throws Exception {
+        SearchClient client = SearchClientFactory.getClient(TMDB_URL);
+        LuceneQuery q = new LuceneQuery("title", "psycho");
+        BooleanQuery bq = new BooleanQuery();
+        bq.addClause(new BooleanClause(BooleanClause.OCCUR.MUST_NOT,
+                new TermQuery("_id", "539")));
+        bq.addClause(new BooleanClause(BooleanClause.OCCUR.SHOULD,
+                q));
+        QueryRequest queryRequest = new QueryRequest(bq,
+                null, client.getDefaultIdField());
+
+//        queryRequest.addFilterQueries(bq);
+        queryRequest.setNumResults(100);
+        ResultSet result = client.search(queryRequest);
+        Set<String> hits = new HashSet<>();
+        for (int i = 0; i < result.size(); i++) {
+            hits.add(result.get(i));
+        }
+        assertEquals(7, hits.size());
+        assertTrue(hits.contains("35683"));
+
+    }
+
+    @Test
+    public void testBoolean() throws Exception {
+        SearchClient client = SearchClientFactory.getClient(TMDB_URL);
+        MultiMatchQuery q1 = new MultiMatchQuery("brown fox");
+        q1.getQF().add(new WeightableField("title"));
+        q1.getQF().add(new WeightableField("overview"));
+        q1.setMultiMatchType(new MultiMatchType("best_fields"));
+        q1.setTie(new TIE(0.3f));
+
+        MultiMatchQuery q2 = new MultiMatchQuery("elephant");
+        q2.getQF().add(new WeightableField("title"));
+        q2.getQF().add(new WeightableField("overview"));
+        q2.setMultiMatchType(new MultiMatchType("best_fields"));
+        q2.setTie(new TIE(0.3f));
+
+        BooleanQuery bq = new BooleanQuery();
+        bq.addClause(new BooleanClause(BooleanClause.OCCUR.SHOULD, q1));
+        bq.addClause(new BooleanClause(BooleanClause.OCCUR.SHOULD, q2));
+        QueryRequest queryRequest = new QueryRequest(bq,
+                null, client.getDefaultIdField());
+        queryRequest.addFieldsToRetrieve("_id");
+        queryRequest.setNumResults(1000);
+        ResultSet result = client.search(queryRequest);
+        Set<String> hits = new HashSet<>();
+        for (int i = 0; i < result.size(); i++) {
+            hits.add(result.get(i));
+        }
+        assertEquals(176, hits.size());
+        assertTrue(hits.contains("81579"));
+        assertTrue(hits.contains("42254"));
+
+    }
+    @Test
     public void testGetDocs() throws Exception {
         Set<String> ids = new HashSet<>();
         ids.addAll(Arrays.asList("539 11252 1359 10576 12662".split(" ")));
@@ -225,5 +283,36 @@ public class TestESClient {
     public void testDeleteAll() throws Exception {
         SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
         searchClient.deleteAll();
+    }
+
+    @Disabled("for development")
+    @Test
+    public void testRaw() throws Exception {
+        String json =
+                "{\n" +
+                        "\n" +
+                        "  \"query\": {\n" +
+                        "  \"bool\":{\n" +
+                        "    \"should\":[\n" +
+                        "    {\"multi_match\" : {\n" +
+                        "      \"query\":      \"brown fox\",\n" +
+                        "      \"type\":       \"best_fields\",\n" +
+                        "      \"fields\":     [ \"title\", \"overview\" ],\n" +
+                        "      \"tie_breaker\": 0.3\n" +
+                        "    }},\n" +
+                        "\t{\"multi_match\" : {\n" +
+                        "      \"query\":      \"elephant\",\n" +
+                        "      \"type\":       \"best_fields\",\n" +
+                        "      \"fields\":     [ \"title\", \"overview\" ],\n" +
+                        "      \"tie_breaker\": 0.3\n" +
+                        "    }}\n" +
+                        "\t]\n" +
+                        "  }\n" +
+                        "  }\n" +
+                        "}";
+        SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
+        String url = TMDB_URL+"/_search";
+        JsonResponse r = searchClient.postJson(url, json);
+        System.out.println(r);
     }
 }

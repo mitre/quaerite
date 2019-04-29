@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -35,11 +36,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.mitre.quaerite.core.ExperimentConfig;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.features.WeightableField;
-import org.mitre.quaerite.core.queries.DisMaxQuery;
+import org.mitre.quaerite.core.queries.BooleanClause;
+import org.mitre.quaerite.core.queries.BooleanQuery;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
@@ -123,8 +124,31 @@ public class ESClient extends SearchClient {
     }
 
     private Map<String, Object> getQueryMap(QueryRequest queryRequest, List<String> fieldsToRetrieve) {
-        Map<String, Object> queryMap;
-        Query query = queryRequest.getQuery();
+        Query fullQuery = queryRequest.getQuery();
+        Query q = queryRequest.getQuery();
+        if (queryRequest.getFilterQueries().size() > 0) {
+            fullQuery = new BooleanQuery();
+            ((BooleanQuery)fullQuery).addClause(
+                    new BooleanClause(BooleanClause.OCCUR.SHOULD, q));
+            for (Query filterQuery : queryRequest.getFilterQueries()) {
+                ((BooleanQuery)fullQuery).addClause(
+                        new BooleanClause(BooleanClause.OCCUR.FILTER, filterQuery));
+            }
+        }
+
+        Map<String, Object> queryMap = buildQuery(fullQuery);
+        Map<String, Object> overallMap = wrapAMap("query", queryMap);
+
+        if (fieldsToRetrieve.size() > 0) {
+            overallMap.put("_source", fieldsToRetrieve);
+        }
+        overallMap.put("size", queryRequest.getNumResults());
+        overallMap.put("from", queryRequest.getStart());
+        return overallMap;
+    }
+
+    private Map<String, Object> buildQuery(Query query) {
+        Map<String, Object> queryMap = new HashMap<>();
         if (query instanceof MultiMatchQuery) {
             queryMap = getMultiMatchMap((MultiMatchQuery)query);
         } else if (query instanceof TermsQuery) {
@@ -148,19 +172,27 @@ public class ESClient extends SearchClient {
             lQ.put("query", luceneQuery.getQueryString());
             lQ.put("default_operator", luceneQuery.getQueryOperator().toString());
             queryMap = wrapAMap("query_string", lQ);
+        } else if (query instanceof BooleanQuery) {
+            return getBooleanMap((BooleanQuery)query);
         } else {
             throw new IllegalArgumentException("I regret I don't yet know how to handle queries of type: "+ query.getClass());
         }
-        Map<String, Object> overallMap = wrapAMap("query", queryMap);
-
-        if (fieldsToRetrieve.size() > 0) {
-            overallMap.put("_source", fieldsToRetrieve);
-        }
-        overallMap.put("size", queryRequest.getNumResults());
-        overallMap.put("from", queryRequest.getStart());
-        return overallMap;
+        return queryMap;
     }
 
+    private Map<String, Object> getBooleanMap(BooleanQuery bq) {
+        Map<String, Object> queryMap = new LinkedHashMap<>();
+        for (BooleanClause.OCCUR occur : BooleanClause.OCCUR.values()) {
+            List<Map<String, Object>> clauses = new ArrayList<>();
+            for (Query q : bq.get(occur)) {
+                clauses.add(buildQuery(q));
+            }
+            if (clauses.size() > 0) {
+                queryMap.put(occur.toString().toLowerCase(Locale.US), clauses);
+            }
+        }
+        return wrapAMap("bool", queryMap);
+    }
 
     private Map<String, Object> getMultiMatchMap(MultiMatchQuery query) {
         String type = query.getMultiMatchType().getFeature();

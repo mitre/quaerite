@@ -18,10 +18,10 @@ package org.mitre.quaerite.core.queries;
 
 public class BooleanClause {
 
-    enum OCCUR {
+    public enum OCCUR {
         SHOULD,
         MUST,
-        NOT,
+        MUST_NOT,
         FILTER
     }
 
@@ -40,5 +40,13 @@ public class BooleanClause {
 
     public Query getQuery() {
         return query;
+    }
+
+    @Override
+    public String toString() {
+        return "BooleanClause{" +
+                "occur=" + occur +
+                ", query=" + query +
+                '}';
     }
 }

@@ -156,9 +156,7 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_es_1.json")
         );
-        experimentFactory.getFeatureFactories().get("queries");
         QueryFactory<MultiMatchQuery> qf = (QueryFactory<MultiMatchQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
-
 
         List<MultiMatchQuery> multiMatchQueries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {

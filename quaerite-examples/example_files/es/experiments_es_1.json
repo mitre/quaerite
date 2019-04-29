@@ -47,28 +47,39 @@
     }
   ],
   "experiments": {
-    "title": {
-      "name": "title",
+    "title_overview1": {
       "searchServerUrl": "http://localhost:9200/tmdb",
       "query": {
         "multi_match": {
           "type": "best_fields",
           "qf": [
-            "title"
+            "title",
+            "overview"
           ]
         }
       }
     },
-    "overview": {
-      "name": "overview",
+    "title_overview2": {
       "searchServerUrl": "http://localhost:9200/tmdb",
       "query": {
         "multi_match": {
           "type": "best_fields",
           "qf": [
-            "overview"
-          ],
-          "bq": []
+            "title^10",
+            "overview^1"
+          ]
+        }
+      }
+    },
+    "title_overview3": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "cross_fields",
+          "qf": [
+            "title^10",
+            "overview^1"
+          ]
         }
       }
     },

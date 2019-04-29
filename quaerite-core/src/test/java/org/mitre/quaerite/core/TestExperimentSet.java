@@ -35,6 +35,7 @@ import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
+import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.scoreaggregators.NDCGAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 
@@ -105,6 +106,21 @@ public class TestExperimentSet {
         assertEquals(2, fields.size());
         assertEquals("people", fields.get(0).getFeature());
         assertEquals("title", fields.get(1).getFeature());
+
+    }
+
+    @Test
+    public void testBoolean() throws Exception {
+        ExperimentSet experimentSet = null;
+        try (Reader reader =
+                     new BufferedReader(new InputStreamReader(
+                             getClass().getResourceAsStream("/test-documents/experiments_es_1.json"),
+                             StandardCharsets.UTF_8))) {
+            experimentSet = ExperimentSet.fromJson(reader);
+        }
+        System.out.println(experimentSet);
+        Query q = experimentSet.getExperiments().get("title").getQuery();
+        System.out.println(q);
 
     }
 
