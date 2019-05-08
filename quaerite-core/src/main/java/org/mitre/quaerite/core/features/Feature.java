@@ -17,9 +17,6 @@
 package org.mitre.quaerite.core.features;
 
 
-
-import org.apache.commons.lang3.tuple.Pair;
-
 public interface Feature<T> {
 
     /**
@@ -27,8 +24,6 @@ public interface Feature<T> {
      * @return
      */
     String getName();
-
-    Pair<T, T> crossover(T parentB);
 
     //this should be a deep copy
     T deepCopy();

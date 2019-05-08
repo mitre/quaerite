@@ -18,6 +18,7 @@ package org.mitre.quaerite.core.features.factories;
 
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.features.Feature;
 
 public interface FeatureFactory<T extends Feature> {
@@ -34,4 +35,6 @@ public interface FeatureFactory<T extends Feature> {
     T random();
 
     T mutate(T feature, double probability, double amplitude);
+
+    Pair<T,T> crossover(T parentA, T parentB);
 }

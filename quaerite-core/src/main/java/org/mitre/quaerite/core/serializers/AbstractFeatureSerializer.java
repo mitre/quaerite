@@ -23,9 +23,14 @@ import java.util.Locale;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonParseException;
-import org.mitre.quaerite.core.features.StringFeature;
+import com.google.gson.JsonPrimitive;
+import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.WeightableField;
+import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
+import org.mitre.quaerite.core.features.factories.QueryFactory;
+import org.mitre.quaerite.core.queries.Query;
 
 public class AbstractFeatureSerializer {
     static String DEFAULT_CLASS_NAME_SPACE = "org.mitre.quaerite.core.features.";
@@ -37,6 +42,9 @@ public class AbstractFeatureSerializer {
             } else {
                 clazzName = clazzName.substring(0,1).toUpperCase(Locale.US)+
                         clazzName.substring(1);
+            }
+            if (clazzName.endsWith("S")) {
+                clazzName = clazzName.substring(0, clazzName.length()-1);
             }
             return DEFAULT_CLASS_NAME_SPACE + clazzName;
         }
@@ -111,13 +119,18 @@ public class AbstractFeatureSerializer {
         }
     }
 
-
-    JsonArray featureListJsonArr(List<Object> features) {
-        JsonArray arr = new JsonArray();
-        for (Object w : features) {
-            arr.add(w.toString());
+    JsonElement stringListJsonArr(List<String> strings) {
+        if (strings.size() == 0) {
+            return JsonNull.INSTANCE;
+        } else if (strings.size() == 1) {
+            return new JsonPrimitive(strings.get(0));
+        } else {
+            JsonArray arr = new JsonArray();
+            for (String s : strings) {
+                arr.add(s);
+            }
+            return arr;
         }
-        return arr;
     }
 
     JsonArray floatListToJsonArr(List<Float> defaultWeights) {
@@ -129,6 +142,11 @@ public class AbstractFeatureSerializer {
     }
 
     Class determineClass(String clazzName) {
+        if (clazzName.equals(QueryFactory.NAME)) {
+            return Query.class;
+        } else if (clazzName.equals(CustomHandlerFactory.NAME)) {
+            return CustomHandler.class;
+        }
         if (!clazzName.contains(".")) {
             clazzName = getClassName(clazzName);
         }
@@ -138,4 +156,5 @@ public class AbstractFeatureSerializer {
             throw new JsonParseException(e.getMessage());
         }
     }
+
 }

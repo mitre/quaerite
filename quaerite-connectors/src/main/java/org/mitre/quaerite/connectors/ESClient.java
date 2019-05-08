@@ -22,7 +22,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -36,6 +38,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.features.WeightableField;
+import org.mitre.quaerite.core.queries.BooleanClause;
+import org.mitre.quaerite.core.queries.BooleanQuery;
+import org.mitre.quaerite.core.queries.LuceneQuery;
+import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
+import org.mitre.quaerite.core.queries.MultiMatchQuery;
+import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.queries.TermQuery;
+import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.stats.TokenDF;
 import org.mitre.quaerite.core.util.JsonUtil;
 
@@ -96,7 +107,7 @@ public class ESClient extends SearchClient {
         List<String> ids = new ArrayList<>();
         for (JsonElement el : hitArray) {
             JsonObject hit = (JsonObject) el;
-            String id = JsonUtil.getPrimitive(hit, getIdField(), "");
+            String id = JsonUtil.getPrimitive(hit, getDefaultIdField(), "");
             if (!StringUtils.isBlank(id)) {
                 ids.add(id);
             }
@@ -112,22 +123,100 @@ public class ESClient extends SearchClient {
         return GSON.toJson(queryMap);
     }
 
-    private Map<String, Object> getQueryMap(QueryRequest query, List<String> fieldsToRetrieve) {
-        Map<String, Object> multiMatchParams = new HashMap<>();
-        multiMatchParams.put("query", query.getQuery());
-        //parameterize this
-        multiMatchParams.put("type", "best_fields");
-        multiMatchParams.put("fields", query.getParameters().get("qf"));
-        if (query.getParameters().get("tie") != null) {
-            multiMatchParams.put("tie_breaker", query.getParameters().get("tie"));
+    private Map<String, Object> getQueryMap(QueryRequest queryRequest, List<String> fieldsToRetrieve) {
+        Query fullQuery = queryRequest.getQuery();
+        Query q = queryRequest.getQuery();
+        if (queryRequest.getFilterQueries().size() > 0) {
+            fullQuery = new BooleanQuery();
+            ((BooleanQuery)fullQuery).addClause(
+                    new BooleanClause(BooleanClause.OCCUR.SHOULD, q));
+            for (Query filterQuery : queryRequest.getFilterQueries()) {
+                ((BooleanQuery)fullQuery).addClause(
+                        new BooleanClause(BooleanClause.OCCUR.FILTER, filterQuery));
+            }
         }
-        Map<String, Object> multiMatch = wrapAMap("multi_match", multiMatchParams);
-        Map<String, Object> queryMap = wrapAMap("query", multiMatch);
+
+        Map<String, Object> queryMap = buildQuery(fullQuery);
+        Map<String, Object> overallMap = wrapAMap("query", queryMap);
 
         if (fieldsToRetrieve.size() > 0) {
-            queryMap.put("_source", fieldsToRetrieve);
+            overallMap.put("_source", fieldsToRetrieve);
+        }
+        overallMap.put("size", queryRequest.getNumResults());
+        overallMap.put("from", queryRequest.getStart());
+        return overallMap;
+    }
+
+    private Map<String, Object> buildQuery(Query query) {
+        Map<String, Object> queryMap = new HashMap<>();
+        if (query instanceof MultiMatchQuery) {
+            queryMap = getMultiMatchMap((MultiMatchQuery)query);
+        } else if (query instanceof TermsQuery) {
+            Map<String, List<String>> tQ = new HashMap<>();
+            TermsQuery termsQuery = (TermsQuery)query;
+            tQ.put(termsQuery.getField(), termsQuery.getTerms());
+            queryMap = wrapAMap("terms", tQ);
+        } else if (query instanceof TermQuery) {
+            Map<String, String> tQ = new HashMap<>();
+            TermQuery termQuery = (TermQuery)query;
+            tQ.put(termQuery.getField(), termQuery.getTerm());
+            queryMap = wrapAMap("term", tQ);
+        } else if (query instanceof MatchAllDocsQuery) {
+            queryMap = wrapAMap("match_all", Collections.EMPTY_MAP);
+        } else if (query instanceof LuceneQuery) {
+            //TODO -- replace this with a true query_string query
+            //that allows multiple fields, etc.
+            Map<String, String> lQ = new HashMap<>();
+            LuceneQuery luceneQuery = (LuceneQuery) query;
+            lQ.put("default_field", luceneQuery.getDefaultField());
+            lQ.put("query", luceneQuery.getQueryString());
+            lQ.put("default_operator", luceneQuery.getQueryOperator().toString());
+            queryMap = wrapAMap("query_string", lQ);
+        } else if (query instanceof BooleanQuery) {
+            return getBooleanMap((BooleanQuery)query);
+        } else {
+            throw new IllegalArgumentException("I regret I don't yet know how to handle queries of type: "+ query.getClass());
         }
         return queryMap;
+    }
+
+    private Map<String, Object> getBooleanMap(BooleanQuery bq) {
+        Map<String, Object> queryMap = new LinkedHashMap<>();
+        for (BooleanClause.OCCUR occur : BooleanClause.OCCUR.values()) {
+            List<Map<String, Object>> clauses = new ArrayList<>();
+            for (Query q : bq.get(occur)) {
+                clauses.add(buildQuery(q));
+            }
+            if (clauses.size() > 0) {
+                queryMap.put(occur.toString().toLowerCase(Locale.US), clauses);
+            }
+        }
+        return wrapAMap("bool", queryMap);
+    }
+
+    private Map<String, Object> getMultiMatchMap(MultiMatchQuery query) {
+        String type = query.getMultiMatchType().getFeature();
+        Map<String, Object> queryMap = new LinkedHashMap<>();
+        queryMap.put("query", query.getQueryString());
+        queryMap.put("type", type);
+        List<String> fields = new ArrayList<>();
+        for (WeightableField f : query.getQF().getWeightableFields()) {
+            fields.add(f.toString());
+        }
+        queryMap.put("fields", fields);
+        if (query.getTie().getValue() > 0.0f) {
+            queryMap.put("tie_breaker", query.getTie().getValue());
+        }
+        if (query.getBoost().getValue() != 1.0f) {
+            queryMap.put("boost", query.getBoost().getValue());
+        }
+        if (!"phrase".equals(type) && !"cross_fields".equals(type)) {
+            if (query.getFuzziness().getValue() > 0.0f) {
+                queryMap.put("fuzziness", query.getFuzziness().getValue());
+            }
+        }
+
+        return wrapAMap("multi_match", queryMap);
     }
 
     @Override
@@ -165,9 +254,8 @@ public class ESClient extends SearchClient {
                         )
                 );
         aggsMap.put("size", "0");
-        if (!(StringUtils.isBlank(query.getQuery()) ||
-                "*:*".equals(query.getQuery()))) {
 
+        if (query.getQuery() != null && ! (query.getQuery() instanceof MatchAllDocsQuery)) {
             Map<String, Object> queryMap = getQueryMap(query, Collections.EMPTY_LIST);
             aggsMap.put("query", queryMap.get("query"));
         }
@@ -260,6 +348,11 @@ public class ESClient extends SearchClient {
         return destFields;
     }
 
+    @Override
+    public String getDefaultIdField() throws IOException, SearchClientException {
+        return _ID;
+    }
+
     private void addValuesForKey(JsonObject mappings, String key, Set<String> values) {
         if (mappings == null || mappings.isJsonNull()) {
             return;
@@ -274,10 +367,6 @@ public class ESClient extends SearchClient {
         }
     }
 
-    @Override
-    public String getIdField() throws IOException, SearchClientException {
-        return _ID;
-    }
 
 
     @Override
@@ -292,8 +381,8 @@ public class ESClient extends SearchClient {
 
     @Override
     public IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids,
-                                  int batchSize, int copierThreads, Collection<String> filterQueries) throws IOException, SearchClientException {
-        return new ESIdGrabber(getIdField(), ids, batchSize, copierThreads, filterQueries);
+                                  int batchSize, int copierThreads, Collection<Query> filterQueries) throws IOException, SearchClientException {
+        return new ESIdGrabber(getDefaultIdField(), ids, batchSize, copierThreads, filterQueries);
     }
 
     @Override
@@ -339,7 +428,8 @@ public class ESClient extends SearchClient {
 
     private class ESIdGrabber extends IdGrabber {
 
-        public ESIdGrabber(String idField, ArrayBlockingQueue<Set<String>> ids, int batchSize, int copierThreads, Collection<String> filterQueries) {
+        public ESIdGrabber(String idField, ArrayBlockingQueue<Set<String>> ids, int batchSize,
+                           int copierThreads, Collection<Query> filterQueries) {
             super(idField, ids, batchSize, copierThreads, filterQueries);
         }
 

@@ -60,4 +60,14 @@ public class JsonUtil {
         }
         return vals;
     }
+
+    public static String getSingleChildName(JsonObject object) {
+        if (object.keySet().size() != 1) {
+            throw new IllegalArgumentException("Expected only a single child, but found: "+object.keySet().size());
+        }
+        for (String s : object.keySet()) {
+            return s;
+        }
+        throw new IllegalArgumentException("Expected only a single child, but found: "+object.keySet().size());
+    }
 }

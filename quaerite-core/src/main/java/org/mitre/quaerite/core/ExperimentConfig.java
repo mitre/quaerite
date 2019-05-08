@@ -16,18 +16,21 @@
  */
 package org.mitre.quaerite.core;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class ExperimentConfig {
 
     public static final int DEFAULT_NUM_THREADS = 6;
-    public static final String DEFAULT_SEARCH_SERVER_ID_FIELD = "id";
 
     private int numThreads = DEFAULT_NUM_THREADS;
-    private String idField = DEFAULT_SEARCH_SERVER_ID_FIELD;
+    private String idField = StringUtils.EMPTY;
 
     public int getNumThreads() {
         return numThreads;
     }
 
+    //returns id field if customized in experiment config
+    //or empty string if nothing was specified
     public String getIdField() {
         return idField;
     }

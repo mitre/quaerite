@@ -25,15 +25,16 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.mitre.quaerite.core.features.ParamsMap;
+import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregatorListSerializer;
-import org.mitre.quaerite.core.serializers.ParamsSerializer;
+import org.mitre.quaerite.core.serializers.QuerySerializer;
 
 public class ExperimentSet {
 
     private static Gson GSON = new GsonBuilder().setPrettyPrinting()
             .registerTypeAdapter(ScoreAggregator.class, new ScoreAggregatorListSerializer.ScoreAggregatorSerializer())
-            .registerTypeHierarchyAdapter(ParamsMap.class, new ParamsSerializer())
+            .registerTypeHierarchyAdapter(Query.class, new QuerySerializer())
             .create();
 
     private transient int maxRows = -1;
@@ -52,8 +53,8 @@ public class ExperimentSet {
     }
 
 
-    public void addExperiment(String name, Experiment experiment) {
-        experiments.put(name, experiment);
+    public void addExperiment(Experiment experiment) {
+        experiments.put(experiment.getName(), experiment);
     }
 
     public void addScoreAggregator(ScoreAggregator scoreAggregator) {
@@ -89,14 +90,18 @@ public class ExperimentSet {
         for (String experimentName : experiments) {
             Experiment experiment = getExperiment(experimentName);
             if (experiment != null) {
-                tmpExperimentSet.addExperiment(experimentName, experiment);
+                tmpExperimentSet.addExperiment(experiment);
             }
         }
         return GSON.toJson(tmpExperimentSet);
     }
 
     public static ExperimentSet fromJson(Reader reader) {
-        return GSON.fromJson(reader, ExperimentSet.class);
+        ExperimentSet experimentSet = GSON.fromJson(reader, ExperimentSet.class);
+        for (Map.Entry<String, Experiment> e : experimentSet.getExperiments().entrySet()) {
+            e.getValue().setName(e.getKey());
+        }
+        return experimentSet;
     }
 
     public Experiment getExperiment(String experimentName) {

@@ -23,12 +23,12 @@ public class BQ extends StringListFeature<BQ> {
 
     private static final String NAME = "bq";
 
-    public BQ(List<String> features, int minSetSize, int maxSetSize) {
-        super(NAME, features, minSetSize, maxSetSize);
+    public BQ(List<String> features) {
+        super(NAME, features);
     }
 
     @Override
-    BQ build(List<String> strings, int minSetSize, int maxSetSize) {
-        return new BQ(strings, minSetSize, maxSetSize);
+    public BQ build(List<String> strings) {
+        return new BQ(strings);
     }
 }

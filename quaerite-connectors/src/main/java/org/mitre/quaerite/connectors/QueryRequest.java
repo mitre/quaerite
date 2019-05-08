@@ -17,27 +17,38 @@
 package org.mitre.quaerite.connectors;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+
+
+import org.mitre.quaerite.core.features.CustomHandler;
+import org.mitre.quaerite.core.queries.Query;
 
 public class QueryRequest {
 
-    private Map<String, List<String>> parameters = new HashMap<>();
+    enum SORT_ORDER {
+        ASC,
+        DESC
+    }
     private String facetField = null;
-    private List<String> fields = new ArrayList<>();
+    private List<String> fieldsToRetrieve = new ArrayList<>();
     private int facetLimit = 10;
-    private final String query;
-    private final String customHandler;
+    private final Query query;
+    private final List<Query> filterQueries = new ArrayList<>();
+    private final CustomHandler customHandler;
     private final String idField;
+    private int start = 0;
     private int numResults = 10;
+    private String sortField;
+    private SORT_ORDER sortOrder;
 
-    public QueryRequest(String query) {
+    public QueryRequest(Query query) {
         this(query, null, null);
     }
 
-    public QueryRequest(String query, String customHandler, String idField) {
+    public QueryRequest(Query query, CustomHandler customHandler, String idField) {
         this.query = query;
         this.customHandler = customHandler;
         this.idField = idField;
@@ -47,22 +58,9 @@ public class QueryRequest {
         this.numResults = numResults;
     }
 
-    public void addParameter(String param, String value) {
-        List<String> values = parameters.get(param);
-        if (values == null) {
-            values = new ArrayList<>();
-        }
-        values.add(value);
-        parameters.put(param, values);
-    }
 
-    public Map<String, List<String>> getParameters() {
-        //defensively copy
-        Map<String, List<String>> ret = new HashMap<>(parameters);
-        return ret;
-    }
 
-    public String getQuery() {
+    public Query getQuery() {
         return query;
     }
 
@@ -78,7 +76,7 @@ public class QueryRequest {
      *
      * @return the custom handler or null if it doesn't exist
      */
-    public String getCustomHandler() {
+    public CustomHandler getCustomHandler() {
         return customHandler;
     }
 
@@ -102,25 +100,65 @@ public class QueryRequest {
     @Override
     public String toString() {
         return "QueryRequest{" +
-                "parameters=" + parameters +
-                ", facetField=" + facetField +
+                ", facetField='" + facetField + '\'' +
+                ", fieldsToRetrieve=" + fieldsToRetrieve +
                 ", facetLimit=" + facetLimit +
-                ", query='" + query + '\'' +
+                ", query=" + query +
+                ", filterQueries=" + filterQueries +
                 ", customHandler='" + customHandler + '\'' +
                 ", idField='" + idField + '\'' +
                 ", numResults=" + numResults +
                 '}';
     }
 
-    public void addField(String field) {
-        fields.add(field);
+    public List<String> getFieldsToRetrieve() {
+        return fieldsToRetrieve;
     }
 
-    public List<String> getFields() {
-        return fields;
+    public void addFieldsToRetrieve(String ... fields) {
+        addFieldsToRetrieve(Arrays.asList(fields));
     }
 
-    public void addFields(Set<String> fields) {
-        this.fields.addAll(fields);
+    public void addFieldsToRetrieve(Collection<String> fieldsToRetrieve) {
+        this.fieldsToRetrieve.addAll(fieldsToRetrieve);
     }
+
+    public void addFilterQueries(Query ... filterQueries) {
+        addFilterQueries(Arrays.asList(filterQueries));
+    }
+
+    public void addFilterQueries(Collection<Query> filterQueries) {
+        this.filterQueries.addAll(filterQueries);
+    }
+
+
+    public String getSortField() {
+        return sortField;
+    }
+
+    public SORT_ORDER getSortOrder() {
+        return sortOrder;
+    }
+
+    /**
+     *
+     * @param start first row to return
+     */
+    public void setStart(int start) {
+        this.start = start;
+    }
+
+    public int getStart() {
+        return start;
+    }
+
+    public void setSort(String sortField, SORT_ORDER sortOrder) {
+        this.sortField = sortField;
+        this.sortOrder = sortOrder;
+    }
+
+    public List<Query> getFilterQueries() {
+        return filterQueries;
+    }
+
 }

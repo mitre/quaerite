@@ -16,10 +16,12 @@
  */
 package org.mitre.quaerite.core.features.factories;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.features.FloatFeature;
 import org.mitre.quaerite.core.util.MathUtil;
 
@@ -31,9 +33,11 @@ public class FloatFeatureFactory<T extends FloatFeature>
     private final float min;
     private final float max;
     List<Float> floats;
+    private final Class clazz;
 
-    public FloatFeatureFactory(String name, List<Float> floats) {
-        super(name);
+    public FloatFeatureFactory(Class clazz, List<Float> floats) {
+        super(clazz.getSimpleName());
+        this.clazz = clazz;
         this.floats = floats;
         if (floats.size() > 0) {
             float tmpMin = floats.get(0);
@@ -57,14 +61,16 @@ public class FloatFeatureFactory<T extends FloatFeature>
     @Override
     public T random() {
         float f = floats.get(random.nextInt(floats.size()));
-        return (T)new FloatFeature(getName(), f);
+        return newInstance(f);
     }
+
+
 
     @Override
     public List<T> permute(int maxSize) {
         List<T> ret = new ArrayList<>();
         for (float f : floats) {
-            ret.add((T)new FloatFeature(getName(), f));
+            ret.add(newInstance(f));
         }
         return ret;
     }
@@ -77,10 +83,27 @@ public class FloatFeatureFactory<T extends FloatFeature>
     @Override
     public T mutate(T floatFeature, double probability, double amplitude) {
         if (MathUtil.RANDOM.nextDouble() <= probability) {
-            return (T)new FloatFeature(
-                    floatFeature.getName(), MathUtil.calcMutatedWeight(floatFeature.getValue(), min, max, amplitude));
+            return newInstance(MathUtil.calcMutatedWeight(floatFeature.getValue(), min, max, amplitude));
         } else {
-            return floatFeature;
+            return newInstance(floatFeature.getValue());
+        }
+    }
+
+    @Override
+    public Pair<T, T> crossover(T parentA, T parentB) {
+        if (MathUtil.RANDOM.nextFloat() > 0.5) {
+            return Pair.of(parentB, parentA);
+        } else {
+            return Pair.of(parentA, parentB);
+        }
+    }
+
+    private T newInstance(float f) {
+        try {
+            Constructor cstr = clazz.getConstructor(float.class);
+            return (T)cstr.newInstance(f);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
         }
     }
 }

@@ -18,10 +18,12 @@
 package org.mitre.quaerite;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
@@ -32,11 +34,11 @@ import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
-import org.mitre.quaerite.core.features.FQ;
-import org.mitre.quaerite.core.features.SimpleStringFeature;
-import org.mitre.quaerite.core.features.SimpleStringListFeature;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
+import org.mitre.quaerite.core.queries.EDisMaxQuery;
+import org.mitre.quaerite.core.queries.LuceneQuery;
+import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.scoreaggregators.AtLeastOneHitAtKAggregator;
 import org.mitre.quaerite.db.ExperimentDB;
 
@@ -56,15 +58,21 @@ public class TestExperimentDB {
     @Test
     public void testBasicDB() throws Exception {
         ExperimentDB db = ExperimentDB.open(DB_DIR);
-        Experiment experiment = new Experiment("test1", "http://solr");
+
         WeightableListFeature weightableListFeature = new WeightableListFeature("qf");
         weightableListFeature.add(new WeightableField("f1^2"));
         weightableListFeature.add(new WeightableField("f2^5"));
         weightableListFeature.add(new WeightableField("f3^10"));
 
-        experiment.addParam("qf", weightableListFeature);
-        experiment.addParam("fq", new SimpleStringListFeature("fq",
-                Arrays.asList("fq1", "fq2"), 0, 2));
+        EDisMaxQuery q = new EDisMaxQuery("actualQuery");
+        q.getQF().addAll(weightableListFeature.getWeightableFields());
+        Experiment experiment = new Experiment("test1", "http://solr", q);
+
+        List<Query> filterQueries = new ArrayList<>();
+        for (String fq : new String[]{ "fq1", "fq2"}) {
+            filterQueries.add(new LuceneQuery("defaultField", fq));
+        }
+        experiment.addFilterQueries(filterQueries);
         db.addExperiment(experiment);
         db.addScoreAggregator(new AtLeastOneHitAtKAggregator(1));
         db.addScoreAggregator(new AtLeastOneHitAtKAggregator(3));
@@ -84,8 +92,11 @@ public class TestExperimentDB {
 
         assertEquals("test1", revivified.getName());
         assertEquals("http://solr", revivified.getSearchServerUrl());
-        assertEquals(3, ((WeightableListFeature)revivified.getParams("qf")).size());
-        assertEquals(2, ((FQ)revivified.getParams("fq")).size());
+        List<Query> filterQueries2 = revivified.getFilterQueries();
+        assertEquals(2, filterQueries2.size());
+        assertIterableEquals(filterQueries, filterQueries2);
+        EDisMaxQuery q2 = (EDisMaxQuery)revivified.getQuery();
+        assertEquals(q, q2);
         db.close();
 
         db = ExperimentDB.open(DB_DIR);

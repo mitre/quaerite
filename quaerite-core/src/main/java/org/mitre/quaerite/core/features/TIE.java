@@ -23,4 +23,9 @@ public class TIE extends FloatFeature {
     public TIE(float value) {
         super(NAME, value);
     }
+
+    @Override
+    public TIE deepCopy() {
+        return new TIE(getValue());
+    }
 }

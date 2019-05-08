@@ -44,6 +44,8 @@ import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientException;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.connectors.StoredDocument;
+import org.mitre.quaerite.core.queries.LuceneQuery;
+import org.mitre.quaerite.core.queries.Query;
 
 public class CopyIndex extends AbstractCLI {
 
@@ -128,8 +130,12 @@ public class CopyIndex extends AbstractCLI {
                 getString(commandLine, "whiteListFields", StringUtils.EMPTY));
         Set<String> blackListFields = splitComma(
                 getString(commandLine, "blackListFields", StringUtils.EMPTY));
-        Set<String> filterQueries = splitComma(
+        Set<String> filterQueryStrings = splitComma(
                 getString(commandLine, "fq", StringUtils.EMPTY));
+        Set<Query> filterQueries = new HashSet<>();
+        for (String q : filterQueryStrings) {
+            filterQueries.add(new LuceneQuery("", q));
+        }
 
         blackListFields = updateBlackList(srcClient, blackListFields);
 
@@ -173,13 +179,13 @@ public class CopyIndex extends AbstractCLI {
         return ret;
     }
 
-    private void execute(SearchClient srcClient, SearchClient destClient, Set<String> filterQueries, Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
+    private void execute(SearchClient srcClient, SearchClient destClient, Set<Query> filterQueries, Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
         ArrayBlockingQueue<Set<String>> idQueue = new ArrayBlockingQueue<>(100);
 
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads+1);
         ExecutorCompletionService<Integer> executorCompletionService = new ExecutorCompletionService<>(executorService);
-        String srcIdField = srcClient.getIdField();
-        String destIdField = destClient.getIdField();
+        String srcIdField = srcClient.getDefaultIdField();
+        String destIdField = destClient.getDefaultIdField();
 
         executorCompletionService.submit(srcClient.getIdGrabber(idQueue,
                 batchSize, numThreads, filterQueries));
@@ -221,8 +227,8 @@ public class CopyIndex extends AbstractCLI {
         private Copier(ArrayBlockingQueue<Set<String>> ids,
                        SearchClient src, SearchClient dest,
                        Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
-            this.srcIdField = src.getIdField();
-            this.destIdField = dest.getIdField();
+            this.srcIdField = src.getDefaultIdField();
+            this.destIdField = dest.getDefaultIdField();
             this.ids = ids;
             this.src = src;
             this.dest = dest;

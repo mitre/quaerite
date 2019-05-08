@@ -28,18 +28,22 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.mitre.quaerite.connectors.QueryRequest;
-import org.mitre.quaerite.connectors.SearchClient;
-import org.mitre.quaerite.connectors.SearchClientFactory;
-import org.mitre.quaerite.connectors.SolrClient;
-import org.mitre.quaerite.connectors.StoredDocument;
 import org.mitre.quaerite.core.FacetResult;
+import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.features.WeightableField;
+import org.mitre.quaerite.core.queries.DisMaxQuery;
+import org.mitre.quaerite.core.queries.EDisMaxQuery;
+import org.mitre.quaerite.core.queries.LuceneQuery;
+import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
+import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.queries.TermQuery;
+import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.stats.TokenDF;
 
 @Disabled("need to have Solr tmdb instance running")
 public class TestSolrClient {
 
-    private static String ALL_DOCS = "*:*";
+    private static Query ALL_DOCS = new MatchAllDocsQuery();
     private static String TMDB_URL = "http://localhost:8983/solr/tmdb";
 
     @Test
@@ -48,7 +52,7 @@ public class TestSolrClient {
         Set<String> copyFieldDests = client.getCopyFields();
         assertTrue(copyFieldDests.contains("tsss_directors"));
         assertTrue(copyFieldDests.contains("tsss_cast"));
-        assertEquals(19, copyFieldDests.size());
+        assertEquals(20, copyFieldDests.size());
     }
 
 
@@ -75,12 +79,34 @@ public class TestSolrClient {
         assertEquals(1, counts.get("haile gerima"));
         assertEquals(90, counts.get("dreamworks skg"));
 
-        queryRequest = new QueryRequest("red");
+        EDisMaxQuery q = new EDisMaxQuery("red");
+        q.getQF().add(new WeightableField("title"));
+        testRed(q);
+
+        DisMaxQuery disMaxQuery = new DisMaxQuery("red");
+        disMaxQuery.getQF().add(new WeightableField("title"));
+        testRed(disMaxQuery);
+
+        TermQuery tq = new TermQuery("title", "red");
+        testRed(tq);
+
+        TermsQuery tsq = new TermsQuery("title", Collections.singletonList("red"));
+        testRed(tsq);
+
+        LuceneQuery luceneQuery = new LuceneQuery("", "title:red");
+        testRed(luceneQuery);
+
+        luceneQuery = new LuceneQuery("title", "red");
+        testRed(luceneQuery);
+    }
+
+    private void testRed(Query q) throws Exception {
+        SearchClient client = SearchClientFactory.getClient(TMDB_URL);
+        QueryRequest queryRequest = new QueryRequest(q);
         queryRequest.setFacetLimit(20000);
-        queryRequest.addParameter("qf", "title");
         queryRequest.setFacetField("production_companies_facet");
-        result = client.facet(queryRequest);
-        counts = result.getFacetCounts();
+        FacetResult result = client.facet(queryRequest);
+        Map<String, Long> counts = result.getFacetCounts();
         assertEquals(15905, counts.size());
         assertEquals(2, counts.get("summit entertainment"));
         assertEquals(5, counts.get("paramount pictures"));
@@ -89,8 +115,14 @@ public class TestSolrClient {
     @Test
     public void testQuery() throws Exception {
         SearchClient client = SearchClientFactory.getClient(TMDB_URL);
-        QueryRequest queryRequest = new QueryRequest("title:psycho", null, "id");
-        System.out.println(client.search(queryRequest));
+        QueryRequest queryRequest = new QueryRequest(new LuceneQuery("title", "psycho"), null, "id");
+        ResultSet resultSet = client.search(queryRequest);
+        assertEquals(9, resultSet.getTotalHits());
+        for (String id : new String[]{
+                "539", "11252", "1359", "10576", "12662", "27723", "35683", "10726", "214250"
+        }) {
+            assertTrue(resultSet.getIds().contains(id));
+        }
     }
 
     @Test
@@ -181,6 +213,6 @@ public class TestSolrClient {
         SearchClient client = SearchClientFactory.getClient(TMDB_URL);
         List<String> tokens = client.analyze("title", s);
         assertEquals(3, tokens.size());
-        assertEquals("brün", tokens.get(2));
+        assertEquals("brün", tokens.get(1));
     }
 }

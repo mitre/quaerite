@@ -430,20 +430,11 @@ public class RunGA extends AbstractExperimentRunner {
                         List<ExperimentScorePair> fitnessProportions,
                         List<String> nextGenExpNames, ExperimentDB experimentDB) throws SQLException {
         Experiment parent = MathUtil.select(fitnessProportions);
-        LOG.trace("before mutation: " + parent.getAllFeatures());
-        ParamsMap paramsMap = parent.getAllFeatures().mutate(experimentFactory.getFeatureFactories(),
-                gaConfig.getMutationProbability(),
-                gaConfig.getMutationAmplitude());
-        LOG.trace("after mutation: " + paramsMap);
+        Experiment mutated = experimentFactory.mutate(parent, gaConfig.getMutationProbability(), gaConfig.getMutationAmplitude());
         String name = getTrainExperimentName(fold, generation, nextGenExpNames.size());
+        mutated.setName(name);
         nextGenExpNames.add(name);
-        for (Map.Entry<String, List<String>> constants : experimentFactory.getFixedParameters().entrySet()) {
-            paramsMap.put(constants.getKey(), new SimpleStringListFeature(
-                    constants.getKey(), constants.getValue(), 0, constants.getValue().size()
-            ));
-        }
-        Experiment child = new Experiment(name, paramsMap);
-        experimentDB.addExperiment(child);
+        experimentDB.addExperiment(mutated);
     }
 
     private void reproduce(int fold, int generation, List<ExperimentScorePair> fitnessProportions,
@@ -451,7 +442,8 @@ public class RunGA extends AbstractExperimentRunner {
         Experiment parent = MathUtil.select(fitnessProportions);
         LOG.trace("reproducing: " + parent);
         String name = getTrainExperimentName(fold, generation, nextGenExpNames.size());
-        Experiment child = new Experiment(name, parent.getAllFeatures());
+        Experiment child = parent.deepCopy();
+        child.setName(name);
         experimentDB.addExperiment(child);
         nextGenExpNames.add(name);
     }
@@ -468,23 +460,15 @@ public class RunGA extends AbstractExperimentRunner {
         if (tries == 5 && parentA.getName().equals(parentB.getName())) {
             LOG.warn("crossover with self: "+parentA.getName());
         }
-        Pair<ParamsMap, ParamsMap> pair = parentA.getAllFeatures()
-                .crossover(parentB.getAllFeatures());
         LOG.trace("crossing over: " + parentA + " : " + parentB);
+        Pair<Experiment, Experiment> pair = experimentFactory.crossover(parentA, parentB);
 
         String nameA = getTrainExperimentName(fold, generation, nextGenExpNames.size());
-        ParamsMap paramsMapA = pair.getLeft();
-        for (Map.Entry<String, List<String>> constants : experimentFactory.getFixedParameters().entrySet()) {
-            paramsMapA.put(constants.getKey(), new SimpleStringListFeature(
-                    constants.getKey(), constants.getValue(), 0, constants.getValue().size()
-            ));
-        }
+        pair.getLeft().setName(nameA);
 
         LOG.trace(parentA +
-                "\n+\n" + parentB + "\n->\n" + paramsMapA);
-        Experiment childA = new Experiment(nameA, paramsMapA);
-        LOG.trace("childA: " + childA);
-        experimentDB.addExperiment(childA);
+                "\n+\n" + parentB + "\n->\n" + pair.getLeft());
+        experimentDB.addExperiment(pair.getLeft());
         nextGenExpNames.add(nameA);
 
         if (nextGenExpNames.size() >= gaConfig.getPopulation()) {
@@ -492,24 +476,11 @@ public class RunGA extends AbstractExperimentRunner {
         }
 
         String nameB = getTrainExperimentName(fold, generation, nextGenExpNames.size());
-        ParamsMap paramsMapB = pair.getRight();
-        for (Map.Entry<String, List<String>> constants : experimentFactory.getFixedParameters().entrySet()) {
-            paramsMapB.put(constants.getKey(), new SimpleStringListFeature(
-                    constants.getKey(), constants.getValue(), 0, constants.getValue().size()
-            ));
-        }
-        Experiment childB = new Experiment(nameB, paramsMapB);
-        LOG.trace("childB: " + childB);
+        pair.getRight().setName(nameB);
+        LOG.trace("childB: " + pair.getRight());
 
         nextGenExpNames.add(nameB);
-        experimentDB.addExperiment(
-                childB);
-    }
-
-
-    static int calcListLength(int population) {
-        return (int)FastMath.ceil((1.0 + Math.sqrt(1.0+
-                (8.0*(double)population)))/2.0);
+        experimentDB.addExperiment(pair.getRight());
     }
 
     private String getSeedName(int fold, int i) {
@@ -526,23 +497,9 @@ public class RunGA extends AbstractExperimentRunner {
     }
 
     private void generateRandomSeeds(ExperimentFactory experimentFactory, GADB gadb) throws SQLException {
-        List<Experiment> experiments = new ArrayList<>();
-        for (int i = 0; i < gaConfig.getPopulation(); i++) {
-            Map<String, Feature> instanceFeatures = new HashMap<>();
-            for (String featureKey : experimentFactory.getFeatureFactories().keySet()) {
-                FeatureFactory featureFactory = experimentFactory.getFeatureFactories().get(featureKey);
-                instanceFeatures.put(featureKey, featureFactory.random());
-            }
-            for (Map.Entry<String, List<String>> e : experimentFactory.getFixedParameters().entrySet()) {
-                instanceFeatures.put(e.getKey(), new SimpleStringListFeature(e.getKey(), e.getValue(), 0, e.getValue().size()));
-            }
-            String name = "seed_"+i;
-            experiments.add(new Experiment(name, instanceFeatures));
-        }
         for (int fold = 0; fold < gaConfig.getNFolds(); fold++) {
-            for (int i = 0; i < experiments.size(); i++) {
-                Experiment ex = experiments.get(i);
-                ex.setName(getSeedName(fold, i));
+            for (int i = 0; i < gaConfig.getPopulation(); i++) {
+                Experiment ex = experimentFactory.generateRandomExperiment(getSeedName(fold, i));
                 gadb.addExperiment(ex);
             }
         }

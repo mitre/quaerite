@@ -17,62 +17,37 @@
 package org.mitre.quaerite.core;
 
 import java.io.Reader;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.mitre.quaerite.core.features.CustomHandler;
-import org.mitre.quaerite.core.features.Feature;
-import org.mitre.quaerite.core.features.ParamsMap;
-import org.mitre.quaerite.core.features.StringFeature;
-import org.mitre.quaerite.core.features.URL;
-import org.mitre.quaerite.core.serializers.ParamsSerializer;
+import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.serializers.QuerySerializer;
 
 
 public class Experiment {
 
-    public static final String URL_KEY = "url";
-    public static final String CUSTOM_HANDLER_KEY = "customHandler";
-
-
     private static Gson GSON = new GsonBuilder().setPrettyPrinting()
-            .registerTypeAdapter(ParamsMap.class, new ParamsSerializer())
+            .registerTypeAdapter(Query.class, new QuerySerializer())
             .create();
     private String name;
-    private final String searchServerUrl;
-    private final String customHandler;
-    ParamsMap params = new ParamsMap();
+    private String searchServerUrl;
+    private CustomHandler customHandler;
+    private Query query;
+    private final List<Query> filterQueries = new ArrayList<>();
 
-    public Experiment(String name, String searchServerUrl) {
-        this(name, searchServerUrl, null);
-    }
-    public Experiment(String name, String searchServerUrl, String customHandler) {
+    public Experiment(String name, String searchServerUrl, CustomHandler customHandler, Query query) {
         this.customHandler = customHandler;
         this.name = name;
         this.searchServerUrl = searchServerUrl;
+        this.query = query;
     }
 
-
-    public Experiment(String name, ParamsMap features) {
-        this(name, features.getParams());
-    }
-
-    public Experiment(String name, Map<String, Feature> features) {
-        this.name = name;
-        this.searchServerUrl = features.get(URL_KEY).toString();
-        this.customHandler = (features.containsKey(CUSTOM_HANDLER_KEY)) ?
-                features.get(CUSTOM_HANDLER_KEY).toString() : null;
-
-        for (Map.Entry<String, Feature> e : features.entrySet()) {
-            if (!e.getKey().equals(URL_KEY) && !e.getKey().equals(CUSTOM_HANDLER_KEY)) {
-                addParam(e.getKey(), e.getValue());
-            }
-        }
+    public Experiment(String name, String searchServerUrl, Query query) {
+        this(name, searchServerUrl, null, query);
     }
 
     //consider adding clone to experiment with a new name
@@ -80,37 +55,13 @@ public class Experiment {
         this.name = name;
     }
 
-    public void addParam(String key, Feature feature) {
-        if (key.equals("q")) {
-            throw new IllegalArgumentException("query is specified during initialization, not as a standard param!");
-        }
-        params.put(key, feature);
-    }
 
     public String toJson() {
         return GSON.toJson(this);
     }
 
-    public Map<String, Feature> getParams() {
-        //defensively copy
-        Map<String, Feature> ret = new HashMap<>();
-        for (Map.Entry<String, Feature> e : params.getParams().entrySet()) {
-            ret.put(e.getKey(), e.getValue());
-        }
-        return ret;
-    }
 
-    public ParamsMap getAllFeatures() {
-        ParamsMap ret = new ParamsMap();
-        for (Map.Entry<String, Feature> e : params.getParams().entrySet()) {
-            ret.put(e.getKey(), (Feature)e.getValue().deepCopy());
-        }
-        ret.put(URL_KEY, new URL(getSearchServerUrl()));
-        ret.put(CUSTOM_HANDLER_KEY, new CustomHandler(getCustomHandler()));
-        return ret;
-    }
-
-    public String getCustomHandler() {
+    public CustomHandler getCustomHandler() {
         return customHandler;
     }
 
@@ -131,18 +82,53 @@ public class Experiment {
         return searchServerUrl;
     }
 
-    public Feature getParams(String key) {
-        return params.getParams().get(key);
+    public Query getQuery() {
+        return query;
     }
+
+    public List<Query> getFilterQueries() {
+        //workaround for serialization that can leave a null filterqueries -- fix this at some point
+        if (filterQueries == null) {
+            return Collections.EMPTY_LIST;
+        }
+        return filterQueries;
+    }
+
+    public void addFilterQueries(List<Query> queries) {
+        filterQueries.addAll(queries);
+    }
+
 
     @Override
     public String toString() {
         return "Experiment{" +
                 "name='" + name + '\'' +
                 ", searchServerUrl='" + searchServerUrl + '\'' +
-                ", customHandler='" + customHandler + '\'' +
-                ", params=" + params +
+                ", customHandler=" + customHandler +
+                ", query=" + query +
+                ", filterQueries=" + filterQueries +
                 '}';
     }
 
+    public Experiment deepCopy() {
+        Experiment cp = new Experiment(getName(), getSearchServerUrl(), getCustomHandler(), getQuery());
+        List<Query> cpFq = new ArrayList<>();
+        for (Query q : filterQueries) {
+            cpFq.add((Query)q.deepCopy());
+        }
+        cp.addFilterQueries(cpFq);
+        return cp;
+    }
+
+    public void setSearchServerUrl(String serverUrl) {
+        this.searchServerUrl = serverUrl;
+    }
+
+    public void setCustomHandler(CustomHandler customHandler) {
+        this.customHandler = customHandler;
+    }
+
+    public void setQuery(Query query) {
+        this.query = query;
+    }
 }

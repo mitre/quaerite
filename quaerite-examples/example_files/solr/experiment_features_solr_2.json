@@ -1,0 +1,45 @@
+{
+  "gaConfig": {
+    "numThreads": 6,
+    "population": 20,
+    "generations": 5,
+    "crossoverProbability": 0.2,
+    "mutationProbability": 0.7,
+    "mutationAmplitude": 0.1,
+    "reproductionProbability": 0.1,
+    "nFolds": 3
+  },
+  "scoreAggregators": [
+    {
+      "class": "NDCGAggregator",
+      "params": {
+        "atK": 10,
+        "useForTrain": true,
+        "useForTest": true,
+        "exportPMatrix": true
+      }
+    }
+  ],
+  "featureFactories": {
+    "urls": [
+      "http://localhost:8983/solr/tmdb"
+    ],
+    "query": {
+      "edismax": {
+        "qf": {
+          "fields": [
+            "title",
+            "overview",
+            "people"
+          ],
+          "defaultWeights": [
+            "0.0",
+            "1.0"
+          ],
+          "minSetSize": 1,
+          "maxSetSize": 3
+        }
+      }
+    }
+  }
+}

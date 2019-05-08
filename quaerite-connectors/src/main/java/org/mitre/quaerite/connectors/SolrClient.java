@@ -16,6 +16,8 @@
  */
 package org.mitre.quaerite.connectors;
 
+import static org.mitre.quaerite.core.features.CustomHandler.DEFAULT_HANDLER;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -28,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -42,6 +45,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.features.CustomHandler;
+import org.mitre.quaerite.core.features.QF;
+import org.mitre.quaerite.core.features.WeightableField;
+import org.mitre.quaerite.core.queries.DisMaxQuery;
+import org.mitre.quaerite.core.queries.EDisMaxQuery;
+import org.mitre.quaerite.core.queries.LuceneQuery;
+import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
+import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.queries.TermQuery;
+import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.stats.TokenDF;
 
 /**
@@ -49,7 +62,6 @@ import org.mitre.quaerite.core.stats.TokenDF;
  */
 public class SolrClient extends SearchClient {
 
-    private static final String DEFAULT_HANDLER = "select";
     protected static final String JSON_RESPONSE = "&wt=json";
     private static Set<String> SYS_INTERNAL_FIELDS;
 
@@ -62,6 +74,7 @@ public class SolrClient extends SearchClient {
     static Logger LOG = Logger.getLogger(SolrClient.class);
 
     static final Gson GSON = new Gson();
+    private static String DEFAULT_ID_FIELD = "id";
 
     final String url;
     String idField;
@@ -103,56 +116,124 @@ public class SolrClient extends SearchClient {
         return new ResultSet(totalHits, queryTime, totalTime, ids);
     }
 
-    String generateRequestURL(QueryRequest query) {
+    String generateRequestURL(QueryRequest queryRequest) {
         StringBuilder sb = new StringBuilder();
         sb.append(url);
         if (!url.endsWith("/")) {
             sb.append("/");
         }
-        String handler = query.getCustomHandler();
-        handler = StringUtils.isBlank(handler) ? DEFAULT_HANDLER : handler;
-        sb.append(handler);
+        CustomHandler handler = queryRequest.getCustomHandler();
+        handler = (handler == null) ? DEFAULT_HANDLER : handler;
+        sb.append(handler.getHandler());
         sb.append("?");
 
         /* TODO: make this configurable; turn off for now
-            if (!StringUtils.isBlank(query.getCustomHandler())) {
+            if (!StringUtils.isBlank(queryRequest.getCustomHandler())) {
                 sb.append("qq=");
             } else { */
-        sb.append("q=");
+        Query query = queryRequest.getQuery();
+        if (query instanceof EDisMaxQuery) {
+            addEdisMaxParams((EDisMaxQuery) query, handler, sb);
+        } else if (query instanceof DisMaxQuery) {
+            sb.append("defType=dismax");
+            addDisMaxParams((DisMaxQuery) query, handler, sb);
+        } else if (query instanceof MatchAllDocsQuery) {
+            sb.append("&q=").append(encode("*:*"));
+        } else if (query instanceof LuceneQuery) {
+            sb.append("&q=");
+            appendLuceneQuery((LuceneQuery) query, sb);
+        } else if (query instanceof TermsQuery) {
+            sb.append("&q=");
+            appendTermsQuery((TermsQuery) query, sb);
+        } else if (query instanceof TermQuery) {
+            sb.append("&q=");
+            appendTermQuery((TermQuery) query, sb);
+        } else {
+            throw new IllegalArgumentException("Sorry, I don't yet support: " + queryRequest.getQuery());
+        }
 
-        sb.append(encode(query.getQuery()));
-        if (!query.getParameters().containsKey("defType")) {
-            sb.append("&defType=edismax");
+        if (queryRequest.getFieldsToRetrieve().size() > 0) {
+            sb.append("&fl=").append(StringUtils.join(queryRequest.getFieldsToRetrieve(), ','));
         }
-        if (query.getFields().size() > 0) {
-            sb.append("&fl=").append(StringUtils.join(query.getFields(), ','));
+        sb.append("&start=").append(queryRequest.getStart());
+
+        sb.append("&rows=" + queryRequest.getNumResults());
+
+        if (queryRequest.getSortField() != null) {
+            sb.append("&sort=").append(encode(queryRequest.getSortField())).append(" ")
+                    .append(queryRequest.getSortOrder().toString().toLowerCase(Locale.US));
         }
-        if (!query.getParameters().containsKey("start")) {
-            sb.append("&start=0");
-        }
-        sb.append("&rows=" + query.getNumResults());
-        for (Map.Entry<String, List<String>> e : query.getParameters().entrySet()) {
-            for (String value : e.getValue()) {
-                sb.append("&");
-                sb.append(encode(e.getKey()));
-                sb.append("=").append(encode(value));
+        if (queryRequest.getFilterQueries().size() > 0) {
+            for (Query q : queryRequest.getFilterQueries()) {
+                appendFilterQuery(q, sb);
             }
         }
-        /*
-        //        solrQuery.setFacetMissing(true);
-        solrQuery.setFacet(true);
-        solrQuery.setFacetLimit(10000);
-         */
 
-        if (query.getFacetField() != null) {
+        if (queryRequest.getFacetField() != null) {
             sb.append("&facet=true");
             //TODO: parameterize
             sb.append("&facet.missing=true");
             sb.append("&facet.limit=100000");
-            sb.append("&facet.field=").append(encode(query.getFacetField()));
+            sb.append("&facet.field=").append(encode(queryRequest.getFacetField()));
         }
         sb.append(JSON_RESPONSE);
         return sb.toString();
+    }
+
+    private void appendFilterQuery(Query q, StringBuilder sb) {
+        sb.append("&fq=");
+        if (q instanceof TermsQuery) {
+            appendTermsQuery((TermsQuery) q, sb);
+        } else if (q instanceof TermQuery) {
+            appendTermQuery((TermQuery) q, sb);
+        } else if (q instanceof LuceneQuery) {
+            appendLuceneQuery((LuceneQuery) q, sb);
+        }
+    }
+
+    private void appendLuceneQuery(LuceneQuery q, StringBuilder sb) {
+        StringBuilder tmp = new StringBuilder("{!lucene");
+        if (! StringUtils.isBlank(q.getDefaultField())) {
+            tmp.append(" df=").append(q.getDefaultField());
+        }
+        tmp.append(" q.op=");
+        tmp.append(q.getQueryOperator()).append("}").append(q.getQueryString());
+        sb.append(encode(tmp.toString()));
+    }
+
+    private void appendTermQuery(TermQuery q, StringBuilder sb) {
+        StringBuilder tmp = new StringBuilder("{!raw f=")
+                .append(q.getField()).append("}").append(q.getTerm());
+        sb.append(encode(tmp.toString()));
+    }
+
+    private void appendTermsQuery(TermsQuery tq, StringBuilder sb) {
+        StringBuilder tmp = new StringBuilder("{!terms f=").append(tq.getField()).append("}");
+        tmp.append(StringUtils.join(tq.getTerms(), ","));
+        sb.append(encode(tmp.toString()));
+    }
+
+    private void addEdisMaxParams(EDisMaxQuery query, CustomHandler handler, StringBuilder sb) {
+        sb.append("defType=edismax");
+        //TODO: stub ...need to add edismax stuff pf2, ps2
+        addDisMaxParams((DisMaxQuery) query, handler, sb);
+    }
+
+    private void addDisMaxParams(DisMaxQuery query, CustomHandler handler, StringBuilder sb) {
+
+        sb.append("&").append(handler.getCustomQueryKey()).append("=").append(encode(query.getQueryString()));
+        QF qf = query.getQF();
+        sb.append("&qf=");
+        int i = 0;
+        for (WeightableField f : qf.getWeightableFields()) {
+            if (i++ > 0) {
+                sb.append(encode(" "));
+            }
+            sb.append(encode(f.toString()));
+        }
+        if (query.getTie() != null) {
+            sb.append("&tie=").append(query.getTie().toString());
+        }
     }
 
     @Override
@@ -280,8 +361,9 @@ public class SolrClient extends SearchClient {
         return dests;
     }
 
+
     @Override
-    public synchronized String getIdField() throws IOException, SearchClientException {
+    public synchronized String getDefaultIdField() throws IOException, SearchClientException {
         if (idField == null) {
             JsonResponse jsonResponse = getJson(url + "/schema/uniquekey");
             if (jsonResponse.getStatus() != 200) {
@@ -301,8 +383,8 @@ public class SolrClient extends SearchClient {
 
     @Override
     public IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids, int batchSize,
-                                  int copierThreads, Collection<String> filterQueries) throws IOException, SearchClientException {
-        return new SolrIdGrabber(getIdField(), ids, batchSize, copierThreads, filterQueries);
+                                  int copierThreads, Collection<Query> filterQueries) throws IOException, SearchClientException {
+        return new SolrIdGrabber(getDefaultIdField(), ids, batchSize, copierThreads, filterQueries);
     }
 
     @Override
@@ -325,7 +407,7 @@ public class SolrClient extends SearchClient {
         JsonObject fieldNamesNode = analysisNode.get("field_names").getAsJsonObject();
         JsonObject fieldNode = fieldNamesNode.get(field).getAsJsonObject();
         JsonArray indexArr = fieldNode.getAsJsonArray("index");
-        JsonArray lastStep = indexArr.get(indexArr.size()-1).getAsJsonArray();
+        JsonArray lastStep = indexArr.get(indexArr.size() - 1).getAsJsonArray();
         List<String> tokens = new ArrayList<>();
         for (JsonElement el : lastStep) {
             String t = el.getAsJsonObject().get("text").getAsString();
@@ -339,12 +421,12 @@ public class SolrClient extends SearchClient {
         StringBuilder request = new StringBuilder();
         request.append(url).append("/terms?terms=true");
         request.append("&terms.fl=").append(encode(field));
-        request.append("&limit="+limit);
-        if (! StringUtils.isBlank(lower)) {
+        request.append("&limit=" + limit);
+        if (!StringUtils.isBlank(lower)) {
             request.append("&terms.lower=").append(encode(lower));
         }
         if (minCount > 0) {
-            request.append("&terms.mincount="+minCount);
+            request.append("&terms.mincount=" + minCount);
         }
         request.append("&terms.lower.incl=false");
         request.append("&terms.sort=index");
@@ -358,10 +440,10 @@ public class SolrClient extends SearchClient {
 
         JsonArray fieldArr = termObj.getAsJsonArray(field);
 
-        for (int i = 0; i < fieldArr.size(); i+=2) {
+        for (int i = 0; i < fieldArr.size(); i += 2) {
             termDFList.add(new TokenDF(
                     fieldArr.get(i).getAsString(),
-                    fieldArr.get(i+1).getAsLong()
+                    fieldArr.get(i + 1).getAsLong()
             ));
         }
 
@@ -370,7 +452,8 @@ public class SolrClient extends SearchClient {
 
     class SolrIdGrabber extends IdGrabber {
 
-        public SolrIdGrabber(String idField, ArrayBlockingQueue<Set<String>> ids, int batchSize, int copierThreads, Collection<String> filterQueries) {
+        public SolrIdGrabber(String idField, ArrayBlockingQueue<Set<String>> ids,
+                             int batchSize, int copierThreads, Collection<Query> filterQueries) {
             super(idField, ids, batchSize, copierThreads, filterQueries);
         }
 
@@ -406,16 +489,14 @@ public class SolrClient extends SearchClient {
             return -1;
         }
 
-        private QueryRequest buildQueryRequest(String idField, int start, int numResults, Collection<String> filterQueries) {
-            QueryRequest queryRequest = new QueryRequest("*:*");
+        private QueryRequest buildQueryRequest(String idField, int start, int numResults, Collection<Query> filterQueries) {
+            QueryRequest queryRequest = new QueryRequest(new MatchAllDocsQuery());
             queryRequest.setNumResults(numResults);
 
-            queryRequest.addParameter("start", Integer.toString(start));
-            for (String fq : filterQueries) {
-                queryRequest.addParameter("fq", fq);
-            }
-            queryRequest.addParameter("sort", idField + " asc");
-            queryRequest.addParameter("fl", idField);
+            queryRequest.setStart(start);
+            queryRequest.addFilterQueries(filterQueries);
+            queryRequest.setSort(idField, QueryRequest.SORT_ORDER.ASC);
+            queryRequest.addFieldsToRetrieve(idField);
             return queryRequest;
         }
 

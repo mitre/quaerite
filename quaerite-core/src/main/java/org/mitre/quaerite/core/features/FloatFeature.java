@@ -39,16 +39,6 @@ public class FloatFeature extends AbstractFeature<FloatFeature> {
         return df.format(v);
     }
 
-    @Override
-    public Pair<FloatFeature, FloatFeature> crossover(FloatFeature parentB) {
-        //order shouldn't matter
-        if (MathUtil.RANDOM.nextFloat() > 0.5) {
-            return Pair.of(this, parentB);
-        } else {
-            return Pair.of(parentB, this);
-        }
-    }
-
     public float getValue() {
         return v;
     }

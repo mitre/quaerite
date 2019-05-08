@@ -1,0 +1,186 @@
+{
+  "scoreAggregators": [
+    {
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 1
+      }
+    },
+    {
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 3
+      }
+    },
+	{
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 5
+      }
+    },
+	{
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 10
+      }
+    },
+	{
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 30
+      }
+    },
+	{
+      "class": "NDCGAggregator",
+      "params": {
+        "atK": 10,
+        "useForTrain": true,
+        "useForTest": true,
+        "exportPMatrix": true
+      }
+    },
+	{
+      "class": "TotalDocsReturnedAggregator"
+    },
+	{
+      "class": "TotalElapsedTimeAggregator"
+    }
+  ],
+  "experiments": {
+    "cast": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "cast"
+          ]
+        }
+      }
+    },
+    "cast_min": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "cast.min"
+          ],
+          "bq": []
+        }
+      }
+    },
+	"cast_porter": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "cast.porter"
+          ]
+        }
+      }
+    },
+    "cast_shingle": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "cast.shingle"
+          ]
+        }
+      }
+    },
+    "directors": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "directors"
+          ]
+        }
+      }
+    },
+    "directors_min": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "directors.min"
+          ],
+          "bq": []
+        }
+      }
+    },
+    "directors_porter": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "directors.porter"
+          ]
+        }
+      }
+    },
+    "directors_shingle": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "directors.shingle"
+          ]
+        }
+      }
+    },
+    "people": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "people"
+          ]
+        }
+      }
+    },
+    "people_min": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "people.min"
+          ],
+          "bq": []
+        }
+      }
+    },
+    "people_porter": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "people.porter"
+          ]
+        }
+      }
+    },
+    "people_shingle": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "multi_match": {
+          "type": "best_fields",
+          "qf": [
+            "people.shingle"
+          ]
+        }
+      }
+    }
+  }
+}

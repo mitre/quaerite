@@ -49,7 +49,7 @@ public class IndexTMDB {
         int cnt = 0;
         long start = System.currentTimeMillis();
         List<Movie> movies = new ArrayList<>();
-        String idField = searchClient.getIdField();
+        String idField = searchClient.getDefaultIdField();
         try (Reader reader = Files.newBufferedReader(p, StandardCharsets.UTF_8)) {
             JsonReader jsonReader = new JsonReader(reader);
             jsonReader.beginObject();

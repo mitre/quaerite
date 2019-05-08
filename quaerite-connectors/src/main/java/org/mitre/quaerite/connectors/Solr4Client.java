@@ -42,6 +42,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.stats.TokenDF;
 
 /**
@@ -77,9 +78,9 @@ public class Solr4Client extends SolrClient {
             sb.append("\"" + id + "\"");
             if (sb.length() > 1000) {
                 sb.append(")");
-                QueryRequest q = new QueryRequest(sb.toString());
+                QueryRequest q = new QueryRequest(new LuceneQuery(idField, sb.toString()));
                 q.setNumResults(i);
-                q.addFields(whiteListFields);
+                q.addFieldsToRetrieve(whiteListFields);
                 String url = generateRequestURL(q);
                 List<StoredDocument> localDocs = _getDocs(url, blackListFields);
                 documents.addAll(localDocs);
@@ -90,9 +91,9 @@ public class Solr4Client extends SolrClient {
         }
         if (sb.length() > 0) {
             sb.append(")");
-            QueryRequest q = new QueryRequest(sb.toString());
+            QueryRequest q = new QueryRequest(new LuceneQuery(idField, sb.toString()));
             q.setNumResults(i);
-            q.addFields(whiteListFields);
+            q.addFieldsToRetrieve(whiteListFields);
             String url = generateRequestURL(q);
             List<StoredDocument> localDocs = _getDocs(url, blackListFields);
             documents.addAll(localDocs);

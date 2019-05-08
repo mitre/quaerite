@@ -1,0 +1,85 @@
+{
+  "scoreAggregators": [
+    {
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 1
+      }
+    },
+    {
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 3
+      }
+    },
+	{
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 5
+      }
+    },
+	{
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 10
+      }
+    },
+	{
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 30
+      }
+    },
+	{
+      "class": "NDCGAggregator",
+      "params": {
+        "atK": 10,
+        "useForTrain": true,
+        "useForTest": true,
+        "exportPMatrix": true
+      }
+    },
+	{
+      "class": "TotalDocsReturnedAggregator"
+    },
+	{
+      "class": "TotalElapsedTimeAggregator"
+    }
+  ],
+  "experiments": {
+    "title": {
+      "name": "title",
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax": {
+          "qf": [
+            "title"
+          ]
+        }
+      }
+    },
+    "overview": {
+      "name": "overview",
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax": {
+          "qf": [
+            "overview"
+          ],
+          "bq": []
+        }
+      }
+    },
+	"people": {
+      "name": "people",
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax": {
+          "qf": [
+            "people"
+          ]
+        }
+      }
+    }
+  }
+}

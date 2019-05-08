@@ -56,9 +56,8 @@ import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.ResultSet;
-import org.mitre.quaerite.core.features.Feature;
-import org.mitre.quaerite.core.features.StringListFeature;
-import org.mitre.quaerite.core.features.WeightableListFeature;
+import org.mitre.quaerite.core.queries.MultiFieldQuery;
+import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.scoreaggregators.DistributionalScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.SummingScoreAggregator;
@@ -207,29 +206,31 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
      * @param judgmentList
      * @return
      */
-    private JudgmentList validate(SearchClient searchClient, JudgmentList judgmentList) {
-
+    private JudgmentList validate(SearchClient searchClient, JudgmentList judgmentList) throws IOException, SearchClientException {
+        String idField = searchClient.getIdField(experimentConfig);
         Set<String> judgmentIds = new HashSet<>();
         for (Judgments j : judgmentList.getJudgmentsList()) {
             judgmentIds.addAll(j.getSortedJudgments().keySet());
         }
 
         Set<String> valid = new HashSet<>();
-        StringBuilder queryString = new StringBuilder();
 
-        int expected = 0;
+        int len = 0;
+        List<String> ids = new ArrayList<>();
         for (String id : judgmentIds) {
-            if (expected++ > 0) {
-                queryString.append(" OR ");
-            }
-            queryString.append(experimentConfig.getIdField() + ":\"" + id + "\"");
-            if (queryString.length() > 1000) {
-                addValid(queryString.toString(), experimentConfig.getIdField(), searchClient, expected, valid);
-                queryString.setLength(0);
-                expected = 0;
+            ids.add(id);
+            len += id.length();
+            if (len > 1000) {
+                addValid(new TermsQuery(idField, ids),
+                        idField, searchClient, ids.size(), valid);
+                len = 0;
+                ids.clear();
             }
         }
-        addValid(queryString.toString(), experimentConfig.getIdField(), searchClient, expected, valid);
+        if (ids.size() > 0) {
+            addValid(new TermsQuery(idField, ids),
+                    idField, searchClient, ids.size(), valid);
+        }
 
         int validIds = 0;
         int invalidIds = 0;
@@ -270,7 +271,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
                 invalidQueries++;
             }
         }
-        if (validQueries > 0) {
+        if (invalidQueries > 0) {
             LOG.warn("I had to remove "+invalidQueries+" queries because there were no judgments for them. "+
                     " There were " + validQueries + " valid queries.");
         }
@@ -278,12 +279,12 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
     }
 
-    private static void addValid(String queryString, String idField, SearchClient searchClient, int expected, Set<String> valid) {
+    private static void addValid(TermsQuery termsQuery, String idField, SearchClient searchClient, int expected, Set<String> valid) {
         if (expected == 0) {
             return;
         }
-        QueryRequest q = new QueryRequest(queryString, null, idField);
-        q.addField(idField);
+        QueryRequest q = new QueryRequest(termsQuery, null, idField);
+        q.addFieldsToRetrieve(idField);
         q.setNumResults(expected * 2);
         ResultSet resultSet;
         try {
@@ -342,25 +343,16 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
 
         private void scoreEach(Judgments judgments, List<ScoreAggregator> scoreAggregators) {
-            QueryRequest queryRequest = new QueryRequest(judgments.getQuery(), experiment.getCustomHandler(), idField);
-            queryRequest.addField(idField);
-            for (Map.Entry<String, Feature> e : experiment.getParams().entrySet()) {
-                if (e.getValue() instanceof WeightableListFeature) {
-                    WeightableListFeature list = (WeightableListFeature) e.getValue();
-                    for (int i = 0; i < list.size(); i++) {
-                        queryRequest.addParameter(e.getKey(), list.get(i).toString());
-                    }
-                } else if (e.getValue() instanceof StringListFeature){
-                    StringListFeature list = (StringListFeature) e.getValue();
-                    for (int i = 0; i < list.size(); i++) {
-                        queryRequest.addParameter(e.getKey(), list.get(i));
-                    }
+            //TODO: fix this; ok to assume multimatch for now
+            MultiFieldQuery fullQuery = (MultiFieldQuery)experiment.getQuery();
+            fullQuery.setQueryString(judgments.getQuery());
 
-                } else {
-                    queryRequest.addParameter(e.getKey(), e.getValue().toString());
-                }
+
+            QueryRequest queryRequest = new QueryRequest(fullQuery, experiment.getCustomHandler(), idField);
+            queryRequest.addFieldsToRetrieve(idField);
+            if (experiment.getFilterQueries().size() > 0) {
+                queryRequest.addFilterQueries(experiment.getFilterQueries());
             }
-            List<String> results = new ArrayList<>();
             queryRequest.setNumResults(maxRows);
 
             ResultSet resultSet = null;

@@ -16,15 +16,47 @@
  */
 package org.mitre.quaerite.core.features;
 
-public class CustomHandler extends StringFeature {
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
+
+/**
+ * For Solr...users can specify a custom handler
+ * that modifies the query server side. (see Hossman's Hidden Gems).
+ * https://home.apache.org/~hossman/rev2016/
+ *
+ * These custom handlers might use a different key for the query, e.g. "qq".
+ */
+public class CustomHandler implements Feature<CustomHandler> {
+
+    public static final CustomHandler DEFAULT_HANDLER =
+            new CustomHandler("select", "q");
 
     private static final String NAME = "customHandler";
-    public CustomHandler(String value) {
-        super(NAME, value);
+
+    private final String handler;
+    private final String customQueryKey;
+    public CustomHandler(String handler, String customQueryKey) {
+        this.handler = handler;
+        this.customQueryKey = StringUtils.isBlank(customQueryKey) ?
+                CustomHandlerFactory.DEFAULT_QUERY_KEY : customQueryKey;
+    }
+
+    public String getHandler() {
+        return handler;
+    }
+
+    public String getCustomQueryKey() {
+        return customQueryKey;
+    }
+
+    @Override
+    public String getName() {
+        return NAME;
     }
 
     @Override
     public CustomHandler deepCopy() {
-        return new CustomHandler(getFeature());
+        return new CustomHandler(getHandler(), getCustomQueryKey());
     }
 }

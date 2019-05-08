@@ -23,4 +23,18 @@ public class QF extends WeightableListFeature {
     public QF() {
         super(NAME);
     }
+
+    @Override
+    public QF deepCopy() {
+
+        QF deepCopy = new QF();
+        for (WeightableField field : weightableFields) {
+            if (field.hasWeight()) {
+                deepCopy.add(new WeightableField(field.getFeature(), field.getWeight()));
+            } else {
+                deepCopy.add(new WeightableField(field.getFeature()));
+            }
+        }
+        return deepCopy;
+    }
 }
