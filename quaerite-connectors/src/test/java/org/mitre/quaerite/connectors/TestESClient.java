@@ -57,7 +57,7 @@ import org.mitre.quaerite.core.queries.TermQuery;
  */
 
 
-//@Disabled("need to have ES tmdb instance running")
+@Disabled("need to have ES tmdb instance running")
 public class TestESClient {
 
 

@@ -1,0 +1,247 @@
+{
+  "index_patterns": [
+    "tmdb"
+  ],
+  "mappings": {
+    "_meta": {
+      "version": "7.0.1"
+    },
+    "dynamic": "false",
+    "properties": {
+      "@timestamp": {
+        "type": "date"
+      },
+      "all_text": {
+        "type": "text",
+        "analyzer": "text_en"
+      },
+      "original_language": {
+        "type": "text",
+        "analyzer": "text_en",
+        "fields": {
+          "facet": {
+            "type": "keyword",
+            "normalizer": "lc_normalizer"
+          }
+        }
+      },
+      "original_title": {
+        "type": "text",
+        "analyzer": "text_en"
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "text_en",
+        "copy_to": "all_text",
+        "fields": {
+          "min": {
+            "type": "text",
+            "analyzer": "text_minimal_en"
+          },
+          "porter": {
+            "type": "text",
+            "analyzer": "text_porter_en"
+          },
+          "shingle": {
+            "type": "text",
+            "analyzer": "text_shingle_en"
+          }
+        }
+      },
+      "overview": {
+        "type": "text",
+        "analyzer": "text_en",
+        "copy_to": "all_text",
+        "fields": {
+          "min": {
+            "type": "text",
+            "analyzer": "text_minimal_en"
+          },
+          "porter": {
+            "type": "text",
+            "analyzer": "text_porter_en"
+          },
+          "shingle": {
+            "type": "text",
+            "analyzer": "text_shingle_en"
+          }
+        }
+      },
+      "genres": {
+        "type": "text",
+        "analyzer": "text_en",
+        "fields": {
+          "facet": {
+            "type": "keyword",
+            "normalizer": "lc_normalizer"
+          }
+        }
+      },
+      "production_companies": {
+        "type": "text",
+        "analyzer": "text_en",
+        "fields": {
+          "facet": {
+            "type": "keyword",
+            "normalizer": "lc_normalizer"
+          }
+        }
+      },
+      "cast": {
+        "type": "text",
+        "analyzer": "text_en",
+        "copy_to": [
+          "people",
+          "all_text"
+        ],
+        "fields": {
+          "min": {
+            "type": "text",
+            "analyzer": "text_minimal_en"
+          },
+          "porter": {
+            "type": "text",
+            "analyzer": "text_porter_en"
+          },
+          "shingle": {
+            "type": "text",
+            "analyzer": "text_shingle_en"
+          }
+        }
+      },
+      "directors": {
+        "type": "text",
+        "analyzer": "text_en",
+        "fields": {
+          "min": {
+            "type": "text",
+            "analyzer": "text_minimal_en"
+          },
+          "porter": {
+            "type": "text",
+            "analyzer": "text_porter_en"
+          },
+          "shingle": {
+            "type": "text",
+            "analyzer": "text_shingle_en"
+          }
+        },
+        "copy_to": [
+          "people",
+          "all_text"
+        ]
+      },
+      "people": {
+        "type": "text",
+        "analyzer": "text_en",
+        "fields": {
+          "min": {
+            "type": "text",
+            "analyzer": "text_minimal_en"
+          },
+          "porter": {
+            "type": "text",
+            "analyzer": "text_porter_en"
+          },
+          "shingle": {
+            "type": "text",
+            "analyzer": "text_shingle_en"
+          }
+        }
+      },
+      "budget": {
+        "type": "double"
+      },
+      "revenue": {
+        "type": "double"
+      },
+      "popularity": {
+        "type": "double"
+      },
+      "vote_average": {
+        "type": "double"
+      },
+      "vote_count": {
+        "type": "integer"
+      },
+      "release_date": {
+        "type": "date"
+      }
+    }
+  },
+  "settings": {
+    "index": {
+      "analysis": {
+        "normalizer": {
+          "lc_normalizer": {
+            "type": "custom",
+            "char_filter": [],
+            "filter": [
+              "lowercase",
+              "asciifolding"
+            ]
+          }
+        },
+        "filter": {
+          "trim_final_period": {
+            "type": "pattern_replace",
+            "pattern": "\\.$",
+            "replacement": ""
+          },
+          "minimal_english": {
+            "type": "stemmer",
+            "name": "minimal_english"
+          },
+          "shingle": {
+            "max_shingle_size": "3",
+            "min_shingle_size": "2",
+            "type": "shingle"
+          }
+        },
+        "analyzer": {
+          "text_en": {
+            "tokenizer": "uax_url_email",
+            "filter": [
+              "lowercase",
+              "asciifolding",
+              "trim_final_period"
+            ],
+            "type": "custom"
+          },
+          "text_porter_en": {
+            "tokenizer": "standard",
+            "filter": [
+              "lowercase",
+              "porter_stem"
+            ],
+            "type": "custom"
+          },
+          "text_minimal_en": {
+            "tokenizer": "standard",
+            "filter": [
+              "lowercase",
+              "asciifolding",
+              "minimal_english"
+            ],
+            "type": "custom"
+          },
+          "text_shingle_en": {
+            "tokenizer": "standard",
+            "filter": [
+              "lowercase",
+              "asciifolding",
+              "shingle"
+            ],
+            "type": "custom"
+          }
+        }
+      },
+      "number_of_replicas": "1",
+      "number_of_shards": "1",
+      "search.max_buckets": 100000
+    }
+  }
+}
+
+
+

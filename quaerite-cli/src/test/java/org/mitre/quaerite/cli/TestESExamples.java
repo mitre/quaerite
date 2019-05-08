@@ -16,19 +16,17 @@
  */
 package org.mitre.quaerite.cli;
 
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled
-public class TestExamples {
+@Disabled("ES tmdb instance has to be running")
+public class TestESExamples {
     //TODO -- make all the working files tmp files/put in tmp directory
     //turn these into actual tests that check the output
     static Path CWD = Paths.get("../quaerite-examples/example_files");
-
     @Test
     public void testGenerateRunESRand() throws Exception {
 
@@ -75,38 +73,6 @@ public class TestExamples {
                         "-o", "C:/data/quaerite/examples/ga_output_es"
                 }
         );
-    }
-
-    @Test
-    public void runGASolr() throws Exception {
-        for (int i = 1; i <= 5; i++) {
-            Path featuresPath = CWD.resolve("solr/experiment_features_solr_"+i+".json");
-            System.out.println("running: "+featuresPath);
-            RunGA.main(
-                    new String[]{
-                            "-db", "C:/data/quaerite/test_db5",
-                            "-f", featuresPath.toAbsolutePath().toString(),
-                            "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
-                            "-o", "C:/data/quaerite/examples/ga_output_solr_"+i
-                    }
-            );
-        }
-    }
-
-    @Test
-    public void runExperimentsSolr() throws Exception {
-        for (int i = 1; i <= 2; i++) {
-            Path experimentsPath = CWD.resolve("solr/experiments_solr_"+i+".json");
-            System.out.println("running: " + experimentsPath);
-            RunExperiments.main(
-                    new String[]{
-                            "-db", "C:/data/quaerite/test_db5",
-                            "-e", experimentsPath.toAbsolutePath().toString(),
-                            "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
-                            "-r", "C:/data/quaerite/examples/experiments_output_solr_"+i
-                    }
-            );
-        }
     }
 
     @Test

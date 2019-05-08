@@ -360,7 +360,14 @@ public class ESClient extends SearchClient {
         for (String k : mappings.keySet()) {
             if (k.equals(key)) {
                 //could be anything else!
-                values.add(mappings.get(k).getAsJsonPrimitive().getAsString());
+                JsonElement el = mappings.get(k);
+                if (el.isJsonPrimitive()) {
+                    values.add(mappings.get(k).getAsJsonPrimitive().getAsString());
+                } else if (el.isJsonArray()) {
+                    for (JsonElement el2 : el.getAsJsonArray()) {
+                        values.add(el2.getAsJsonPrimitive().getAsString());
+                    }
+                }
             } else if (mappings.get(k).isJsonObject()) {
                 addValuesForKey(mappings.get(k).getAsJsonObject(), key, values);
             }

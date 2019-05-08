@@ -23,8 +23,8 @@ Background and Goals
 --------------------
 
 This project includes tools to help evaluate relevance
-ranking.  This code has been tested with Solr 4.x, 7.x and 8.x.
-We plan to add a connector for Elasticsearch. 
+ranking.  This code has been tested with Solr 4.x, 7.x and 8.x,
+and ES 6.x and 7.x.
 
 This project is not intended to compete with existing relevance
 evaluation tools, such as [Splainer](http://splainer.io/),
@@ -107,6 +107,7 @@ Planned Releases
 
 Related Open Source Projects
 ---------------------
+* https://quepid.com/
 * https://github.com/SeaseLtd/rated-ranking-evaluator
 * http://splainer.io/
 * https://github.com/DiceTechJobs/RelevancyTuning

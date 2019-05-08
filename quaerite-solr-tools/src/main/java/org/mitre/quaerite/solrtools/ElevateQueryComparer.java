@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *
+ */
 package org.mitre.quaerite.solrtools;
 
 import java.io.BufferedWriter;
@@ -11,12 +29,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -38,6 +58,8 @@ import org.mitre.quaerite.connectors.QueryRequest;
 import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.queries.LuceneQuery;
+import org.mitre.quaerite.core.queries.TermQuery;
 
 public class ElevateQueryComparer {
     static Logger LOG = Logger.getLogger(ElevateQueryComparer.class);
@@ -118,7 +140,7 @@ public class ElevateQueryComparer {
             reportsRoot = Paths.get(commandLine.getOptionValue("d"));
         }
 
-        DecimalFormat df = new DecimalFormat("##.###%");
+        DecimalFormat df = new DecimalFormat("##.###%", DecimalFormatSymbols.getInstance(Locale.ROOT));
         //TODO: lowercase queries or run them through an analyzer from a specific field?
         QuerySet queries = loadQueries(Paths.get(commandLine.getOptionValue("q")));
         Map<String, Elevate> elevateMap = ElevateScraper.scrape(Paths.get(commandLine.getOptionValue("e")),
@@ -266,7 +288,7 @@ public class ElevateQueryComparer {
     }
 
     private static boolean indexContains(String id, SearchClient searchClient) throws Exception {
-        QueryRequest qr = new QueryRequest("id:\"" + id + "\"");
+        QueryRequest qr = new QueryRequest(new TermQuery("id",id));
         ResultSet rs = searchClient.search(qr);
         return rs.getIds().size() > 0;
     }
