@@ -27,4 +27,11 @@ public class Fuzziness extends FloatFeature {
     public Fuzziness(float value) {
         super(NAME, value);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Fuzziness)) return false;
+        return super.equals(o);
+    }
 }

@@ -38,4 +38,11 @@ public class TotalQueryTime extends AbstractRankScorer {
     public double score(Judgments judgments, ResultSet resultSet) {
         return resultSet.getQueryTime();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TotalQueryTime)) return false;
+        return super.equals(o);
+    }
 }

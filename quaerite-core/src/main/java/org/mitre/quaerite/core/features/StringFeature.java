@@ -18,6 +18,8 @@ package org.mitre.quaerite.core.features;
 
 
 
+import java.util.Objects;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.util.MathUtil;
 
@@ -40,4 +42,16 @@ public abstract class StringFeature<T extends StringFeature>
         return feature;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof StringFeature)) return false;
+        StringFeature<?> that = (StringFeature<?>) o;
+        return Objects.equals(feature, that.feature);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(feature);
+    }
 }

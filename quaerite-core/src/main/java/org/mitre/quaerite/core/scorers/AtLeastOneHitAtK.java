@@ -44,4 +44,12 @@ public class AtLeastOneHitAtK extends AbstractRankScorer {
     String _getName() {
         return "AtLeastOneHitAtK";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AtLeastOneHitAtK)) return false;
+        return super.equals(o);
+    }
+
 }

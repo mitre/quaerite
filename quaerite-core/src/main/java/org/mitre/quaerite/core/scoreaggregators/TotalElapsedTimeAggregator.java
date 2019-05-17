@@ -31,4 +31,11 @@ public class TotalElapsedTimeAggregator extends SummingScoreAggregator {
     TotalElapsedTimeAggregator(AbstractRankScorer scorer) {
         super(scorer);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TotalElapsedTimeAggregator)) return false;
+        return super.equals(o);
+    }
 }

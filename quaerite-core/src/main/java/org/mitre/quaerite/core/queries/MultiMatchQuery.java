@@ -76,7 +76,7 @@ public class MultiMatchQuery extends MultiFieldQuery {
         cp.tie = (tie != null) ? (TIE)tie.deepCopy() : null;
         cp.boost = this.boost;
         cp.fuzziness = this.fuzziness;
-        cp.queryString = queryString;
+        cp.setQueryString(getQueryString());
         return cp;
     }
 
@@ -86,7 +86,7 @@ public class MultiMatchQuery extends MultiFieldQuery {
                 "type=" + type +
                 ", boost=" + boost +
                 ", fuzziness=" + fuzziness +
-                ", queryString='" + queryString + '\'' +
+                ", queryString='" + getQueryString() + '\'' +
                 ", qf=" + qf +
                 ", tie=" + tie +
                 ", qOp=" + qOp +

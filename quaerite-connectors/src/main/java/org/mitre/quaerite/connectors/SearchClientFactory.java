@@ -57,6 +57,22 @@ public class SearchClientFactory {
         } catch (SearchClientException e) {
 
         }
-        return new ESClient(url);
+        String es = m.group(1);
+        byte[] bytes = HttpUtils.get(es);
+        try (Reader reader = new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8)) {
+            JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
+            JsonObject version = root.getAsJsonObject("version");
+            String number = version.get("number").getAsString();
+            String major = number.substring(0,1);
+            if (major.equals("6")) {
+                return new ES6Client(url);
+            } else if (major.equals("7")) {
+                return new ESClient(url);
+            } else {
+                throw new IllegalArgumentException("I regret that I don't yet support: "+number);
+            }
+        } catch (IOException e) {
+            throw new SearchClientException("Couldn't find right client for: "+url);
+        }
     }
 }

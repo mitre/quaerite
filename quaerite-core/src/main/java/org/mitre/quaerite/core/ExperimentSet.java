@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -131,5 +132,23 @@ public class ExperimentSet {
                 ", scoreAggregators=" + scoreAggregators +
                 ", experiments=" + experiments +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ExperimentSet)) return false;
+        ExperimentSet that = (ExperimentSet) o;
+        return maxRows == that.maxRows &&
+                scoreAggregators.equals(that.scoreAggregators) &&
+                experiments.equals(that.experiments) &&
+                Objects.equals(trainScoreAggregator, that.trainScoreAggregator) &&
+                Objects.equals(testScoreAggregator, that.testScoreAggregator) &&
+                experimentConfig.equals(that.experimentConfig);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(maxRows, scoreAggregators, experiments, trainScoreAggregator, testScoreAggregator, experimentConfig);
     }
 }

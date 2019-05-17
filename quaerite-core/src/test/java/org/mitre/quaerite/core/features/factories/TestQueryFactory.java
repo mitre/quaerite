@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +36,8 @@ import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.ExperimentFactory;
 import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.Feature;
+import org.mitre.quaerite.core.features.NegativeBoost;
+import org.mitre.quaerite.core.queries.BoostingQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
 
@@ -119,13 +122,22 @@ public class TestQueryFactory {
         );
         QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
         List<EDisMaxQuery> queries = new ArrayList<>();
-        for (int i = 0; i < 1000; i++) {
+        int numQueries = 1000;
+        int equal = 0;
+        double probability = 0.8;
+        for (int i = 0; i < numQueries; i++) {
             EDisMaxQuery q = qf.random();
-            EDisMaxQuery mutated = qf.mutate(q, 0.20, 0.9);
-            assertNotEquals(q, mutated);
+            EDisMaxQuery mutated = qf.mutate(q, probability, 0.9);
+            if (mutated.equals(q)) {
+                equal++;
+            }
             assertTrue(q != mutated);
             queries.add(mutated);
         }
+        double percentEqual = (double)equal/(double)numQueries;
+        double percentMutated = 1.0-percentEqual;
+        //this test will fail very, very, very rarely...
+        assertEquals(probability, percentMutated, 0.1);
         assertWithinBounds(queries);
     }
 
@@ -152,6 +164,62 @@ public class TestQueryFactory {
     }
 
     @Test
+    public void testBoostingQueryRandom() throws Exception {
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features_es_2.json")
+        );
+        QueryFactory<BoostingQuery> qf = (QueryFactory<BoostingQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        List<BoostingQuery> bqs = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            bqs.add(qf.random());
+        }
+        assertBoostingWithinBounds(bqs);
+    }
+
+    @Test
+    public void testBoostingMutate() throws Exception {
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features_es_2.json")
+        );
+        BoostingQueryFactory qf = (BoostingQueryFactory) experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+
+        List<BoostingQuery> boostingQueries = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            BoostingQuery boosting = qf.random();
+            boostingQueries.add(qf.mutate(boosting, 0.2, 0.9));
+        }
+        assertBoostingWithinBounds(boostingQueries);
+    }
+
+    @Test
+    public void testBoostingCrossover() throws Exception {
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features_es_2.json")
+        );
+        BoostingQueryFactory qf = (BoostingQueryFactory)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+
+        List<BoostingQuery> boostingQueries = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            BoostingQuery mA = qf.random();
+            BoostingQuery mB = qf.random();
+            Pair<BoostingQuery, BoostingQuery> pair = qf.crossover(mA, mB);
+            boostingQueries.add(pair.getLeft());
+            boostingQueries.add(pair.getRight());
+        }
+        assertBoostingWithinBounds(boostingQueries);
+    }
+
+    @Test
+    public void testBoostingPermute() throws Exception {
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features_es_2.json")
+        );
+        BoostingQueryFactory qf = (BoostingQueryFactory) experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        List<BoostingQuery> bqs = qf.permute(100000);
+        assertBoostingWithinBounds(bqs);
+        assertEquals(100000, bqs.size());
+    }
+    @Test
     public void testMultiMatchRandom() throws Exception {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_es_1.json")
@@ -163,8 +231,7 @@ public class TestQueryFactory {
             MultiMatchQuery mmq = qf.random();
             multiMatchQueries.add(mmq);
         }
-
-        assertMulitMatchWithinBounds(multiMatchQueries);
+        assertMultiMatchWithinBounds(multiMatchQueries);
     }
 
     @Test
@@ -180,7 +247,7 @@ public class TestQueryFactory {
             multiMatchQueries.add(qf.mutate(mmq, 0.2, 0.9));
         }
 
-        assertMulitMatchWithinBounds(multiMatchQueries);
+        assertMultiMatchWithinBounds(multiMatchQueries);
     }
 
     @Test
@@ -199,10 +266,23 @@ public class TestQueryFactory {
             multiMatchQueries.add(pair.getRight());
         }
 
-        assertMulitMatchWithinBounds(multiMatchQueries);
+        assertMultiMatchWithinBounds(multiMatchQueries);
     }
 
-    private void assertMulitMatchWithinBounds(List<MultiMatchQuery> queries) {
+    private void assertBoostingWithinBounds(List<BoostingQuery> bqs) {
+        List<MultiMatchQuery> allQueries = new ArrayList<>();
+        for (BoostingQuery bq : bqs) {
+            allQueries.add((MultiMatchQuery)bq.getPositiveQuery());
+            allQueries.add((MultiMatchQuery)bq.getNegativeQuery());
+            NegativeBoost nb = bq.getNegativeBoost();
+            assertTrue(nb.getValue() <= 1.0f);
+            assertTrue(nb.getValue() >= 0.001f);
+        }
+        assertMultiMatchWithinBounds(allQueries);
+    }
+
+
+    private void assertMultiMatchWithinBounds(List<MultiMatchQuery> queries) {
         Set<String> types = new HashSet<>();
         Set<String> qOps = new HashSet<>();
         int minQf = 100;

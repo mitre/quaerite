@@ -16,6 +16,8 @@
  */
 package org.mitre.quaerite.core;
 
+import java.util.Objects;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class ExperimentConfig {
@@ -33,5 +35,19 @@ public class ExperimentConfig {
     //or empty string if nothing was specified
     public String getIdField() {
         return idField;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ExperimentConfig)) return false;
+        ExperimentConfig that = (ExperimentConfig) o;
+        return numThreads == that.numThreads &&
+                Objects.equals(idField, that.idField);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(numThreads, idField);
     }
 }

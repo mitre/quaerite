@@ -49,4 +49,19 @@ public class MultiMatchType extends StringFeature {
     public MultiMatchType deepCopy() {
         return new MultiMatchType(getFeature());
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (! MultiMatchType.class.equals(obj.getClass())) {
+            return false;
+        }
+        if (this == obj) {
+            return true;
+        }
+        return super.equals(obj);
+    }
+
 }

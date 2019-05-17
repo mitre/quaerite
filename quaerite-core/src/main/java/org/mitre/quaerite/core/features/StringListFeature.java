@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -93,4 +94,23 @@ public abstract class StringListFeature<T extends StringListFeature> extends Abs
         return strings.get(i);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof StringListFeature)) return false;
+        StringListFeature<?> that = (StringListFeature<?>) o;
+        return Objects.equals(strings, that.strings);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(strings);
+    }
+
+    @Override
+    public String toString() {
+        return "StringListFeature{" +
+                "strings=" + strings +
+                '}';
+    }
 }

@@ -44,4 +44,11 @@ public class HighestRank extends AbstractRankScorer {
     String _getName() {
         return "HighestRank";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof HighestRank)) return false;
+        return super.equals(o);
+    }
 }

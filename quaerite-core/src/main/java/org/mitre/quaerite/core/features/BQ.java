@@ -31,4 +31,11 @@ public class BQ extends StringListFeature<BQ> {
     public BQ build(List<String> strings) {
         return new BQ(strings);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BQ)) return false;
+        return super.equals(o);
+    }
 }

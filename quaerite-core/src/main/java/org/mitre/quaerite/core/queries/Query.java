@@ -20,5 +20,4 @@ import org.mitre.quaerite.core.features.Feature;
 
 public abstract class Query implements Feature {
 
-    public abstract void setQueryString(String queryString);
 }

@@ -41,6 +41,7 @@ import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.queries.BooleanClause;
 import org.mitre.quaerite.core.queries.BooleanQuery;
+import org.mitre.quaerite.core.queries.BoostingQuery;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
@@ -102,7 +103,7 @@ public class ESClient extends SearchClient {
     private ResultSet scrapeIds(JsonElement root, long start) throws IOException, SearchClientException {
         long queryTime = JsonUtil.getPrimitive(root, "took", -1l);
         JsonObject hits = (JsonObject) ((JsonObject) root).get("hits");
-        long totalHits = JsonUtil.getPrimitive(hits, "total", -1l);
+        long totalHits = getTotalHits(hits);
         JsonArray hitArray = (JsonArray) hits.get("hits");
         List<String> ids = new ArrayList<>();
         for (JsonElement el : hitArray) {
@@ -117,22 +118,32 @@ public class ESClient extends SearchClient {
 
     }
 
-    private String buildJsonQuery(QueryRequest query, List<String> fieldsToRetrieve) {
-
-        Map<String, Object> queryMap = getQueryMap(query, fieldsToRetrieve);
-        return GSON.toJson(queryMap);
+    protected long getTotalHits(JsonObject hits) {
+        JsonObject total = hits.getAsJsonObject("total");
+        long val = total.get("value").getAsJsonPrimitive().getAsLong();
+        String rel = total.get("relation").getAsString();
+        if (!rel.equals("eq")) {
+            LOG.warn("totalhits may not be accurate: "+total.toString());
+        }
+        return val;
     }
 
-    private Map<String, Object> getQueryMap(QueryRequest queryRequest, List<String> fieldsToRetrieve) {
+    private String buildJsonQuery(QueryRequest query, List<String> fieldsToRetrieve) {
+        Map<String, Object> queryMap = getQueryMap(query, fieldsToRetrieve);
+        String json = GSON.toJson(queryMap);
+        return json;
+    }
+
+    protected Map<String, Object> getQueryMap(QueryRequest queryRequest, List<String> fieldsToRetrieve) {
         Query fullQuery = queryRequest.getQuery();
         Query q = queryRequest.getQuery();
         if (queryRequest.getFilterQueries().size() > 0) {
             fullQuery = new BooleanQuery();
             ((BooleanQuery)fullQuery).addClause(
-                    new BooleanClause(BooleanClause.OCCUR.SHOULD, q));
+                    new BooleanClause(null, BooleanClause.OCCUR.SHOULD, q));
             for (Query filterQuery : queryRequest.getFilterQueries()) {
                 ((BooleanQuery)fullQuery).addClause(
-                        new BooleanClause(BooleanClause.OCCUR.FILTER, filterQuery));
+                        new BooleanClause(null, BooleanClause.OCCUR.FILTER, filterQuery));
             }
         }
 
@@ -144,6 +155,7 @@ public class ESClient extends SearchClient {
         }
         overallMap.put("size", queryRequest.getNumResults());
         overallMap.put("from", queryRequest.getStart());
+        overallMap.put("track_total_hits", true);
         return overallMap;
     }
 
@@ -174,18 +186,33 @@ public class ESClient extends SearchClient {
             queryMap = wrapAMap("query_string", lQ);
         } else if (query instanceof BooleanQuery) {
             return getBooleanMap((BooleanQuery)query);
+        } else if (query instanceof BoostingQuery) {
+            return getBoostingMap((BoostingQuery)query);
         } else {
             throw new IllegalArgumentException("I regret I don't yet know how to handle queries of type: "+ query.getClass());
         }
         return queryMap;
     }
 
+    private Map<String, Object> getBoostingMap(BoostingQuery query) {
+        //short circuit if there is no negative boost query
+        if (StringUtils.isBlank(query.getNegativeQuery().getQueryString())) {
+            return buildQuery(query.getPositiveQuery());
+        }
+        Map<String, Object> queryMap = wrapAMap(
+                "positive", buildQuery(query.getPositiveQuery()),
+                "negative", buildQuery(query.getNegativeQuery())
+        );
+        queryMap.put("negative_boost", query.getNegativeBoost().getValue());
+        return wrapAMap("boosting", queryMap);
+    }
+
     private Map<String, Object> getBooleanMap(BooleanQuery bq) {
         Map<String, Object> queryMap = new LinkedHashMap<>();
         for (BooleanClause.OCCUR occur : BooleanClause.OCCUR.values()) {
             List<Map<String, Object>> clauses = new ArrayList<>();
-            for (Query q : bq.get(occur)) {
-                clauses.add(buildQuery(q));
+            for (BooleanClause clause : bq.get(occur)) {
+                clauses.add(buildQuery(clause.getQuery()));
             }
             if (clauses.size() > 0) {
                 queryMap.put(occur.toString().toLowerCase(Locale.US), clauses);

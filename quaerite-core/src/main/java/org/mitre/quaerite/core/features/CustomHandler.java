@@ -59,4 +59,11 @@ public class CustomHandler implements Feature<CustomHandler> {
     public CustomHandler deepCopy() {
         return new CustomHandler(getHandler(), getCustomQueryKey());
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CustomHandler)) return false;
+        return super.equals(o);
+    }
 }

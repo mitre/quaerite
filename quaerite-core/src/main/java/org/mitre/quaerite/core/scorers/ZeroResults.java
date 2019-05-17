@@ -42,4 +42,11 @@ public class ZeroResults extends AbstractRankScorer {
         }
         return 0;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ZeroResults)) return false;
+        return super.equals(o);
+    }
 }

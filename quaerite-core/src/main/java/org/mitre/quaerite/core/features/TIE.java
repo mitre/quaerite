@@ -28,4 +28,11 @@ public class TIE extends FloatFeature {
     public TIE deepCopy() {
         return new TIE(getValue());
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TIE)) return false;
+        return super.equals(o);
+    }
 }

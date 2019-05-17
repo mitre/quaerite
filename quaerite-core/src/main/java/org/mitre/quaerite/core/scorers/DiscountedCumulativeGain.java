@@ -21,4 +21,11 @@ public abstract class DiscountedCumulativeGain extends AbstractRankScorer {
     public DiscountedCumulativeGain(int atN) {
         super(atN);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DiscountedCumulativeGain)) return false;
+        return super.equals(o);
+    }
 }

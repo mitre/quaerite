@@ -32,4 +32,11 @@ public class ZeroResultsAggregator extends SummingScoreAggregator {
     ZeroResultsAggregator(AbstractRankScorer scorer) {
         super(scorer);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ZeroResultsAggregator)) return false;
+        return super.equals(o);
+    }
 }

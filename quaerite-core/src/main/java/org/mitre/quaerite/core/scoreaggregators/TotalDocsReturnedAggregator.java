@@ -31,4 +31,11 @@ public class TotalDocsReturnedAggregator extends SummingScoreAggregator {
     TotalDocsReturnedAggregator(AbstractRankScorer scorer) {
         super(scorer);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TotalDocsReturnedAggregator)) return false;
+        return super.equals(o);
+    }
 }

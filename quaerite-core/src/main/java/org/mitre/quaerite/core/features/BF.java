@@ -31,4 +31,11 @@ public class BF extends StringListFeature<BF> {
     public BF build(List<String> strings) {
         return new BF(strings);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BF)) return false;
+        return super.equals(o);
+    }
 }

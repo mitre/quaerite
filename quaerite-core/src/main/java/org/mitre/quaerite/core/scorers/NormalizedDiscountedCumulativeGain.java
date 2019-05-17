@@ -64,4 +64,11 @@ public class NormalizedDiscountedCumulativeGain extends AbstractRankScorer {
         return dcg.score(judgments, new ResultSet(totalHits, queryTime,
                 elapsedTime, bestResults));
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof NormalizedDiscountedCumulativeGain)) return false;
+        return super.equals(o);
+    }
 }

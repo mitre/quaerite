@@ -17,6 +17,7 @@
 package org.mitre.quaerite.core.queries;
 
 import java.util.Locale;
+import java.util.Objects;
 
 public class QueryOperator {
 
@@ -52,4 +53,18 @@ public class QueryOperator {
         this.mmInt = mmInt;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof QueryOperator)) return false;
+        QueryOperator that = (QueryOperator) o;
+        return Objects.equals(mmFloat, that.mmFloat) &&
+                Objects.equals(mmInt, that.mmInt) &&
+                operator == that.operator;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mmFloat, mmInt, operator);
+    }
 }

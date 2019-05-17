@@ -50,7 +50,8 @@ public class EDisMaxQuery extends DisMaxQuery {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof EDisMaxQuery)) return false;
+        if (!super.equals(o)) return false;
         EDisMaxQuery that = (EDisMaxQuery) o;
         return Objects.equals(pf2, that.pf2) &&
                 Objects.equals(pf3, that.pf3);
@@ -58,7 +59,7 @@ public class EDisMaxQuery extends DisMaxQuery {
 
     @Override
     public int hashCode() {
-        return Objects.hash(pf2, pf3);
+        return Objects.hash(super.hashCode(), pf2, pf3);
     }
 
     @Override
@@ -69,7 +70,7 @@ public class EDisMaxQuery extends DisMaxQuery {
                 ", pf=" + pf +
                 ", bq=" + bq +
                 ", bf=" + bf +
-                ", queryString='" + queryString + '\'' +
+                ", queryString='" + getQueryString() + '\'' +
                 ", qf=" + qf +
                 ", tie=" + tie +
                 '}';
@@ -85,7 +86,7 @@ public class EDisMaxQuery extends DisMaxQuery {
         cp.bf = (bf != null) ? (BF)bf.deepCopy() : null;
         cp.qf = (qf != null) ? (QF)qf.deepCopy() : null;
         cp.tie = (tie != null) ? new TIE(tie.getValue()) : null;
-        cp.queryString = queryString;
+        cp.setQueryString(getQueryString());
         return cp;
     }
 

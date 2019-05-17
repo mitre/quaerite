@@ -1,0 +1,109 @@
+{
+  "scoreAggregators": [
+    {
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 1
+      }
+    },
+    {
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 3
+      }
+    },
+	{
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 5
+      }
+    },
+	{
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 10
+      }
+    },
+	{
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 30
+      }
+    },
+	{
+      "class": "NDCGAggregator",
+      "params": {
+        "atK": 10,
+        "useForTrain": true,
+        "useForTest": true,
+        "exportPMatrix": true
+      }
+    },
+	{
+      "class": "TotalDocsReturnedAggregator"
+    },
+	{
+      "class": "TotalElapsedTimeAggregator"
+    }
+  ],
+  "experiments": {
+    "title": {
+      "name": "title",
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "bool": {
+          "should": [
+            {
+              "multi_match": {
+                "type": "best_fields",
+                "qf": [
+                  "title"
+                ]
+              },
+              "queryStringName": "positive"
+            }
+          ],
+          "must_not": [
+            {
+              "terms": {
+                "field": "title",
+                "terms": [
+                  "good",
+                  "bad",
+                  "ugly"
+                ]
+              },
+              "queryStringName": "negative"
+            }
+          ]
+        }
+      }
+    },
+    "boostingExperiment": {
+      "searchServerUrl": "http://localhost:9200/tmdb",
+      "query": {
+        "boosting": {
+          "positive": {
+            "multi_match": {
+              "type": "best_fields",
+              "qf": [
+                "title",
+                "overview"
+              ]
+            }
+          },
+          "negative": {
+            "multi_match": {
+              "type": "best_fields",
+              "qf": [
+                "people",
+                "cast"
+              ]
+            }
+          },
+          "negativeBoost": 0.01
+        }
+      }
+    }
+  }
+}

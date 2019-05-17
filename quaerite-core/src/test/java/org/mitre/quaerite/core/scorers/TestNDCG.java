@@ -16,8 +16,6 @@
  */
 package org.mitre.quaerite.core.scorers;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,11 +24,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.ResultSet;
 
 
 public class TestNDCG {
-    static Judgments JUDGMENTS = new Judgments(new QueryInfo("", "query", 1));
+    static Judgments JUDGMENTS = new Judgments(new QueryInfo("",
+            new QueryStrings(), 1));
     static ResultSet RESULT_SET;
     @BeforeAll
     public static void setUp() {

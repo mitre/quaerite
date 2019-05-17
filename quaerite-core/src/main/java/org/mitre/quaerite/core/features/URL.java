@@ -29,4 +29,11 @@ public class URL extends StringFeature {
     public URL deepCopy() {
         return new URL(getFeature());
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof URL)) return false;
+        return super.equals(o);
+    }
 }

@@ -1,0 +1,47 @@
+{
+  "experimentConfig" :
+  {
+    "numThreads": 5,
+    "idField": "customIdField"
+  },
+  "scoreAggregators": [
+    {
+      "class": "AtLeastOneHitAtKAggregator",
+      "params": {
+        "atK": 1
+      }
+    }
+  ],
+  "experiments": {
+    "boolean_example": {
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "boolean": {
+          "must": [
+            {
+              "edismax": {
+                "qf": "title"
+              },
+              "queryStringName": "must1"
+            },
+            {
+              "lucene": {
+                "field": "producer"
+              },
+              "queryStringName": "must2"
+            }
+          ],
+          "filter": [
+
+          ],
+          "should" : [
+
+          ],
+          "must_not" : [
+
+          ]
+        }
+      }
+    }
+  }
+}

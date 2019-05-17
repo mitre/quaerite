@@ -94,8 +94,8 @@ public class Judgments {
         return queryInfo;
     }
 
-    public String getQuery() {
-        return queryInfo.getQuery();
+    public QueryStrings getQueryStrings() {
+        return queryInfo.getQueryStrings();
     }
 
     public String getQuerySet() {

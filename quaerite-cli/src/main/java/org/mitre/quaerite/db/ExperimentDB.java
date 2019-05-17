@@ -249,7 +249,7 @@ public class ExperimentDB implements Closeable {
             throws SQLException {
         insertJudgments.clearParameters();
         insertJudgments.setString(1, judgments.getQuerySet());
-        insertJudgments.setString(2, judgments.getQuery());
+        insertJudgments.setString(2, judgments.getQueryInfo().getQueryId());
         //this is to use later, potentially, in weighting scores for more frequent queries
         insertJudgments.setInt(3, judgments.getQueryCount());
         insertJudgments.setString(4, judgments.toJson());
@@ -442,7 +442,7 @@ public class ExperimentDB implements Closeable {
         synchronized (INSERT_SCORE_LOCK) {
             insertScores.clearParameters();
             insertScores.setString(1, queryInfo.getQuerySet());
-            insertScores.setString(2, queryInfo.getQuery());
+            insertScores.setString(2, queryInfo.getQueryId());
             insertScores.setInt(3, queryInfo.getQueryCount());
             insertScores.setString(4, experiment);
             int i = 5;

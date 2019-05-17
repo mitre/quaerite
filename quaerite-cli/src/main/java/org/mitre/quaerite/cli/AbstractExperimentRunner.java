@@ -43,6 +43,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.analysis.function.Sin;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.connectors.QueryRequest;
@@ -55,8 +56,12 @@ import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.queries.MultiFieldQuery;
+import org.mitre.quaerite.core.queries.MultiStringQuery;
+import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.queries.SingleStringQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.scoreaggregators.DistributionalScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
@@ -65,7 +70,7 @@ import org.mitre.quaerite.core.util.MapUtil;
 import org.mitre.quaerite.db.ExperimentDB;
 
 public abstract class AbstractExperimentRunner extends AbstractCLI {
-    static final Judgments POISON = new Judgments(new QueryInfo("", "", -1));
+    static final Judgments POISON = new Judgments(new QueryInfo("", new QueryStrings(), -1));
 
     static Logger LOG = Logger.getLogger(AbstractExperimentRunner.class);
 
@@ -253,7 +258,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         int invalidQueries = 0;
         JudgmentList retList = new JudgmentList();
         for (Judgments j : judgmentList.getJudgmentsList()) {
-            Judgments winnowedJugments = new Judgments(new QueryInfo(j.getQuerySet(), j.getQuery(), j.getQueryCount()));
+            Judgments winnowedJugments = new Judgments(new QueryInfo(j.getQuerySet(), j.getQueryStrings(), j.getQueryCount()));
             for (Map.Entry<String, Double> e : j.getSortedJudgments().entrySet()) {
                 if (valid.contains(e.getKey())) {
                     winnowedJugments.addJudgment(e.getKey(), e.getValue());
@@ -267,7 +272,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             } else {
                 LOG.warn(
                         "After removing invalid jugments, there were 0 judgments for query: " +
-                                j.getQuery());
+                                j.getQueryInfo().getQueryId());
                 invalidQueries++;
             }
         }
@@ -343,9 +348,25 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
 
         private void scoreEach(Judgments judgments, List<ScoreAggregator> scoreAggregators) {
-            //TODO: fix this; ok to assume multimatch for now
-            MultiFieldQuery fullQuery = (MultiFieldQuery)experiment.getQuery();
-            fullQuery.setQueryString(judgments.getQuery());
+
+            Query fullQuery = experiment.getQuery();
+            if (fullQuery instanceof MultiStringQuery) {
+                ((MultiStringQuery)fullQuery).setQueryStrings(judgments.getQueryStrings());
+            } else if (fullQuery instanceof SingleStringQuery) {
+                QueryStrings queryStrings = judgments.getQueryStrings();
+                if (queryStrings.names().size() > 1) {
+                    throw new IllegalArgumentException("This query is a single string query, but there are multiple queryStrings: "+queryStrings);
+                }
+                if (! queryStrings.names().contains(QueryStrings.DEFAULT_QUERY_NAME)) {
+                    throw new IllegalArgumentException("QueryStrings must contain a single field named '"+
+                            QueryStrings.DEFAULT_QUERY_NAME+"' for the query: "+queryStrings);
+                }
+                String queryString = queryStrings.getStringByName(QueryStrings.DEFAULT_QUERY_NAME);
+                ((SingleStringQuery)fullQuery).setQueryString(queryString);
+            } else {
+                throw new IllegalArgumentException("I regret that I only support MultiStringQueries " +
+                        "and SingleStringQueries, not: "+fullQuery.getClass());
+            }
 
 
             QueryRequest queryRequest = new QueryRequest(fullQuery, experiment.getCustomHandler(), idField);

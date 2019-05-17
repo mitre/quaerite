@@ -32,4 +32,11 @@ public class TotalQueryTimeAggregator extends SummingScoreAggregator {
     TotalQueryTimeAggregator(AbstractRankScorer scorer) {
         super(scorer);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TotalQueryTimeAggregator)) return false;
+        return super.equals(o);
+    }
 }

@@ -56,7 +56,7 @@ public class DisMaxQuery extends MultiFieldQuery {
         cp.bf = (bf == null) ? null : bf.deepCopy();
         cp.qf = (qf == null) ? null : qf.deepCopy();
         cp.tie = (tie == null) ? null : tie.deepCopy();
-        cp.queryString = queryString;
+        cp.setQueryString(getQueryString());
         return cp;
     }
 

@@ -20,31 +20,26 @@ package org.mitre.quaerite.core.queries;
 
 import java.util.Objects;
 
-public class LuceneQuery extends Query {
+public class LuceneQuery extends SingleStringQuery {
 
     public final static QueryOperator.OPERATOR
             DEFAULT_QUERY_OPERATOR = QueryOperator.OPERATOR.AND;
 
     private String defaultField;
-    private String queryString;
     private QueryOperator.OPERATOR qop;
 
     public LuceneQuery(String defaultField, String queryString) {
         this(defaultField, queryString, DEFAULT_QUERY_OPERATOR);
     }
     public LuceneQuery(String defaultField, String queryString, QueryOperator.OPERATOR qop) {
+        super(queryString);
         this.defaultField = defaultField;
-        this.queryString = queryString;
         this.qop = qop;
 
     }
 
     public String getDefaultField() {
         return defaultField;
-    }
-
-    public String getQueryString() {
-        return queryString;
     }
 
     public QueryOperator.OPERATOR getQueryOperator() {
@@ -58,12 +53,7 @@ public class LuceneQuery extends Query {
 
     @Override
     public Object deepCopy() {
-        return new LuceneQuery(defaultField, queryString, qop);
-    }
-
-    @Override
-    public void setQueryString(String queryString) {
-        this.queryString = queryString;
+        return new LuceneQuery(defaultField, getQueryString(), qop);
     }
 
     @Override
@@ -72,12 +62,12 @@ public class LuceneQuery extends Query {
         if (o == null || getClass() != o.getClass()) return false;
         LuceneQuery that = (LuceneQuery) o;
         return Objects.equals(defaultField, that.defaultField) &&
-                Objects.equals(queryString, that.queryString) &&
+                Objects.equals(getQueryString(), that.getQueryString()) &&
                 qop == that.qop;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(defaultField, queryString, qop);
+        return Objects.hash(defaultField, getQueryString(), qop);
     }
 }

@@ -17,6 +17,8 @@
  */
 package org.mitre.quaerite.core.scorers;
 
+import java.util.Objects;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.mitre.quaerite.core.RankScorer;
@@ -44,5 +46,18 @@ public abstract class AbstractRankScorer implements RankScorer {
 
     public int getAtN() {
         return atN;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AbstractRankScorer)) return false;
+        AbstractRankScorer that = (AbstractRankScorer) o;
+        return atN == that.atN;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(atN);
     }
 }

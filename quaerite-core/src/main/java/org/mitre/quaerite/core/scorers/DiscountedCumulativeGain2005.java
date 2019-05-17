@@ -55,4 +55,11 @@ public class DiscountedCumulativeGain2005 extends DiscountedCumulativeGain {
     String _getName() {
         return "dcg2005";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DiscountedCumulativeGain2005)) return false;
+        return super.equals(o);
+    }
 }

@@ -19,6 +19,7 @@ package org.mitre.quaerite.core.features;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
+import java.util.Objects;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.util.MathUtil;
@@ -46,5 +47,19 @@ public class FloatFeature extends AbstractFeature<FloatFeature> {
     @Override
     public FloatFeature deepCopy() {
         return new FloatFeature(getName(), v);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FloatFeature)) return false;
+        FloatFeature that = (FloatFeature) o;
+        return Float.compare(that.v, v) == 0 &&
+                Objects.equals(df, that.df);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(df, v);
     }
 }

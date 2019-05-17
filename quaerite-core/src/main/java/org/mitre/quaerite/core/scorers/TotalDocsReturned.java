@@ -38,4 +38,11 @@ public class TotalDocsReturned extends AbstractRankScorer {
     public double score(Judgments judgments, ResultSet resultSet) {
         return resultSet.getTotalHits();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TotalDocsReturned)) return false;
+        return super.equals(o);
+    }
 }

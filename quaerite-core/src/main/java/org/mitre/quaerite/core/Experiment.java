@@ -20,6 +20,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -130,5 +131,22 @@ public class Experiment {
 
     public void setQuery(Query query) {
         this.query = query;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Experiment)) return false;
+        Experiment that = (Experiment) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(searchServerUrl, that.searchServerUrl) &&
+                Objects.equals(customHandler, that.customHandler) &&
+                Objects.equals(query, that.query) &&
+                Objects.equals(filterQueries, that.filterQueries);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, searchServerUrl, customHandler, query, filterQueries);
     }
 }

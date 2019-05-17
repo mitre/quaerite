@@ -293,10 +293,10 @@ public class RunGA extends AbstractExperimentRunner {
                 ")");
         if (LOG.isDebugEnabled()) {
             for (Judgments j : trainJudgmentList.getJudgmentsList()) {
-                LOG.debug("fold " + fold + ", training query: " + j.getQuery());
+                LOG.debug("fold " + fold + ", training query: " + j.getQueryInfo().getQueryId());
             }
             for (Judgments j : trainTestJudmentListPair.getTest().getJudgmentsList()) {
-                LOG.debug("fold " + fold + ", testing query: " + j.getQuery());
+                LOG.debug("fold " + fold + ", testing query: " + j.getQueryInfo().getQueryId());
             }
         }
 

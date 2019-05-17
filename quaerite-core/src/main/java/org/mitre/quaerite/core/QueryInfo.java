@@ -18,18 +18,19 @@
 
 package org.mitre.quaerite.core;
 
+import java.util.Map;
 import java.util.Objects;
 
 public class QueryInfo {
 
     public static final String DEFAULT_QUERY_SET = "";
     private final String querySet;
-    private final String query;
+    private final QueryStrings queryStrings;
     private final int queryCount;
 
-    public QueryInfo(String querySet, String query, int queryCount) {
+    public QueryInfo(String querySet, QueryStrings queryStrings, int queryCount) {
         this.querySet = querySet;
-        this.query = query;
+        this.queryStrings = queryStrings;
         this.queryCount = queryCount;
     }
 
@@ -37,12 +38,16 @@ public class QueryInfo {
         return querySet;
     }
 
-    public String getQuery() {
-        return query;
+    public QueryStrings getQueryStrings() {
+        return queryStrings;
     }
 
     public int getQueryCount() {
         return queryCount;
+    }
+
+    public String getQueryId() {
+        return queryStrings.getId();
     }
 
     @Override
@@ -52,19 +57,19 @@ public class QueryInfo {
         QueryInfo queryInfo = (QueryInfo) o;
         return queryCount == queryInfo.queryCount &&
                 querySet.equals(queryInfo.querySet) &&
-                query.equals(queryInfo.query);
+                queryStrings.equals(queryInfo.queryStrings);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(querySet, query, queryCount);
+        return Objects.hash(querySet, queryStrings, queryCount);
     }
 
     @Override
     public String toString() {
         return "QueryInfo{" +
                 "querySet='" + querySet + '\'' +
-                ", query='" + query + '\'' +
+                ", queryStrings='" + queryStrings + '\'' +
                 ", queryCount=" + queryCount +
                 '}';
     }

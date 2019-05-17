@@ -29,8 +29,4 @@ public class MatchAllDocsQuery extends Query {
         return this;
     }
 
-    @Override
-    public void setQueryString(String queryString) {
-        //no-op
-    }
 }

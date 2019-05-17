@@ -19,6 +19,7 @@ package org.mitre.quaerite.core.features;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,4 +72,18 @@ public class WeightableField {
         return weight;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof WeightableField)) return false;
+        WeightableField that = (WeightableField) o;
+        return Objects.equals(feature, that.feature) &&
+                Objects.equals(weight, that.weight) &&
+                Objects.equals(df, that.df);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(feature, weight, df);
+    }
 }

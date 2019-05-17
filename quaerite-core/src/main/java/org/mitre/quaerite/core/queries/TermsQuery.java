@@ -20,12 +20,16 @@ package org.mitre.quaerite.core.queries;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
-public class TermsQuery extends Query {
+import org.apache.commons.lang3.StringUtils;
+
+public class TermsQuery extends SingleStringQuery {
 
     private final String field;
-    private final List<String> terms;
+    private volatile List<String> terms;
     public TermsQuery(String field, List<String> terms) {
+        super(StringUtils.joinWith(",", terms));
         this.field = field;
         //defensive copy
         this.terms = new ArrayList<>(terms);
@@ -45,6 +49,7 @@ public class TermsQuery extends Query {
      */
     @Override
     public void setQueryString(String queryString) {
+        super.setQueryString(queryString);
         terms.clear();
         terms.addAll(Arrays.asList(queryString.split(",")));
     }
@@ -57,5 +62,19 @@ public class TermsQuery extends Query {
     @Override
     public Object deepCopy() {
         return new TermsQuery(field, terms);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TermsQuery)) return false;
+        TermsQuery that = (TermsQuery) o;
+        return Objects.equals(field, that.field) &&
+                Objects.equals(terms, that.terms);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(field, terms);
     }
 }

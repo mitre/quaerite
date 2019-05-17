@@ -17,11 +17,13 @@
  */
 package org.mitre.quaerite.core.scoreaggregators;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -71,7 +73,7 @@ public abstract class AbstractScoreAggregator implements ScoreAggregator {
         QueryInfo defaultQueryInfo = null;
         //also keep track of all results together
         if (!judgments.getQuerySet().equals(QueryInfo.DEFAULT_QUERY_SET)) {
-            defaultQueryInfo = new QueryInfo(QueryInfo.DEFAULT_QUERY_SET, judgments.getQuery(), judgments.getQueryCount());
+            defaultQueryInfo = new QueryInfo(QueryInfo.DEFAULT_QUERY_SET, judgments.getQueryStrings(), judgments.getQueryCount());
             scores.put(defaultQueryInfo, result);
         }
         synchronized (lock) {
@@ -149,5 +151,23 @@ public abstract class AbstractScoreAggregator implements ScoreAggregator {
     @Override
     public boolean getExportPMatrix() {
         return exportPMatrix;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AbstractScoreAggregator)) return false;
+        AbstractScoreAggregator that = (AbstractScoreAggregator) o;
+        return useForTrain == that.useForTrain &&
+                useForTest == that.useForTest &&
+                exportPMatrix == that.exportPMatrix &&
+                Objects.equals(scorer, that.scorer) &&
+                Objects.equals(scores, that.scores) &&
+                Objects.equals(querySets, that.querySets);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(useForTrain, useForTest, exportPMatrix, scorer, scores, querySets);
     }
 }

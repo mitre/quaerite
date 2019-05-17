@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -117,5 +118,18 @@ public class WeightableListFeature extends AbstractFeature<WeightableListFeature
         return "WeightableListFeature{" +
                 "weightableFields=" + weightableFields +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof WeightableListFeature)) return false;
+        WeightableListFeature that = (WeightableListFeature) o;
+        return Objects.equals(weightableFields, that.weightableFields);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(weightableFields);
     }
 }

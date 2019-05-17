@@ -30,4 +30,12 @@ public class NDCGAggregator extends DistributionalScoreAggregator {
     private NDCGAggregator(int k) {
         super(new NormalizedDiscountedCumulativeGain(k));
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof NDCGAggregator)) return false;
+        return super.equals(o);
+    }
+
 }

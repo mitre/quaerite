@@ -43,4 +43,12 @@ public class CumulativeGain extends AbstractRankScorer {
     String _getName() {
         return "CumulativeGain";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CumulativeGain)) return false;
+        return super.equals(o);
+    }
+
 }

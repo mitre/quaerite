@@ -20,6 +20,7 @@ package org.mitre.quaerite.core;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -31,13 +32,20 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.features.Feature;
+import org.mitre.quaerite.core.features.MultiMatchType;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
+import org.mitre.quaerite.core.queries.BooleanClause;
+import org.mitre.quaerite.core.queries.BooleanQuery;
+import org.mitre.quaerite.core.queries.BoostingQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
+import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.scoreaggregators.NDCGAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
+import org.mitre.quaerite.core.serializers.QuerySerializer;
 
 public class TestExperimentSet {
 
@@ -110,7 +118,7 @@ public class TestExperimentSet {
     }
 
     @Test
-    public void testBoolean() throws Exception {
+    public void testESBooleanAndBoosting() throws Exception {
         ExperimentSet experimentSet = null;
         try (Reader reader =
                      new BufferedReader(new InputStreamReader(
@@ -118,9 +126,71 @@ public class TestExperimentSet {
                              StandardCharsets.UTF_8))) {
             experimentSet = ExperimentSet.fromJson(reader);
         }
-        System.out.println(experimentSet);
+        //test deserialization before modifying experiment set
+        String json = experimentSet.toJson();
+        ExperimentSet revivified = ExperimentSet.fromJson(new StringReader(json));
+        assertEquals(experimentSet, revivified);
+
         Query q = experimentSet.getExperiments().get("title").getQuery();
-        System.out.println(q);
+        assertEquals(BooleanQuery.class, q.getClass());
+
+        BooleanQuery bq = (BooleanQuery)q;
+        QueryStrings queryStrings = new QueryStrings();
+        queryStrings.addQueryString("should_1", "should1query");
+
+        boolean ex = false;
+        try {
+            bq.setQueryStrings(queryStrings);
+            //must_not_1 is not set
+            fail("should have thrown exception");
+        } catch (IllegalArgumentException e) {
+            ex = true;
+        }
+        assertTrue(ex);
+        //test duplicate key
+        ex = false;
+        try {
+            queryStrings.addQueryString("should_1", "should1query");
+            fail("can't add duplicate key");
+        } catch (IllegalArgumentException e) {
+            ex = true;
+        }
+        assertTrue(ex);
+        ex = false;
+        //test bad query string
+        queryStrings.addQueryString("unknown", "unknown");
+        try {
+            bq.setQueryStrings(queryStrings);
+            fail("can't add unknown query string");
+        } catch (IllegalArgumentException e) {
+            ex = true;
+        }
+        assertTrue(ex);
+        //now do it correctly
+        queryStrings = new QueryStrings();
+        queryStrings.addQueryString("should_1", "should1query");
+        queryStrings.addQueryString("must_not_1", "mustnot1query");
+        bq.setQueryStrings(queryStrings);
+
+        List<BooleanClause> shoulds = bq.get(BooleanClause.OCCUR.SHOULD);
+        assertEquals(1, shoulds.size());
+        Query should = shoulds.get(0).getQuery();
+        assertEquals(MultiMatchQuery.class, should.getClass());
+        MultiMatchQuery mm = (MultiMatchQuery)should;
+        assertTrue(new MultiMatchType("best_fields").equals(mm.getMultiMatchType()));
+        assertEquals("should1query", mm.getQueryString());
+
+        List<BooleanClause> mustNots = bq.get(BooleanClause.OCCUR.MUST_NOT);
+        assertEquals(1, mustNots.size());
+        Query mustNot = mustNots.get(0).getQuery();
+        assertEquals(TermsQuery.class, mustNot.getClass());
+
+
+        Query boosting = experimentSet.getExperiments().get("boostingExperiment").getQuery();
+        assertEquals(BoostingQuery.class, boosting.getClass());
+
+        assertEquals((float)0.001, ((BoostingQuery)boosting).getNegativeBoost().getValue(), 0.1);
+
 
     }
 

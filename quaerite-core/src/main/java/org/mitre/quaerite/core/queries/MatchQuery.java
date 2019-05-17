@@ -17,15 +17,14 @@
 package org.mitre.quaerite.core.queries;
 
 
-public class MatchQuery extends Query {
-    String queryString;
+public class MatchQuery extends SingleStringQuery {
 
     public MatchQuery() {
-
+        super(null);
     }
 
     public MatchQuery(String queryString) {
-        this.queryString = queryString;
+       super(queryString);
     }
 
     @Override
@@ -35,11 +34,6 @@ public class MatchQuery extends Query {
 
     @Override
     public Object deepCopy() {
-        return new MatchQuery(queryString);
-    }
-
-    @Override
-    public void setQueryString(String queryString) {
-        this.queryString = queryString;
+        return new MatchQuery(getQueryString());
     }
 }

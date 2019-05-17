@@ -48,4 +48,11 @@ public class PrecisionAtK extends AbstractRankScorer {
     String _getName() {
         return "p";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PrecisionAtK)) return false;
+        return super.equals(o);
+    }
 }

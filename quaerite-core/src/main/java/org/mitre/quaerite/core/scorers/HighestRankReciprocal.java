@@ -43,4 +43,11 @@ public class HighestRankReciprocal extends HighestRank {
     String _getName() {
         return "HighestRankReciprocal";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof HighestRankReciprocal)) return false;
+        return super.equals(o);
+    }
 }

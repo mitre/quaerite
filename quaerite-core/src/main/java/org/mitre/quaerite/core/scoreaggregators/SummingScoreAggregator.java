@@ -68,4 +68,6 @@ public class SummingScoreAggregator extends AbstractScoreAggregator {
     public String getPrimaryStatisticName() {
         return getName()+"_"+SUM;
     }
+
+
 }

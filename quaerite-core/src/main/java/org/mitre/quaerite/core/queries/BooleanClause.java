@@ -16,6 +16,8 @@
  */
 package org.mitre.quaerite.core.queries;
 
+import java.util.Objects;
+
 public class BooleanClause {
 
     public enum OCCUR {
@@ -25,11 +27,17 @@ public class BooleanClause {
         FILTER
     }
 
-    private OCCUR occur;
-    private Query query;
+    private final OCCUR occur;
+    private final Query query;
+    private final String queryStringName;
 
-
-    public BooleanClause(OCCUR occur, Query query) {
+    /**
+     * @param queryStringName
+     * @param occur
+     * @param query
+     */
+    public BooleanClause(String queryStringName, OCCUR occur, Query query) {
+        this.queryStringName = queryStringName;
         this.occur = occur;
         this.query = query;
     }
@@ -42,11 +50,43 @@ public class BooleanClause {
         return query;
     }
 
+    /**
+     * This is the name of the queryString that should be injected
+     * into this clause.  This can be null.
+     * @return
+     */
+    public String getQueryStringName() {
+        return queryStringName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BooleanClause)) return false;
+        BooleanClause clause = (BooleanClause) o;
+        return occur == clause.occur &&
+                Objects.equals(query, clause.query) &&
+                Objects.equals(queryStringName, clause.queryStringName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(occur, query, queryStringName);
+    }
+
     @Override
     public String toString() {
         return "BooleanClause{" +
                 "occur=" + occur +
                 ", query=" + query +
+                ", queryStringName='" + queryStringName + '\'' +
                 '}';
     }
+
+    public BooleanClause deepCopy() {
+        return new BooleanClause(queryStringName, getOccur(),
+                (SingleStringQuery)query.deepCopy());
+    }
+
+
 }

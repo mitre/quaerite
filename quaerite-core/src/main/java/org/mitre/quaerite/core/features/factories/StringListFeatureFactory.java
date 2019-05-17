@@ -182,13 +182,16 @@ public class StringListFeatureFactory<T extends StringListFeature>
         Collections.shuffle(uniques);
         List<String> childA = new ArrayList<>();
         int numA = MathUtil.RANDOM.nextInt(minSetSize, maxSetSize);
-        for (int i = 0; i < numA; i++) {
+        int sz = numA >= uniques.size() ? uniques.size() : numA;
+
+        for (int i = 0; i < sz; i++) {
             childA.add(uniques.get(i));
         }
         Collections.shuffle(uniques);
         List<String> childB = new ArrayList<>();
         int numB = MathUtil.RANDOM.nextInt(minSetSize, maxSetSize);
-        for (int i = 0; i < numB; i++) {
+        sz = numB >= uniques.size() ? uniques.size() : numB;
+        for (int i = 0; i < sz; i++) {
             childB.add(uniques.get(i));
         }
         return Pair.of((T)parentA.build(childA), (T)parentB.build(childB));

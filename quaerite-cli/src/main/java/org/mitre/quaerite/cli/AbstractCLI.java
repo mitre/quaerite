@@ -25,23 +25,47 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.sun.org.apache.regexp.internal.RE;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
+import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.Experiment;
 import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 import org.mitre.quaerite.db.ExperimentDB;
 
 public abstract class AbstractCLI {
+
+    private static final String QUERY_SET = "querySet";
+    private static final String QUERY_ID = "queryId";
+    private static final String DOCUMENT_ID = "id";
+    private static final String RELEVANCE = "relevance";
+    private static final String COUNT = "count";
+
+    static Logger LOG = Logger.getLogger(AbstractCLI.class);
+
+    private static Set<String> DEFINED_JUDGMENT_COLUMNS =
+            Collections.unmodifiableSet(
+                    new HashSet(
+                            Arrays.asList(new String[]{
+                                    QUERY_SET, QUERY_ID, DOCUMENT_ID, RELEVANCE, COUNT })
+                    )
+            );
 
     static ExperimentSet addExperiments(ExperimentDB experimentDB, Path experimentsJson, boolean merge, boolean freshStart) throws SQLException, IOException {
         if (freshStart) {
@@ -78,25 +102,28 @@ public abstract class AbstractCLI {
             try (Reader reader = new InputStreamReader(new BOMInputStream(is), "UTF-8")) {
                 Iterable<CSVRecord> records = CSVFormat.EXCEL
                         .withFirstRecordAsHeader().parse(reader);
-                boolean hasQuerySet = (((CSVParser) records).getHeaderMap().containsKey("querySet")) ? true : false;
-                boolean hasCount = (((CSVParser) records).getHeaderMap().containsKey("count")) ? true : false;
+                boolean hasQuerySet = (((CSVParser) records).getHeaderMap().containsKey(QUERY_SET)) ? true : false;
+                boolean hasCount = (((CSVParser) records).getHeaderMap().containsKey(COUNT)) ? true : false;
+                boolean hasQueryId = (((CSVParser) records).getHeaderMap().containsKey(QUERY_ID)) ? true : false;
+                Set<String> queryStringNames = getQueryStringNames(((CSVParser)records).getHeaderMap().keySet());
+
                 for (CSVRecord record : records) {
-                    String querySet = (hasQuerySet) ? record.get("querySet") : QueryInfo.DEFAULT_QUERY_SET;
-                    String query = record.get("query");
-                    String id = record.get("id");
-                    int count = (hasCount) ? Integer.parseInt(record.get("count")) : 1;
+                    String querySet = (hasQuerySet) ? record.get(QUERY_SET) : QueryInfo.DEFAULT_QUERY_SET;
+                    QueryStrings queryStrings = getQueryStrings(hasQueryId, queryStringNames, record);
+                    String documentId = record.get("id");
+                    int count = (hasCount) ? Integer.parseInt(record.get(COUNT)) : 1;
                     double relevanceScore =
-                            Double.parseDouble(record.get("relevance"));
+                            Double.parseDouble(record.get(RELEVANCE));
                     Map<String, Judgments> querySetMap = queries.get(querySet);
                     if (querySetMap == null) {
                         querySetMap = new HashMap<>();
                     }
-                    Judgments judgments = querySetMap.get(query);
+                    Judgments judgments = querySetMap.get(queryStrings.getId());
                     if (judgments == null) {
-                        judgments = new Judgments(new QueryInfo(querySet, query, count));
+                        judgments = new Judgments(new QueryInfo(querySet, queryStrings, count));
                     }
-                    judgments.addJudgment(id, relevanceScore);
-                    querySetMap.put(query, judgments);
+                    judgments.addJudgment(documentId, relevanceScore);
+                    querySetMap.put(queryStrings.getId(), judgments);
                     queries.put(querySet, querySetMap);
                 }
             }
@@ -106,6 +133,31 @@ public abstract class AbstractCLI {
                 experimentDB.addJudgment(judgments);
             }
         }
+    }
+
+    private static QueryStrings getQueryStrings(
+            boolean hasQueryId, Set<String> queryStringNames, CSVRecord record) {
+        QueryStrings queryStrings;
+        if (hasQueryId) {
+            queryStrings = new QueryStrings(record.get(QUERY_ID));
+        } else {
+            queryStrings = new QueryStrings();
+        }
+        for (String name : queryStringNames) {
+            queryStrings.addQueryString(name, record.get(name));
+        }
+        return queryStrings;
+    }
+
+    private static Set<String> getQueryStringNames(Set<String> keySet) {
+        Set<String> undefined = new HashSet<>();
+        for (String s : keySet) {
+            if (! DEFINED_JUDGMENT_COLUMNS.contains(s)) {
+                undefined.add(s);
+                LOG.debug("adding column for queryString:'"+s+"'");
+            }
+        }
+        return undefined;
     }
 
 

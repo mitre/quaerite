@@ -47,4 +47,11 @@ public class RecallAtK extends AbstractRankScorer {
         }
         return (double)hits/(double)atN;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RecallAtK)) return false;
+        return super.equals(o);
+    }
 }

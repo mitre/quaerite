@@ -17,21 +17,15 @@
 
 package org.mitre.quaerite.core.queries;
 
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.Objects;
 
-public class TermQuery extends Query {
+public class TermQuery extends SingleStringQuery {
 
     final String field;
-    String term;
 
     public TermQuery(String field, String term) {
+        super(term);
         this.field = field;
-        this.term = term;
-    }
-
-    @Override
-    public void setQueryString(String queryString) {
-        this.term = queryString;
     }
 
     @Override
@@ -41,7 +35,7 @@ public class TermQuery extends Query {
 
     @Override
     public Object deepCopy() {
-        return new TermQuery(field, term);
+        return new TermQuery(field, getQueryString());
     }
 
     public String getField() {
@@ -49,6 +43,20 @@ public class TermQuery extends Query {
     }
 
     public String getTerm() {
-        return  term;
+        return  getQueryString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TermQuery)) return false;
+        TermQuery termQuery = (TermQuery) o;
+        return Objects.equals(field, termQuery.field) &&
+                Objects.equals(getQueryString(), termQuery.getTerm());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(field, getTerm());
     }
 }

@@ -31,4 +31,11 @@ public class SimpleStringFeature extends StringFeature<SimpleStringFeature> {
     public SimpleStringFeature deepCopy() {
         return new SimpleStringFeature(getName(), getFeature());
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SimpleStringFeature)) return false;
+        return super.equals(o);
+    }
 }

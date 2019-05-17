@@ -40,10 +40,11 @@ public class TestStringListFeatureFactory {
         List<String> lB = new ArrayList<>();
         lB.addAll(lA);
         StringListFeatureFactory<FQ> factoryB = new StringListFeatureFactory<FQ>("fq", FQ.class, lB, minSetSize, maxSetSize);
-        FQ fqA = factoryA.random();
-        FQ fqB = factoryB.random();
         for (int i = 0; i < 1000000; i++) {
+            FQ fqA = factoryA.random();
+            FQ fqB = factoryB.random();
             Pair<FQ, FQ> pair = factoryA.crossover(fqA, fqB);
+
             if (pair.getLeft().getAll().size() > maxSetSize || pair.getLeft().getAll().size() < minSetSize) {
                 fail(pair.getLeft().toString() + " not within set size range");
             }

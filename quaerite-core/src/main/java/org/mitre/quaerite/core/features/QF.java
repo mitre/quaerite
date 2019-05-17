@@ -16,6 +16,8 @@
  */
 package org.mitre.quaerite.core.features;
 
+import java.util.Objects;
+
 public class QF extends WeightableListFeature {
 
     private static final String NAME = "qf";
@@ -37,4 +39,12 @@ public class QF extends WeightableListFeature {
         }
         return deepCopy;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof QF)) return false;
+        return super.equals(o);
+    }
+
 }

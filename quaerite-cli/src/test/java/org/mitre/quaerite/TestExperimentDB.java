@@ -34,6 +34,7 @@ import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
@@ -96,12 +97,18 @@ public class TestExperimentDB {
         assertEquals(2, filterQueries2.size());
         assertIterableEquals(filterQueries, filterQueries2);
         EDisMaxQuery q2 = (EDisMaxQuery)revivified.getQuery();
-        assertEquals(q, q2);
+
+        //the query string is transient and not serialized
+        EDisMaxQuery expected = q.deepCopy();
+        expected.setQueryString(null);
+        assertEquals(expected, q2);
         db.close();
 
         db = ExperimentDB.open(DB_DIR);
 
-        Judgments judgments = new Judgments(new QueryInfo("", "q1", 1));
+        QueryStrings queryStrings = new QueryStrings();
+        queryStrings.setQuery("q1");
+        Judgments judgments = new Judgments(new QueryInfo("", queryStrings, 1));
 
         judgments.addJudgment("id1", 2.0);
         judgments.addJudgment("id2", 4.0);
@@ -115,7 +122,7 @@ public class TestExperimentDB {
         assertEquals(1, judgmentsList.getJudgmentsList().size());
 
         Judgments revivifiedJudgments = judgmentsList.getJudgmentsList().get(0);
-        assertEquals("q1", revivifiedJudgments.getQuery());
+        assertEquals("q1", revivifiedJudgments.getQueryInfo().getQueryId());
         assertEquals(4.0, revivifiedJudgments.getJudgment("id2"), 0.01);
         db.close();
 

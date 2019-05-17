@@ -29,4 +29,13 @@ public class FQ extends StringListFeature<FQ> {
     public FQ build(List<String> strings) {
         return new FQ(strings);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FQ)) return false;
+        return super.equals(o);
+    }
+
+
 }

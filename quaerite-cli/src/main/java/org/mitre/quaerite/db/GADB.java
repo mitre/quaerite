@@ -74,18 +74,18 @@ public class GADB extends ExperimentDB {
         int trainFold = 1;
         for (Judgments judgments : test.getJudgmentsList()) {
             insertTrainTest.clearParameters();
-            insertTrainTest.setString(1, judgments.getQuery());
+            insertTrainTest.setString(1, judgments.getQueryInfo().getQueryId());
             insertTrainTest.setInt(2, testFold);
             insertTrainTest.execute();
-            added.add(judgments.getQuery());
+            added.add(judgments.getQueryInfo().getQueryId());
         }
 
         for (Judgments judgments : all.getJudgmentsList()) {
-            if (added.contains(judgments.getQuery())) {
+            if (added.contains(judgments.getQueryInfo().getQueryId())) {
                 continue;
             }
             insertTrainTest.clearParameters();
-            insertTrainTest.setString(1, judgments.getQuery());
+            insertTrainTest.setString(1, judgments.getQueryInfo().getQueryId());
             insertTrainTest.setInt(2, trainFold);
             insertTrainTest.execute();
         }
@@ -104,7 +104,7 @@ public class GADB extends ExperimentDB {
         int i = 0;
         for (Judgments judgments : judgmentList.getJudgmentsList()) {
             insertTrainTest.clearParameters();
-            insertTrainTest.setString(1, judgments.getQuery());
+            insertTrainTest.setString(1, judgments.getQueryInfo().getQueryId());
             insertTrainTest.setInt(2, foldIds.get(i++));
             insertTrainTest.execute();
         }
@@ -138,7 +138,7 @@ public class GADB extends ExperimentDB {
         JudgmentList test = new JudgmentList();
         JudgmentList train = new JudgmentList();
         for (Judgments judgments : allJudgments.getJudgmentsList()) {
-            if (testNames.contains(judgments.getQuery())) {
+            if (testNames.contains(judgments.getQueryInfo().getQueryId())) {
                 test.addJudgments(judgments);
             } else {
                 train.addJudgments(judgments);

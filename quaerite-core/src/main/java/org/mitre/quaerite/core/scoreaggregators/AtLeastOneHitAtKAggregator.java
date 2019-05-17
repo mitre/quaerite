@@ -31,4 +31,11 @@ public class AtLeastOneHitAtKAggregator extends SummingScoreAggregator {
     public AtLeastOneHitAtKAggregator(int k) {
         super(new AtLeastOneHitAtK(k));
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AtLeastOneHitAtKAggregator)) return false;
+        return super.equals(o);
+    }
 }

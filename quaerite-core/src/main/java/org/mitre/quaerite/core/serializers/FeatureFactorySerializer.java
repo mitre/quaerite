@@ -36,9 +36,11 @@ import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.FloatFeature;
 import org.mitre.quaerite.core.features.Fuzziness;
 import org.mitre.quaerite.core.features.MultiMatchType;
+import org.mitre.quaerite.core.features.NegativeBoost;
 import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.features.WeightableListFeature;
+import org.mitre.quaerite.core.features.factories.BoostingQueryFactory;
 import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
 import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
@@ -47,6 +49,7 @@ import org.mitre.quaerite.core.features.factories.QueryFactory;
 import org.mitre.quaerite.core.features.factories.StringListFeatureFactory;
 import org.mitre.quaerite.core.features.factories.StringFeatureFactory;
 import org.mitre.quaerite.core.features.factories.WeightableListFeatureFactory;
+import org.mitre.quaerite.core.queries.BoostingQuery;
 import org.mitre.quaerite.core.queries.DisMaxQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.MultiFieldQuery;
@@ -109,8 +112,6 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
     }
 
 
-
-
     private QueryFactory createQueryFactory(JsonObject qRoot) {
         String name = JsonUtil.getSingleChildName(qRoot);
         JsonObject childRoot = qRoot.get(name).getAsJsonObject();
@@ -120,9 +121,21 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             return buildDisMaxFactory(childRoot);
         } else if (name.equals("multi_match")) {
             return buildMultiMatchFactory(childRoot);
+        } else if (name.equals("boosting")) {
+            return buildBoostingFactory(childRoot);
         }else {
+            //TODO: add boolean query
             throw new IllegalArgumentException("I regret I don't yet support: "+name);
         }
+    }
+
+    private QueryFactory buildBoostingFactory(JsonObject childRoot) {
+        QueryFactory positive = createQueryFactory(childRoot.getAsJsonObject("positive"));
+        QueryFactory negative = createQueryFactory(childRoot.getAsJsonObject("negative"));
+
+        FloatFeatureFactory<NegativeBoost> negBoostFactory =
+                    new FloatFeatureFactory<>(NegativeBoost.class, toFloatList(childRoot.get("negativeBoost")));
+        return new BoostingQueryFactory(positive, negative, negBoostFactory);
     }
 
     private QueryFactory buildMultiMatchFactory(JsonObject childRoot) {

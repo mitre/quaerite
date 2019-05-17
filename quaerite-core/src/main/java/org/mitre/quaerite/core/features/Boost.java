@@ -26,4 +26,11 @@ public class Boost extends FloatFeature {
     public Boost(float value) {
         super(NAME, value);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Boost)) return false;
+        return super.equals(o);
+    }
 }

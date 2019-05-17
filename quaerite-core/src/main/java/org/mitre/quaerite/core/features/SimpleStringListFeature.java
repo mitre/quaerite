@@ -16,14 +16,8 @@
  */
 package org.mitre.quaerite.core.features;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.mitre.quaerite.core.util.MathUtil;
+import java.util.List;
 
 public class SimpleStringListFeature extends StringListFeature<SimpleStringListFeature> {
 
@@ -34,6 +28,13 @@ public class SimpleStringListFeature extends StringListFeature<SimpleStringListF
 
     public SimpleStringListFeature build(List<String> strings) {
         return new SimpleStringListFeature(getName(), strings);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SimpleStringListFeature)) return false;
+        return super.equals(o);
     }
 
 }

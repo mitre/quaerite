@@ -92,4 +92,11 @@ public class DistributionalScoreAggregator extends AbstractScoreAggregator {
     public String getPrimaryStatisticName() {
         return getName()+"_"+MEAN;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DistributionalScoreAggregator)) return false;
+        return super.equals(o);
+    }
 }

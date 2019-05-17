@@ -82,13 +82,18 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
     @Override
     public T mutate(T query, double probability, double amplitude) {
-        int numMods = (int)Math.ceil(factories.size()*probability);
+        if (MathUtil.RANDOM.nextFloat() > probability) {
+            return (T)query.deepCopy();
+        }
+        int numMods = (int)Math.ceil(factories.size()*amplitude);
         List<FeatureFactory> tmp = new ArrayList<>(factories);
         Collections.shuffle(tmp);
         T cp = (T)query.deepCopy();
         for (int i = 0; i < numMods; i++) {
-            FeatureFactory fact = factories.get(i);
-            fact.mutate(getFeature(cp, (AbstractFeatureFactory)fact), probability, amplitude);
+            FeatureFactory fact = tmp.get(i);
+            Feature feature = getFeature(cp, (AbstractFeatureFactory)fact);
+            feature = fact.mutate(feature, probability, amplitude);
+            setFeature(cp, feature);
         }
         return cp;
     }

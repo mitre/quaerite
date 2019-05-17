@@ -17,21 +17,22 @@
 package org.mitre.quaerite.core.queries;
 
 
+import java.util.Objects;
+
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.TIE;
 
-public abstract class MultiFieldQuery extends Query {
-    protected String queryString;
+public abstract class MultiFieldQuery extends SingleStringQuery {
     protected QF qf = new QF();
     protected TIE tie = new TIE(0.0f);
     protected QueryOperator qOp = new QueryOperator(QueryOperator.OPERATOR.AND);
 
     public MultiFieldQuery() {
-
+        super(null);
     }
 
     public MultiFieldQuery(String queryString) {
-        this.queryString = queryString;
+        super(queryString);
     }
     public QF getQF() {
         return qf;
@@ -49,19 +50,27 @@ public abstract class MultiFieldQuery extends Query {
         return tie;
     }
 
-    public String getQueryString() {
-        return queryString;
-    }
-
-    public void setQueryString(String queryString) {
-        this.queryString = queryString;
-    }
-
     public QueryOperator getQOp() {
         return qOp;
     }
 
     public void setQOp(QueryOperator qOp) {
         this.qOp = qOp;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MultiFieldQuery)) return false;
+        if (! super.equals(o));
+        MultiFieldQuery that = (MultiFieldQuery) o;
+        return  Objects.equals(qf, that.qf) &&
+                Objects.equals(tie, that.tie) &&
+                Objects.equals(qOp, that.qOp);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getQueryString(), qf, tie, qOp);
     }
 }
