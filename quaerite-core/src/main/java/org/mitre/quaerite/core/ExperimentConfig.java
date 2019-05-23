@@ -50,4 +50,8 @@ public class ExperimentConfig {
     public int hashCode() {
         return Objects.hash(numThreads, idField);
     }
+
+    public void setIdField(String idField) {
+        this.idField = idField;
+    }
 }

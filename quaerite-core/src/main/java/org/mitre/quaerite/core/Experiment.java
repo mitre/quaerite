@@ -83,8 +83,12 @@ public class Experiment {
         return searchServerUrl;
     }
 
+    /**
+     *
+     * @return a deep copy of the query that can be used by a single thread
+     */
     public Query getQuery() {
-        return query;
+        return (Query)query.deepCopy();
     }
 
     public List<Query> getFilterQueries() {

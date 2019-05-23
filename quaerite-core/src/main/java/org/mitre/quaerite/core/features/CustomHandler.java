@@ -35,7 +35,7 @@ public class CustomHandler implements Feature<CustomHandler> {
     private static final String NAME = "customHandler";
 
     private final String handler;
-    private final String customQueryKey;
+    private String customQueryKey;
     public CustomHandler(String handler, String customQueryKey) {
         this.handler = handler;
         this.customQueryKey = StringUtils.isBlank(customQueryKey) ?
@@ -47,6 +47,11 @@ public class CustomHandler implements Feature<CustomHandler> {
     }
 
     public String getCustomQueryKey() {
+        //have to do this because deserialization
+        //may set this to null. :(
+        if (StringUtils.isBlank(customQueryKey)) {
+            customQueryKey = CustomHandlerFactory.DEFAULT_QUERY_KEY;
+        }
         return customQueryKey;
     }
 

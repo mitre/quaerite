@@ -43,6 +43,7 @@ import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.queries.LuceneQuery;
+import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.stats.TokenDF;
 
 /**
@@ -147,4 +148,27 @@ public class Solr4Client extends SolrClient {
             throw new SearchClientException(jsonResponse.getMsg());
         }
     }
+
+    /**
+     * Actual terms query parser didn't come into Solr until 4.11
+     * For compatibility with earlier 4.x, we must translate this to Lucene parser
+     *
+     * @param tq
+     * @param sb
+     */
+    protected void appendTermsQuery(TermsQuery tq, StringBuilder sb) {
+        StringBuilder tmp = new StringBuilder();// StringBuilder("{!lucene f=").append(tq.getField()).append("}");
+        tmp.append("(");
+        int i = 0;
+        for (String t : tq.getTerms()) {
+            if (i++ > 0) {
+                tmp.append(" ");
+            }
+            tmp.append(tq.getField()).append(":");
+            tmp.append("\"").append(t).append("\"");
+        }
+        tmp.append(")");
+        sb.append(encode(tmp.toString()));
+    }
+
 }

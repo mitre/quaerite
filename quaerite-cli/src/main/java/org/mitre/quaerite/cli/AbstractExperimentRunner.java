@@ -100,6 +100,14 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         List<ScoreAggregator> scoreAggregators = experimentSet.getScoreAggregators();
         experimentDB.initScoreTable(scoreAggregators);
         SearchClient searchClient = SearchClientFactory.getClient(ex.getSearchServerUrl());
+
+        if (StringUtils.isBlank(experimentConfig.getIdField())) {
+            LOG.info("default document 'idField' not set in experiment config. " +
+                    "Will use default: '"
+                    + searchClient.getDefaultIdField()+"'");
+            experimentConfig.setIdField(searchClient.getDefaultIdField());
+        }
+
         JudgmentList validated = searchServerValidatedMap.get(ex.getSearchServerUrl()+"_"+judgmentListId);
         if (validated == null) {
             validated = validate(searchClient, judgmentList);
@@ -137,12 +145,13 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         insertScores(experimentDB, experimentName, scoreAggregators);
         experimentDB.insertScoresAggregated(experimentName, scoreAggregators);
         if (logResults) {
-            logResults(scoreAggregators);
+            logResults(experimentName, scoreAggregators);
         }
     }
 
-    private void logResults(List<ScoreAggregator> scoreAggregators) {
+    private void logResults(String experimentName, List<ScoreAggregator> scoreAggregators) {
         StringBuilder result = new StringBuilder();
+        LOG.info("Experiment: "+experimentName);
         for (ScoreAggregator scoreAggregator : scoreAggregators) {
             for (String querySetName : scoreAggregator.getQuerySets()) {
                 Map<String, Double> summaryStats = scoreAggregator.getSummaryStatistics(querySetName);
@@ -316,6 +325,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         private final int maxRows;
         private final ArrayBlockingQueue<Judgments> queue;
         private final Experiment experiment;
+        private final Query query;//thread safe clone of the query
         private final List<ScoreAggregator> scoreAggregators;
         private final SearchClient searchClient;
 
@@ -326,6 +336,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             this.maxRows = maxRows;
             this.queue = judgments;
             this.experiment = experiment;
+            this.query = experiment.getQuery();
             this.searchClient = SearchClientFactory.getClient(experiment.getSearchServerUrl());
             this.scoreAggregators = scoreAggregators;
         }
@@ -349,10 +360,9 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
         private void scoreEach(Judgments judgments, List<ScoreAggregator> scoreAggregators) {
 
-            Query fullQuery = experiment.getQuery();
-            if (fullQuery instanceof MultiStringQuery) {
-                ((MultiStringQuery)fullQuery).setQueryStrings(judgments.getQueryStrings());
-            } else if (fullQuery instanceof SingleStringQuery) {
+            if (query instanceof MultiStringQuery) {
+                ((MultiStringQuery)query).setQueryStrings(judgments.getQueryStrings());
+            } else if (query instanceof SingleStringQuery) {
                 QueryStrings queryStrings = judgments.getQueryStrings();
                 if (queryStrings.names().size() > 1) {
                     throw new IllegalArgumentException("This query is a single string query, but there are multiple queryStrings: "+queryStrings);
@@ -362,14 +372,14 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
                             QueryStrings.DEFAULT_QUERY_NAME+"' for the query: "+queryStrings);
                 }
                 String queryString = queryStrings.getStringByName(QueryStrings.DEFAULT_QUERY_NAME);
-                ((SingleStringQuery)fullQuery).setQueryString(queryString);
+                ((SingleStringQuery)query).setQueryString(queryString);
             } else {
                 throw new IllegalArgumentException("I regret that I only support MultiStringQueries " +
-                        "and SingleStringQueries, not: "+fullQuery.getClass());
+                        "and SingleStringQueries, not: "+query.getClass());
             }
 
 
-            QueryRequest queryRequest = new QueryRequest(fullQuery, experiment.getCustomHandler(), idField);
+            QueryRequest queryRequest = new QueryRequest(query, experiment.getCustomHandler(), idField);
             queryRequest.addFieldsToRetrieve(idField);
             if (experiment.getFilterQueries().size() > 0) {
                 queryRequest.addFilterQueries(experiment.getFilterQueries());
@@ -532,6 +542,10 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
 //        WilcoxonSignedRankTest w = new WilcoxonSignedRankTest();
         //      w.wilcoxonSignedRankTest()
+        if (arrA.length < 2) {
+            LOG.warn("too few examples for t-test; returning -1");
+            return -1;
+        }
         return tTest.tTest(arrA, arrB);
 
     }

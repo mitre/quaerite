@@ -90,8 +90,14 @@ public class SolrClient extends SearchClient {
     public ResultSet search(QueryRequest query) throws SearchClientException, IOException {
 
         String url = generateRequestURL(query);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(url);
+        }
         long start = System.currentTimeMillis();
         JsonResponse response = getJson(url);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(response);
+        }
         if (response.getStatus() != 200) {
             throw new SearchClientException(response.getMsg());
         }
@@ -160,7 +166,7 @@ public class SolrClient extends SearchClient {
         sb.append("&rows=" + queryRequest.getNumResults());
 
         if (queryRequest.getSortField() != null) {
-            sb.append("&sort=").append(encode(queryRequest.getSortField())).append(" ")
+            sb.append("&sort=").append(encode(queryRequest.getSortField())).append(encode(" "))
                     .append(queryRequest.getSortOrder().toString().toLowerCase(Locale.US));
         }
         if (queryRequest.getFilterQueries().size() > 0) {
@@ -207,7 +213,7 @@ public class SolrClient extends SearchClient {
         sb.append(encode(tmp.toString()));
     }
 
-    private void appendTermsQuery(TermsQuery tq, StringBuilder sb) {
+    protected void appendTermsQuery(TermsQuery tq, StringBuilder sb) {
         StringBuilder tmp = new StringBuilder("{!terms f=").append(tq.getField()).append("}");
         tmp.append(StringUtils.join(tq.getTerms(), ","));
         sb.append(encode(tmp.toString()));

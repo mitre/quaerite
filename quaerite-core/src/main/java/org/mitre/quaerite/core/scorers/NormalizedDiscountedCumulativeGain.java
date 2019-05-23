@@ -34,10 +34,12 @@ public class NormalizedDiscountedCumulativeGain extends AbstractRankScorer {
 
     @Override
     public double score(Judgments judgments, ResultSet resultSet) {
+
         if (dcg == null) {
             dcg = new DiscountedCumulativeGain2002(atN);
         }
-        final double idealDCG = calculateIdeal(judgments,
+
+        final double idealDCG = calculateIdeal(dcg, judgments,
                 Math.min(atN, resultSet.size()), resultSet.getTotalHits(),
                 resultSet.getQueryTime(),
                 resultSet.getElapsedTime());
@@ -52,7 +54,7 @@ public class NormalizedDiscountedCumulativeGain extends AbstractRankScorer {
         return "ndcg";
     }
 
-    private double calculateIdeal(Judgments judgments, int size, long totalHits,
+    private double calculateIdeal(DiscountedCumulativeGain dcg, Judgments judgments, int size, long totalHits,
                                   long queryTime, long elapsedTime) {
         List<String> bestResults = new ArrayList<>();
         for (String id : judgments.getSortedJudgments().keySet()) {
