@@ -133,4 +133,8 @@ public class MathUtil {
             return GAOperation.REPRODUCE;
         }
     }
+
+    public static int getRandomInt(int min, int max) {
+        return RANDOM.nextInt(min, max);
+    }
 }

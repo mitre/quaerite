@@ -20,6 +20,8 @@ package org.mitre.quaerite.core.queries;
 
 import java.util.Objects;
 
+import org.mitre.quaerite.core.features.QueryOperator;
+
 public class LuceneQuery extends SingleStringQuery {
 
     public final static QueryOperator.OPERATOR

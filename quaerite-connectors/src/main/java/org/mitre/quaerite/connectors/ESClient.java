@@ -38,6 +38,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.queries.BooleanClause;
 import org.mitre.quaerite.core.queries.BooleanQuery;
@@ -244,6 +245,21 @@ public class ESClient extends SearchClient {
         if (!"phrase".equals(type) && !"cross_fields".equals(type)) {
             if (query.getFuzziness().getValue() > 0.0f) {
                 queryMap.put("fuzziness", query.getFuzziness().getValue());
+            }
+        }
+        QueryOperator qop = query.getQueryOperator();
+        if (qop.getOperator().equals(QueryOperator.OPERATOR.AND)) {
+            queryMap.put("operator", "and");
+        } else if (qop.getOperator().equals(QueryOperator.OPERATOR.OR)) {
+            if (qop.getMM() == QueryOperator.MM.NONE) {
+                queryMap.put("operator", "or");
+            } else if (qop.getMM() == QueryOperator.MM.INTEGER) {
+                queryMap.put("minimum_should_match", Integer.toString(qop.getInt()));
+            } else if (qop.getMM() == QueryOperator.MM.FLOAT) {
+               queryMap.put("minimum_should_match",
+                       String.format(Locale.US,
+                               "%.0f%s",
+                               qop.getMmFloat()*100f, "%"));
             }
         }
 

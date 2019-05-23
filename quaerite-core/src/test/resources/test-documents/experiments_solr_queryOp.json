@@ -1,0 +1,113 @@
+{
+  "scoreAggregators": [
+    {
+      "class": "NDCGAggregator",
+      "params": {
+        "atK": 10,
+        "useForTrain": true,
+        "exportPMatrix": true
+      }
+    }
+  ],
+  "experiments": {
+    "unspecified": {
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax" : {
+          "qf": ["title", "overview"]
+        }
+      }
+    },
+    "query_and": {
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax" : {
+          "qf": ["title", "overview"],
+          "q.op" : {
+            "operator": "and"
+          }
+        }
+      }
+    },
+    "query_or_none": {
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax" : {
+          "qf": ["title", "overview"],
+          "q.op" : {
+            "operator": "or"
+          }
+        }
+      }
+    },
+    "query_or_int": {
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax" : {
+          "qf": ["title", "overview"],
+          "q.op" : {
+            "operator": "or",
+            "mm": "2"
+          }
+        }
+      }
+    },
+    "query_or_int_no_op": {
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax" : {
+          "qf": ["title", "overview"],
+          "q.op" : {
+            "mm": "2"
+          }
+        }
+      }
+    },
+    "query_or_percent_neg20": {
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax" : {
+          "qf": ["title", "overview"],
+          "q.op" : {
+            "operator": "or",
+            "mm": "-20%"
+          }
+        }
+      }
+    },
+    "query_or_percent_no_op_neg20": {
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax" : {
+          "qf": ["title", "overview"],
+          "q.op" : {
+            "mm": "-20%"
+          }
+        }
+      }
+    },
+    "query_or_percent_18": {
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax" : {
+          "qf": ["title", "overview"],
+          "q.op" : {
+            "operator": "or",
+            "mm": "18%"
+          }
+        }
+      }
+    },
+    "query_or_percent_no_op_18": {
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax" : {
+          "qf": ["title", "overview"],
+          "q.op" : {
+            "mm": "18%"
+          }
+        }
+      }
+    }
+  }
+}

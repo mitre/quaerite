@@ -20,8 +20,6 @@ package org.mitre.quaerite.core.queries;
 import org.mitre.quaerite.core.features.BF;
 import org.mitre.quaerite.core.features.BQ;
 import org.mitre.quaerite.core.features.PF;
-import org.mitre.quaerite.core.features.QF;
-import org.mitre.quaerite.core.features.TIE;
 
 public class DisMaxQuery extends MultiFieldQuery {
 
@@ -57,6 +55,8 @@ public class DisMaxQuery extends MultiFieldQuery {
         cp.qf = (qf == null) ? null : qf.deepCopy();
         cp.tie = (tie == null) ? null : tie.deepCopy();
         cp.setQueryString(getQueryString());
+        cp.setQueryStringName(getQueryStringName());
+        cp.setQueryOperator(getQueryOperator());
         return cp;
     }
 

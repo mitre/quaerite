@@ -78,6 +78,7 @@ public class MultiMatchQuery extends MultiFieldQuery {
         cp.fuzziness = this.fuzziness;
         cp.setQueryString(getQueryString());
         cp.setQueryStringName(getQueryStringName());
+        cp.setQueryOperator(getQueryOperator());
         return cp;
     }
 

@@ -25,7 +25,6 @@ import org.mitre.quaerite.core.features.PF2;
 import org.mitre.quaerite.core.features.PF3;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.TIE;
-import org.mitre.quaerite.core.features.WeightableListFeature;
 
 public class EDisMaxQuery extends DisMaxQuery {
 
@@ -70,9 +69,9 @@ public class EDisMaxQuery extends DisMaxQuery {
                 ", pf=" + pf +
                 ", bq=" + bq +
                 ", bf=" + bf +
-                ", queryString='" + getQueryString() + '\'' +
                 ", qf=" + qf +
                 ", tie=" + tie +
+                ", qOp=" + qOp +
                 '}';
     }
 
@@ -86,7 +85,9 @@ public class EDisMaxQuery extends DisMaxQuery {
         cp.bf = (bf != null) ? (BF)bf.deepCopy() : null;
         cp.qf = (qf != null) ? (QF)qf.deepCopy() : null;
         cp.tie = (tie != null) ? new TIE(tie.getValue()) : null;
-        setQueryString(getQueryString());
+        cp.setQueryString(getQueryString());
+        cp.setQueryStringName(getQueryStringName());
+        cp.setQueryOperator(getQueryOperator());
         return cp;
     }
 

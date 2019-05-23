@@ -17,10 +17,15 @@
 package org.mitre.quaerite.core.serializers;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
@@ -37,6 +42,7 @@ import org.mitre.quaerite.core.features.FloatFeature;
 import org.mitre.quaerite.core.features.Fuzziness;
 import org.mitre.quaerite.core.features.MultiMatchType;
 import org.mitre.quaerite.core.features.NegativeBoost;
+import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.features.WeightableListFeature;
@@ -46,6 +52,7 @@ import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
 import org.mitre.quaerite.core.features.factories.FloatFeatureFactory;
 import org.mitre.quaerite.core.features.factories.QueryFactory;
+import org.mitre.quaerite.core.features.factories.QueryOperatorFeatureFactory;
 import org.mitre.quaerite.core.features.factories.StringListFeatureFactory;
 import org.mitre.quaerite.core.features.factories.StringFeatureFactory;
 import org.mitre.quaerite.core.features.factories.WeightableListFeatureFactory;
@@ -67,6 +74,7 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
     static String DEFAULT_WEIGHT_KEY = "defaultWeights";
     static String MIN_SET_SIZE_KEY = "minSetSize";
     static String MAX_SET_SIZE_KEY = "maxSetSize";
+    private static final Pattern PERCENT_MATCHER = Pattern.compile("(-?\\d+(\\.\\d+)?)%");
 
     @Override
     public FeatureFactories deserialize(JsonElement jsonElement, Type type,
@@ -192,6 +200,52 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         if (obj.has("tie")) {
             factory.add(buildFloatFeatureFactory("tie", obj.get("tie")));
         }
+        if (obj.has("q.op")) {
+            factory.add(buildQueryOperatorFeatureFactory(obj.get("q.op").getAsJsonObject()));
+        }
+    }
+
+    private FeatureFactory buildQueryOperatorFeatureFactory(JsonObject jsonObj) {
+        List<Integer> integers = null;
+        List<Float> floats = null;
+        if (jsonObj.has("mmInts")) {
+            integers = new ArrayList<>();
+            for (JsonElement el : ((JsonArray)jsonObj.get("mmInts"))) {
+                integers.add(el.getAsInt());
+            }
+        }
+        if (jsonObj.has("mmFloats")) {
+            floats = new ArrayList<>();
+            for (JsonElement el : ((JsonArray)jsonObj.get("mmFloats"))) {
+                String mmString = el.getAsString();
+                Matcher percentMatcher = PERCENT_MATCHER.matcher(mmString);
+                if (percentMatcher.reset(mmString).find()) {
+                    float f = Float.parseFloat(percentMatcher.group(1)) / 100.0f;
+                    floats.add(f);
+                } else {
+                    floats.add(Float.parseFloat(mmString));
+                }
+            }
+        }
+        Set<QueryOperator.OPERATOR> operators = new HashSet<>();
+        if (jsonObj.has("operators")) {
+            for (JsonElement el : jsonObj.get("operators").getAsJsonArray()) {
+                if (el.getAsString().equals("or")) {
+                    operators.add(QueryOperator.OPERATOR.OR);
+                } else if (el.getAsString().equals("and")) {
+                    operators.add(QueryOperator.OPERATOR.AND);
+                } else {
+                    throw new IllegalArgumentException(
+                            "I'm sorry, but I was expecting 'and' or 'or'. "+
+                                    "I don't understand: "+el
+                    );
+                }
+            }
+        } else if (floats != null || integers != null) {
+            operators.add(QueryOperator.OPERATOR.OR);
+        }
+        return new QueryOperatorFeatureFactory(operators, integers, floats);
+
     }
 
     private FeatureFactory buildStringListFeatureFactory(String paramName, JsonElement jsonFeatureFactory) {

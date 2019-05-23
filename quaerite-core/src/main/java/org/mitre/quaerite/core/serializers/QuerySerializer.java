@@ -20,10 +20,13 @@ import static org.mitre.quaerite.core.serializers.FeatureFactorySerializer.VALUE
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
@@ -60,7 +63,7 @@ import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.MultiFieldQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
-import org.mitre.quaerite.core.queries.QueryOperator;
+import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.queries.SingleStringQuery;
 import org.mitre.quaerite.core.queries.TermQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
@@ -72,6 +75,7 @@ public class QuerySerializer extends AbstractFeatureSerializer
 
     static Logger LOG = Logger.getLogger(QuerySerializer.class);
 
+    private static final Pattern PERCENT_MATCHER = Pattern.compile("(-?\\d+(\\.\\d+)?)%");
     private static final String DEFAULT_FIELD = "defaultField";
     private static final String FIELD = "field";
     private static final String QUERY_STRING = "queryString";
@@ -89,7 +93,6 @@ public class QuerySerializer extends AbstractFeatureSerializer
     private static final String BOOL = "bool";
     private static final String BOOLEAN = "boolean";
     private static final String BOOSTING = "boosting";
-
 
     @Override
     public Query deserialize(JsonElement jsonElement, Type type,
@@ -111,7 +114,6 @@ public class QuerySerializer extends AbstractFeatureSerializer
 
             QueryOperator.OPERATOR qop = (qOpString == null) ? LuceneQuery.DEFAULT_QUERY_OPERATOR :
                     (qOpString.equalsIgnoreCase(AND) ? QueryOperator.OPERATOR.AND : QueryOperator.OPERATOR.OR);
-
 
             return updateQueryWithStringName(new LuceneQuery(defaultField, queryString, qop), jsonObj);
         } else if (queryType.equals(TERMS)) { ;
@@ -261,6 +263,7 @@ public class QuerySerializer extends AbstractFeatureSerializer
             q.setTie(tie);
         }
         updateQueryWithStringName(q, obj);
+        deserializeQueryOperator(q, obj);
     }
 
     private Feature buildParam(String parameterName, JsonElement element) {
@@ -319,6 +322,51 @@ public class QuerySerializer extends AbstractFeatureSerializer
         }
     }
 
+    private static void deserializeQueryOperator(Query q, JsonObject obj) {
+        if (! (q instanceof MultiFieldQuery)) {
+            if (obj.has("q.op")) {
+                throw new IllegalArgumentException("q.op not supported for queries of type:"+q.getClass());
+            }
+        }
+        MultiFieldQuery mfq = (MultiFieldQuery)q;
+        JsonElement qEl = obj.get("q.op");
+        if (qEl  == null) {
+            return;
+        }
+        //TODO -- allow percentage
+        JsonObject qObj = qEl.getAsJsonObject();
+        QueryOperator.OPERATOR op = null;
+        if (qObj.has("operator")) {
+            String opString = qObj.get("operator").getAsString();
+            if (opString.equalsIgnoreCase("and")) {
+                op = QueryOperator.OPERATOR.AND;
+            } else if (opString.equalsIgnoreCase("or")) {
+                op = QueryOperator.OPERATOR.OR;
+            } else {
+                throw new IllegalArgumentException("operator myst be 'and' or 'or'");
+            }
+        } else if (qObj.has("mm")) {
+            op = QueryOperator.OPERATOR.OR;
+        } else {
+            throw new IllegalArgumentException("'operator' must be 'and' or 'or', "+
+                    "or 'mm'");
+        }
+
+        if (qObj.has("mm")) {
+            String mmString = qObj.get("mm").getAsString();
+            Matcher percentMatcher = PERCENT_MATCHER.matcher(mmString);
+            if (percentMatcher.reset(mmString).find()) {
+                float f = Float.parseFloat(percentMatcher.group(1))/100.0f;
+                mfq.setQueryOperator(new QueryOperator(op, f));
+            } else {
+                mfq.setQueryOperator(new QueryOperator(op,
+                        Integer.parseInt(mmString)));
+            }
+        } else {
+            mfq.setQueryOperator(new QueryOperator(op));
+        }
+    }
+
     private Feature buildFloatFeature(String name, JsonElement element) {
         try {
             Class clazz = Class.forName(getClassName(name));
@@ -373,6 +421,8 @@ public class QuerySerializer extends AbstractFeatureSerializer
         }
         return weightableListFeature;
     }
+
+    //SERIALIZE
 
     @Override
     public JsonElement serialize(Query query, Type type, JsonSerializationContext jsonSerializationContext) {
@@ -504,8 +554,28 @@ public class QuerySerializer extends AbstractFeatureSerializer
         JsonObject object = new JsonObject();
         object.addProperty("queryString", query.getQueryString());
         object.addProperty("defaultField", query.getDefaultField());
+        //does lucene query allow a mm?
         object.addProperty("q.op", query.getQueryOperator().toString());
         return object;
+    }
+
+    private JsonElement serializeQueryOperator(QueryOperator qop) {
+        if (qop.getOperator() == QueryOperator.OPERATOR.UNSPECIFIED) {
+            throw new IllegalArgumentException("shouldn't arrive here");
+        }
+        JsonObject obj = new JsonObject();
+        if (qop.getMM() == QueryOperator.MM.INTEGER) {
+            obj.addProperty("mm", qop.getInt());
+            return obj;
+        } else if (qop.getMM() == QueryOperator.MM.FLOAT) {
+            obj.addProperty("mm",
+                    String.format(Locale.US,
+                            "%.0f%s",
+                            qop.getMmFloat()*100, "%"));
+            return obj;
+        }
+        obj.addProperty("operator", qop.getOperatorString());
+        return obj;
     }
 
     private JsonElement serializeDisMax(DisMaxQuery query) {
@@ -536,6 +606,9 @@ public class QuerySerializer extends AbstractFeatureSerializer
         obj.add("qf", serializeFeature(query.getQF()));
         if (query.getTie() != null) {
             obj.add(TIE, serializeFeature(query.getTie()));
+        }
+        if (query.getQueryOperator().getOperator() != QueryOperator.OPERATOR.UNSPECIFIED) {
+            obj.add("q.op", serializeQueryOperator(query.getQueryOperator()));
         }
     }
 

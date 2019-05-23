@@ -33,7 +33,7 @@ import org.mitre.quaerite.core.Experiment;
 import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.Query;
-import org.mitre.quaerite.core.queries.QueryOperator;
+import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.scoreaggregators.NDCGAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 

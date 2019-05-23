@@ -17,6 +17,7 @@
 package org.mitre.quaerite.core.features.factories;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,7 +27,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +37,7 @@ import org.mitre.quaerite.core.ExperimentFactory;
 import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.NegativeBoost;
+import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.queries.BoostingQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
@@ -210,6 +211,64 @@ public class TestQueryFactory {
     }
 
     @Test
+    public void testEdismaxQueryOperators() throws Exception {
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features_solr_queryOp.json")
+        );
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>) experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        for (EDisMaxQuery q : qf.permute(10000)) {
+            System.out.println(q);
+        }
+        assertEquals(1120, qf.permute(10000).size());
+
+        float minFloat = -0.8f;
+        float maxFloat = 0.8f;
+        int minInt = -3;
+        int maxInt = 4;
+        int ands = 0;
+        int orNoMM = 0;
+        int orFloats = 0;
+        int orInts = 0;
+
+        int iterations = 10000;
+        for (int i = 0; i < iterations; i++) {
+            EDisMaxQuery q = qf.random();
+            QueryOperator op = q.getQueryOperator();
+            //for generating experiments, we want to ensure that
+            //query operators are specified
+            assertFalse(op.getOperator() == QueryOperator.OPERATOR.UNSPECIFIED);
+            if (op.getOperator() == QueryOperator.OPERATOR.AND) {
+                ands++;
+                continue;
+            }
+            switch (op.getMM()) {
+                case NONE:
+                    orNoMM++;
+                    break;
+                case INTEGER:
+                    orInts++;
+                    assertTrue(op.getInt() <= maxInt,
+                            "int: "+op.getInt());
+                    assertTrue(op.getInt() >= minInt, "int: " + op.getInt());
+                    break;
+                case FLOAT:
+                    assertTrue(op.getMmFloat() <= maxFloat,
+                            "float: "+op.getMmFloat());
+                    assertTrue(op.getMmFloat() >= minFloat);
+                    orFloats++;
+                    break;
+            }
+        }
+        //20% are 'and', 80% are 'not'
+        assertEquals(0.20, (double)ands/(double)iterations, 0.1);
+        //of the remaining 80% 'or', 20% are no mm, 40% are int, 40% are float
+        assertEquals((0.20*0.80), (double)orNoMM/(double)iterations, 0.1);
+        assertEquals((0.40*0.80), (double)orFloats/(double)iterations, 0.1);
+        assertEquals((0.40*0.80), (double)orInts/(double)iterations, 0.1);
+    }
+
+
+    @Test
     public void testBoostingPermute() throws Exception {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_es_2.json")
@@ -297,7 +356,7 @@ public class TestQueryFactory {
             if (mmq.getQF().size() > maxQf) {
                 maxQf = mmq.getQF().size();
             }
-            qOps.add(mmq.getQOp().getOperatorString());
+            qOps.add(mmq.getQueryOperator().getOperatorString());
         }
 
         assertEquals(4, types.size());

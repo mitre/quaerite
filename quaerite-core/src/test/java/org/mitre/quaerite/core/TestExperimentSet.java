@@ -28,6 +28,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,17 +36,20 @@ import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.MultiMatchType;
 import org.mitre.quaerite.core.features.QF;
+import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.queries.BooleanClause;
 import org.mitre.quaerite.core.queries.BooleanQuery;
 import org.mitre.quaerite.core.queries.BoostingQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
+import org.mitre.quaerite.core.queries.MultiFieldQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.scoreaggregators.NDCGAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
+import sun.util.locale.LocaleUtils;
 
 public class TestExperimentSet {
 
@@ -181,8 +185,75 @@ public class TestExperimentSet {
         assertEquals(BoostingQuery.class, boosting.getClass());
 
         assertEquals((float) 0.001, ((BoostingQuery) boosting).getNegativeBoost().getValue(), 0.1);
-
-
     }
 
+    @Test
+    public void testBooleanOperatorAndMM() throws Exception {
+        ExperimentSet experimentSet = null;
+        try (Reader reader =
+                     new BufferedReader(new InputStreamReader(
+                             getClass().getResourceAsStream(
+                                     "/test-documents/experiments_solr_queryOp.json"),
+                             StandardCharsets.UTF_8))) {
+            experimentSet = ExperimentSet.fromJson(reader);
+        }
+
+        //test deserialization first
+        String json = experimentSet.toJson();
+        ExperimentSet revivified = ExperimentSet.fromJson(new StringReader(json));
+        assertEquals(experimentSet, revivified);
+
+
+
+        Experiment ex = experimentSet.getExperiment("unspecified");
+        Query q = ex.getQuery();
+        assertEquals(QueryOperator.OPERATOR.UNSPECIFIED, ((MultiFieldQuery)q).getQueryOperator().getOperator());
+
+
+        ex = experimentSet.getExperiment("query_and");
+        q = ex.getQuery();
+        assertEquals(QueryOperator.OPERATOR.AND, ((MultiFieldQuery)q).getQueryOperator().getOperator());
+
+        ex = experimentSet.getExperiment("query_or_none");
+        q = ex.getQuery();
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.NONE, ((MultiFieldQuery)q).getQueryOperator().getMM());
+
+        ex = experimentSet.getExperiment("query_or_int");
+        q = ex.getQuery();
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.INTEGER, ((MultiFieldQuery)q).getQueryOperator().getMM());
+        assertEquals(2, ((MultiFieldQuery)q).getQueryOperator().getInt());
+
+        ex = experimentSet.getExperiment("query_or_int_no_op");
+        q = ex.getQuery();
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.INTEGER, ((MultiFieldQuery)q).getQueryOperator().getMM());
+        assertEquals(2, ((MultiFieldQuery)q).getQueryOperator().getInt());
+
+        ex = experimentSet.getExperiment("query_or_percent_neg20");
+        q = ex.getQuery();
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.FLOAT, ((MultiFieldQuery)q).getQueryOperator().getMM());
+        assertEquals(-0.20, ((MultiFieldQuery)q).getQueryOperator().getMmFloat(), 0.01);
+
+        ex = experimentSet.getExperiment("query_or_percent_no_op_neg20");
+        q = ex.getQuery();
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.FLOAT, ((MultiFieldQuery)q).getQueryOperator().getMM());
+        assertEquals(-0.20, ((MultiFieldQuery)q).getQueryOperator().getMmFloat(), 0.001);
+
+        ex = experimentSet.getExperiment("query_or_percent_18");
+        q = ex.getQuery();
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.FLOAT, ((MultiFieldQuery)q).getQueryOperator().getMM());
+        assertEquals(0.18, ((MultiFieldQuery)q).getQueryOperator().getMmFloat(), 0.01);
+
+        ex = experimentSet.getExperiment("query_or_percent_no_op_18");
+        q = ex.getQuery();
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.FLOAT, ((MultiFieldQuery)q).getQueryOperator().getMM());
+        assertEquals(0.18, ((MultiFieldQuery)q).getQueryOperator().getMmFloat(), 0.01);
+
+    }
 }

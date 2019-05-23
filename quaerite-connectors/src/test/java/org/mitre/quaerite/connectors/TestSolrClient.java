@@ -29,7 +29,10 @@ import java.util.Set;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.FacetResult;
+import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.features.QF;
+import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.queries.DisMaxQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
@@ -140,9 +143,9 @@ public class TestSolrClient {
                 break;
             }
         }
-        String overview = (String)doc1359.getFields().get("overview");
+        String overview = (String) doc1359.getFields().get("overview");
         assertTrue(overview.startsWith("A wealthy New"));
-        List<String> cast = (List)doc1359.getFields().get("cast");
+        List<String> cast = (List) doc1359.getFields().get("cast");
         assertEquals(19, cast.size());
         assertEquals("Christian Bale", cast.get(0));
         assertEquals("Willem Dafoe", cast.get(1));
@@ -166,7 +169,7 @@ public class TestSolrClient {
                 doc1359 = sd;
             }
         }
-        String title = (String)doc1359.getFields().get("original_title");
+        String title = (String) doc1359.getFields().get("original_title");
         assertEquals("American Psycho", title);
     }
 
@@ -180,7 +183,7 @@ public class TestSolrClient {
             if (terms.size() == 0) {
                 break;
             }
-            lower = terms.get(terms.size()-1).getToken();
+            lower = terms.get(terms.size() - 1).getToken();
             allTerms.addAll(terms);
         }
         assertEquals(15904, allTerms.size());
@@ -200,7 +203,7 @@ public class TestSolrClient {
             if (terms.size() == 0) {
                 break;
             }
-            lower = terms.get(terms.size()-1).getToken();
+            lower = terms.get(terms.size() - 1).getToken();
             allTerms.addAll(terms);
         }
         assertEquals(15938, allTerms.size());
@@ -215,4 +218,53 @@ public class TestSolrClient {
         assertEquals(3, tokens.size());
         assertEquals("brün", tokens.get(1));
     }
+
+    @Test
+    public void testQueryOperator() throws Exception {
+        QueryStrings qStrings = new QueryStrings();
+        qStrings.setQuery("black mirror white christmas");
+        EDisMaxQuery q = new EDisMaxQuery();
+        QF qf = new QF();
+        qf.add(new WeightableField("title"));
+        q.setQF(qf);
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.AND));
+        q.setQueryStrings(qStrings);
+
+        SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
+        ResultSet rs = searchClient.search(new QueryRequest(q));
+        assertEquals(1, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.OR));
+        rs = searchClient.search(new QueryRequest(q));
+        assertEquals(372, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.OR, 0.25f));
+        rs = searchClient.search(new QueryRequest(q));
+        assertEquals(372, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.OR, -0.75f));
+        rs = searchClient.search(new QueryRequest(q));
+        assertEquals(372, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.OR, 0.5f));
+        rs = searchClient.search(new QueryRequest(q));
+        assertEquals(14, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.OR, 2));
+        rs = searchClient.search(new QueryRequest(q));
+        assertEquals(14, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.OR, -1));
+        rs = searchClient.search(new QueryRequest(q));
+        assertEquals(1, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+    }
+
 }

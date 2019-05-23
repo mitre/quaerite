@@ -20,12 +20,13 @@ package org.mitre.quaerite.core.queries;
 import java.util.Objects;
 
 import org.mitre.quaerite.core.features.QF;
+import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.TIE;
 
 public abstract class MultiFieldQuery extends SingleStringQuery {
     protected QF qf = new QF();
     protected TIE tie = new TIE(0.0f);
-    protected QueryOperator qOp = new QueryOperator(QueryOperator.OPERATOR.AND);
+    protected QueryOperator qOp = new QueryOperator(QueryOperator.OPERATOR.UNSPECIFIED);
 
     public MultiFieldQuery() {
         super(null);
@@ -50,11 +51,11 @@ public abstract class MultiFieldQuery extends SingleStringQuery {
         return tie;
     }
 
-    public QueryOperator getQOp() {
+    public QueryOperator getQueryOperator() {
         return qOp;
     }
 
-    public void setQOp(QueryOperator qOp) {
+    public void setQueryOperator(QueryOperator qOp) {
         this.qOp = qOp;
     }
 

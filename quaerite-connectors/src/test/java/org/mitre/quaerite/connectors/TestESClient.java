@@ -19,6 +19,8 @@ package org.mitre.quaerite.connectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import javax.naming.directory.SearchResult;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,8 +36,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.FacetResult;
+import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.features.MultiMatchType;
+import org.mitre.quaerite.core.features.QF;
+import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.TIE;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.queries.BooleanClause;
@@ -222,6 +227,56 @@ public class TestESClient {
         assertEquals(19, cast.size());
         assertEquals("Christian Bale", cast.get(0));
         assertEquals("Willem Dafoe", cast.get(1));
+    }
+
+    @Test
+    public void testQueryOperator() throws Exception {
+        QueryStrings qStrings = new QueryStrings();
+        qStrings.setQuery("black mirror white christmas");
+        MultiMatchQuery q = new MultiMatchQuery();
+        QF qf = new QF();
+        qf.add(new WeightableField("title"));
+        q.setQF(qf);
+
+        q.setMultiMatchType(new MultiMatchType("best_fields"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.AND));
+        q.setQueryStrings(qStrings);
+
+        SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
+        ResultSet rs = searchClient.search(new QueryRequest(q));
+        assertEquals(1, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.OR));
+        rs = searchClient.search(new QueryRequest(q));
+        assertEquals(369, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.OR, 0.25f));
+        rs = searchClient.search(new QueryRequest(q));
+        assertEquals(369, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.OR, -0.75f));
+        rs = searchClient.search(new QueryRequest(q));
+        assertEquals(369, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.OR, 0.5f));
+        rs = searchClient.search(new QueryRequest(q));
+        assertEquals(14, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.OR, 2));
+        rs = searchClient.search(new QueryRequest(q));
+        assertEquals(14, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
+
+        q.setQueryOperator(new QueryOperator(QueryOperator.OPERATOR.OR, -1));
+        rs = searchClient.search(new QueryRequest(q));
+        assertEquals(1, rs.getTotalHits());
+        assertTrue(rs.getIds().contains("374430"));
     }
 
     @Test

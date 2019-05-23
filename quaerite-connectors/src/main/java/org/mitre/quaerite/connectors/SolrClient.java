@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -47,6 +48,7 @@ import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.QF;
+import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.queries.DisMaxQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
@@ -239,6 +241,24 @@ public class SolrClient extends SearchClient {
         }
         if (query.getTie() != null) {
             sb.append("&tie=").append(query.getTie().toString());
+        }
+        QueryOperator qop = query.getQueryOperator();
+        if (qop.getOperator() == QueryOperator.OPERATOR.UNSPECIFIED) {
+            return;
+        } else if (qop.getOperator() == QueryOperator.OPERATOR.AND) {
+            sb.append("&q.op=AND");
+        } else {
+            sb.append("&q.op=OR");
+            if (qop.getMM() == QueryOperator.MM.NONE) {
+                return;
+            } else if (qop.getMM() == QueryOperator.MM.INTEGER) {
+                sb.append("&mm=").append(qop.getInt());
+            } else if (qop.getMM() == QueryOperator.MM.FLOAT) {
+                sb.append("&mm=").append(encode(
+                        String.format(Locale.US,
+                                "%.0f%s",
+                                qop.getMmFloat()*100f, "%")));
+            }
         }
     }
 
