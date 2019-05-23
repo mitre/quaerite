@@ -52,8 +52,10 @@ public class LuceneQuery extends SingleStringQuery {
     }
 
     @Override
-    public Object deepCopy() {
-        return new LuceneQuery(defaultField, getQueryString(), qop);
+    public LuceneQuery deepCopy() {
+        LuceneQuery lq = new LuceneQuery(defaultField, getQueryString(), qop);
+        lq.setQueryStringName(getQueryStringName());
+        return lq;
     }
 
     @Override

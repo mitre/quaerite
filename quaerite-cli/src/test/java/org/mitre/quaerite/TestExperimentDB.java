@@ -100,7 +100,6 @@ public class TestExperimentDB {
 
         //the query string is transient and not serialized
         EDisMaxQuery expected = q.deepCopy();
-        expected.setQueryString(null);
         assertEquals(expected, q2);
         db.close();
 

@@ -58,8 +58,6 @@ import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.ResultSet;
-import org.mitre.quaerite.core.queries.MultiFieldQuery;
-import org.mitre.quaerite.core.queries.MultiStringQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.SingleStringQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
@@ -359,25 +357,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
 
         private void scoreEach(Judgments judgments, List<ScoreAggregator> scoreAggregators) {
-
-            if (query instanceof MultiStringQuery) {
-                ((MultiStringQuery)query).setQueryStrings(judgments.getQueryStrings());
-            } else if (query instanceof SingleStringQuery) {
-                QueryStrings queryStrings = judgments.getQueryStrings();
-                if (queryStrings.names().size() > 1) {
-                    throw new IllegalArgumentException("This query is a single string query, but there are multiple queryStrings: "+queryStrings);
-                }
-                if (! queryStrings.names().contains(QueryStrings.DEFAULT_QUERY_NAME)) {
-                    throw new IllegalArgumentException("QueryStrings must contain a single field named '"+
-                            QueryStrings.DEFAULT_QUERY_NAME+"' for the query: "+queryStrings);
-                }
-                String queryString = queryStrings.getStringByName(QueryStrings.DEFAULT_QUERY_NAME);
-                ((SingleStringQuery)query).setQueryString(queryString);
-            } else {
-                throw new IllegalArgumentException("I regret that I only support MultiStringQueries " +
-                        "and SingleStringQueries, not: "+query.getClass());
-            }
-
+            query.setQueryStrings(judgments.getQueryStrings());
 
             QueryRequest queryRequest = new QueryRequest(query, experiment.getCustomHandler(), idField);
             queryRequest.addFieldsToRetrieve(idField);

@@ -17,24 +17,57 @@
 package org.mitre.quaerite.core.queries;
 
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.analysis.function.Sin;
+import org.mitre.quaerite.core.QueryStrings;
 
 /**
  * This encapsulates basic queries that take a single
- * string from a user.
+ * string from a user.  If the {@link #queryStringName}
+ * is not set, this falls back to {@link QueryStrings#DEFAULT_QUERY_NAME}.
  */
 public abstract class SingleStringQuery extends Query {
+
+    private String queryStringName;
     private volatile String queryString;
 
     public SingleStringQuery(String queryString) {
         this.queryString = queryString;
     }
 
-    public void setQueryString(String queryString) {
-        this.queryString = queryString;
+    @Override
+    public Set<String> setQueryStrings(QueryStrings queryStrings) {
+        Set<String> used = new HashSet<>();
+        if (StringUtils.isBlank(queryStringName)) {
+            queryString = queryStrings.getStringByName(QueryStrings.DEFAULT_QUERY_NAME);
+        } else {
+            queryString = queryStrings.getStringByName(queryStringName);
+        }
+        if (queryString == null) {
+            throw new IllegalArgumentException("Couldn't find queryString in "+
+                    queryStrings +"; I was looking for: "+
+                    (StringUtils.isBlank(queryStringName) ?
+                    QueryStrings.DEFAULT_QUERY_NAME : queryStringName));
+        }
+        used.add(queryString);
+        return used;
     }
 
+    protected void setQueryString(String queryString) {
+        this.queryString = queryString;
+    }
     public String getQueryString() {
         return queryString;
+    }
+
+    public void setQueryStringName(String queryStringName) {
+        this.queryStringName = queryStringName;
+    }
+
+    public String getQueryStringName() {
+        return queryStringName;
     }
 }

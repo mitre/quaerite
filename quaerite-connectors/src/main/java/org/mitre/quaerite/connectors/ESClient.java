@@ -46,6 +46,7 @@ import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.queries.SingleStringQuery;
 import org.mitre.quaerite.core.queries.TermQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.stats.TokenDF;
@@ -140,10 +141,10 @@ public class ESClient extends SearchClient {
         if (queryRequest.getFilterQueries().size() > 0) {
             fullQuery = new BooleanQuery();
             ((BooleanQuery)fullQuery).addClause(
-                    new BooleanClause(null, BooleanClause.OCCUR.SHOULD, q));
+                    new BooleanClause(BooleanClause.OCCUR.SHOULD, q));
             for (Query filterQuery : queryRequest.getFilterQueries()) {
                 ((BooleanQuery)fullQuery).addClause(
-                        new BooleanClause(null, BooleanClause.OCCUR.FILTER, filterQuery));
+                        new BooleanClause(BooleanClause.OCCUR.FILTER, filterQuery));
             }
         }
 
@@ -196,8 +197,11 @@ public class ESClient extends SearchClient {
 
     private Map<String, Object> getBoostingMap(BoostingQuery query) {
         //short circuit if there is no negative boost query
-        if (StringUtils.isBlank(query.getNegativeQuery().getQueryString())) {
-            return buildQuery(query.getPositiveQuery());
+        if ((query.getNegativeQuery() instanceof SingleStringQuery)) {
+            String qS = ((SingleStringQuery)query.getNegativeQuery()).getQueryString();
+            if (StringUtils.isBlank(qS)) {
+                return buildQuery(query.getPositiveQuery());
+            }
         }
         Map<String, Object> queryMap = wrapAMap(
                 "positive", buildQuery(query.getPositiveQuery()),

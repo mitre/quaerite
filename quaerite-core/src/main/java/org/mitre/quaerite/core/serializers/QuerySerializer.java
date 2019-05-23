@@ -23,7 +23,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.gson.JsonArray;
@@ -36,8 +35,9 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import org.apache.commons.math3.analysis.function.Sin;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.features.Boost;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.FloatFeature;
@@ -111,15 +111,17 @@ public class QuerySerializer extends AbstractFeatureSerializer
 
             QueryOperator.OPERATOR qop = (qOpString == null) ? LuceneQuery.DEFAULT_QUERY_OPERATOR :
                     (qOpString.equalsIgnoreCase(AND) ? QueryOperator.OPERATOR.AND : QueryOperator.OPERATOR.OR);
-            return new LuceneQuery(defaultField, queryString, qop);
+
+
+            return updateQueryWithStringName(new LuceneQuery(defaultField, queryString, qop), jsonObj);
         } else if (queryType.equals(TERMS)) { ;
             List<String> terms = toStringList(jsonObj.get(TERMS));
             String field = jsonObj.get(FIELD).getAsString();
-            return new TermsQuery(field, terms);
+            return updateQueryWithStringName(new TermsQuery(field, terms), jsonObj);
         } else if (queryType.equals(TERM)) {
             String term = jsonObj.get(TERM).getAsString();
             String field = jsonObj.get(FIELD).getAsString();
-            return new TermQuery(field, term);
+            return updateQueryWithStringName(new TermQuery(field, term), jsonObj);
         } else if (queryType.equals(MULTI_MATCH)) {
             return buildMultiMatch(jsonObj);
         } else if (queryType.equals(BOOL) || queryType.equals(BOOLEAN)) {
@@ -132,6 +134,18 @@ public class QuerySerializer extends AbstractFeatureSerializer
 
     }
 
+    private static Query updateQueryWithStringName(Query query, JsonObject obj) {
+        if (obj.has(QUERY_STRING_NAME)) {
+            if (! (query instanceof SingleStringQuery)) {
+                throw new IllegalArgumentException("Can't put a query string name on "+
+                        "query that is not a SingleStringQuery: "+query.getClass());
+            }
+            ((SingleStringQuery)query).setQueryStringName(
+                    obj.getAsJsonPrimitive(QUERY_STRING_NAME).getAsString());
+        }
+        return query;
+    }
+
     private Query buildBoosting(JsonObject obj) {
         SingleStringQuery positiveQuery;
         SingleStringQuery negativeQuery;
@@ -139,11 +153,19 @@ public class QuerySerializer extends AbstractFeatureSerializer
         JsonObject positiveObj = obj.getAsJsonObject("positive");
         String posQueryType = JsonUtil.getSingleChildName(positiveObj);
         positiveQuery = (SingleStringQuery) buildQuery(posQueryType, positiveObj.getAsJsonObject(posQueryType));
+        if ((positiveQuery instanceof SingleStringQuery) &&
+                StringUtils.isBlank(positiveQuery.getQueryStringName())) {
+            positiveQuery.setQueryStringName(BoostingQuery.POSITIVE_QUERY_STRING_NAME);
+        }
+
 
         JsonObject negObj = obj.getAsJsonObject("negative");
         String negQueryType = JsonUtil.getSingleChildName(negObj);
         negativeQuery = (SingleStringQuery) buildQuery(negQueryType, negObj.getAsJsonObject(negQueryType));
-
+        if ((negativeQuery instanceof SingleStringQuery) &&
+                StringUtils.isBlank(negativeQuery.getQueryStringName())) {
+            positiveQuery.setQueryStringName(BoostingQuery.POSITIVE_QUERY_STRING_NAME);
+        }
         NegativeBoost negativeBoost = new NegativeBoost(obj.getAsJsonPrimitive("negativeBoost").getAsFloat());
         return new BoostingQuery(positiveQuery, negativeQuery, negativeBoost);
     }
@@ -156,25 +178,13 @@ public class QuerySerializer extends AbstractFeatureSerializer
                 for (JsonElement el : qArr) {
                     JsonObject clause = (JsonObject) el.getAsJsonObject();
                     Set<String> keys = clause.keySet();
-                    if (keys.size() != 2) {
-                        throw new IllegalArgumentException("boolean clause must have 2 entries: '"+
-                                QUERY_STRING_NAME + "' and a query");
+                    if (keys.size() != 1) {
+                        throw new IllegalArgumentException("boolean clause must have a single entry -- "+
+                                "the query");
                     }
-                    JsonObject queryObject = null;
-                    String queryStringName = null;
-                    String queryType = null;
-                    for (String key : keys) {
-                        if (key.equals(QUERY_STRING_NAME)) {
-                            queryStringName = clause.get(QUERY_STRING_NAME).getAsJsonPrimitive().getAsString();
-                        } else {
-                            queryType = key;
-                            queryObject = clause.getAsJsonObject(key);
-                        }
-                    }
-                    if (queryStringName == null) {
-                        throw new IllegalArgumentException("boolean clause must have a '"+QUERY_STRING_NAME+
-                            "' entry");
-                    }
+                    String queryType = JsonUtil.getSingleChildName(clause);
+                    JsonObject queryObject = clause.getAsJsonObject(queryType);
+
                     if (queryObject == null) {
                         throw new IllegalArgumentException("boolean clause must contain a query");
                     }
@@ -182,7 +192,7 @@ public class QuerySerializer extends AbstractFeatureSerializer
                     if (! (child instanceof SingleStringQuery)) {
                         throw new IllegalArgumentException("For now, boolean clauses may only contain SingleStringQueries");
                     }
-                    bq.addClause(new BooleanClause(queryStringName, occur, (SingleStringQuery)child));
+                    bq.addClause(new BooleanClause(occur, (SingleStringQuery)child));
                 }
             }
         }
@@ -250,6 +260,7 @@ public class QuerySerializer extends AbstractFeatureSerializer
             TIE tie = new TIE(obj.get(TIE).getAsFloat());
             q.setTie(tie);
         }
+        updateQueryWithStringName(q, obj);
     }
 
     private Feature buildParam(String parameterName, JsonElement element) {
@@ -363,7 +374,6 @@ public class QuerySerializer extends AbstractFeatureSerializer
         return weightableListFeature;
     }
 
-
     @Override
     public JsonElement serialize(Query query, Type type, JsonSerializationContext jsonSerializationContext) {
         return serializeQuery(query);
@@ -371,6 +381,7 @@ public class QuerySerializer extends AbstractFeatureSerializer
 
     private JsonElement serializeQuery(Query query) {
         JsonObject jsonObject = new JsonObject();
+        updateJsonQueryStringName(jsonObject, query);
         if (query instanceof EDisMaxQuery) {
             jsonObject.add(EDISMAX, serializeEDisMax((EDisMaxQuery)query));
         } else if (query instanceof DisMaxQuery) {
@@ -397,15 +408,36 @@ public class QuerySerializer extends AbstractFeatureSerializer
         JsonObject ret = new JsonObject();
         JsonObject posObj = new JsonObject();
         JsonObject serializedPosQuery = serializeQuery(query.getPositiveQuery()).getAsJsonObject();
+        serializedPosQuery.remove(QUERY_STRING_NAME);
+
         String posQType = JsonUtil.getSingleChildName(serializedPosQuery);
         posObj.add(posQType, serializedPosQuery.get(posQType));
+        if ((query.getPositiveQuery() instanceof SingleStringQuery)) {
+            String qSName = ((SingleStringQuery) query.getPositiveQuery()).getQueryStringName();
+            if (! StringUtils.isBlank(qSName) &&
+                ! qSName.equals(QueryStrings.DEFAULT_QUERY_NAME) &&
+                ! qSName.equals("positive")) {
+                posObj.addProperty(QUERY_STRING_NAME, qSName);
+            }
+        }
         ret.add("positive", posObj);
 
         JsonObject negObj = new JsonObject();
         JsonObject serializedNegQuery = serializeQuery(
                 query.getNegativeQuery()).getAsJsonObject();
+        serializedPosQuery.remove(QUERY_STRING_NAME);
         String negQType = JsonUtil.getSingleChildName(serializedNegQuery);
         negObj.add(negQType, serializedNegQuery.get(negQType));
+        if ((query.getNegativeQuery() instanceof SingleStringQuery)) {
+            String qSName = ((SingleStringQuery) query.getNegativeQuery()).getQueryStringName();
+            if (! StringUtils.isBlank(qSName) &&
+                    ! qSName.equals(QueryStrings.DEFAULT_QUERY_NAME) &&
+                    ! qSName.equals("negative")) {
+                posObj.addProperty(QUERY_STRING_NAME, qSName);
+            }
+        }
+
+
         ret.add("negative", negObj);
         ret.add("negativeBoost", new JsonPrimitive(query.getNegativeBoost().getValue()));
         return ret;
@@ -417,9 +449,8 @@ public class QuerySerializer extends AbstractFeatureSerializer
             JsonArray jsonArray = new JsonArray();
             for (BooleanClause clause : bq.get(occur)) {
                 JsonObject clauseObj = new JsonObject();
-                clauseObj.addProperty(QUERY_STRING_NAME, clause.getQueryStringName());
                 JsonObject serializedQuery = serializeQuery(clause.getQuery()).getAsJsonObject();
-                String qType = JsonUtil.getSingleChildName(serializedQuery);
+                String qType = JsonUtil.getSingleChildNameNot(serializedQuery, QUERY_STRING_NAME);
                 clauseObj.add(qType, serializedQuery.get(qType));
                 jsonArray.add(clauseObj);
             }
@@ -438,6 +469,19 @@ public class QuerySerializer extends AbstractFeatureSerializer
             obj.add("fuzziness", new JsonPrimitive(query.getFuzziness().getValue()));
         }
         serializeMultiFieldComponents(query, obj);
+        return obj;
+    }
+
+    private static JsonObject updateJsonQueryStringName(JsonObject obj,
+                                                        Query query) {
+        if (! (query instanceof SingleStringQuery)) {
+            return obj;
+        }
+        String queryStringName = ((SingleStringQuery) query).getQueryStringName();
+        if (! StringUtils.isBlank(queryStringName)
+                && ! queryStringName.equals(QueryStrings.DEFAULT_QUERY_NAME)) {
+            obj.addProperty(QUERY_STRING_NAME, queryStringName);
+        }
         return obj;
     }
 

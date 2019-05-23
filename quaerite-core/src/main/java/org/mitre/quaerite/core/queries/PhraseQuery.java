@@ -32,7 +32,7 @@ public class PhraseQuery extends MultiFieldQuery {
     }
 
     @Override
-    public Object deepCopy() {
+    public PhraseQuery deepCopy() {
         return new PhraseQuery(getQueryString());
     }
 

@@ -16,6 +16,10 @@
  */
 package org.mitre.quaerite.core.queries;
 
+import java.util.Collections;
+import java.util.Set;
+
+import org.mitre.quaerite.core.QueryStrings;
 
 public class MatchAllDocsQuery extends Query {
 
@@ -25,8 +29,12 @@ public class MatchAllDocsQuery extends Query {
     }
 
     @Override
-    public Object deepCopy() {
+    public MatchAllDocsQuery deepCopy() {
         return this;
     }
 
+    @Override
+    public Set<String> setQueryStrings(QueryStrings queryStrings) {
+        return Collections.EMPTY_SET;
+    }
 }

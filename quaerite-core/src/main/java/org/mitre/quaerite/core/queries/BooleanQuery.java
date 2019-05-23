@@ -19,6 +19,7 @@ package org.mitre.quaerite.core.queries;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,17 +30,13 @@ import org.apache.commons.math3.analysis.function.Sin;
 import org.mitre.quaerite.core.QueryStrings;
 
 
-public class BooleanQuery extends MultiStringQuery {
+public class BooleanQuery extends Query {
 
-    Map<String, BooleanClause> clauses = new LinkedHashMap<>();
+    List<BooleanClause> clauses = new ArrayList<>();
 
 
     public void addClause(BooleanClause clause) {
-        if (clauses.containsKey(clause.getQueryStringName())) {
-            throw new IllegalArgumentException("This BooleanQuery already contains "+
-                    " a clause with this queryStringName:'"+clause.getQueryStringName()+"'");
-        }
-        clauses.put(clause.getQueryStringName(), clause);
+        clauses.add(clause);
     }
 
     @Override
@@ -50,23 +47,14 @@ public class BooleanQuery extends MultiStringQuery {
     @Override
     public BooleanQuery deepCopy() {
         BooleanQuery bq = new BooleanQuery();
-        for (Map.Entry<String, BooleanClause> e : clauses.entrySet()) {
-            BooleanClause c = e.getValue();
-            if (!e.getKey().equals(c.getQueryStringName())) {
-                throw new IllegalArgumentException("Something went horribly wrong: "+
-                        "there's a mismatch between key name ('"+e.getKey()+
-                        "') and the clause's queryStringName ('"+c.getQueryStringName()+"')");
-            }
-            bq.addClause(new BooleanClause(e.getKey(),
-                    c.getOccur(), c.getQuery()));
+        for (BooleanClause c : clauses) {
+            bq.addClause(c.deepCopy());
         }
         return bq;
     }
 
     /**
      * This updates each clause with the appropriate query string.
-     * <b>Warning:</b> We do not yet support setting query strings
-     * in clauses that contain {@link MultiStringQuery}.
      *
      * @param queryStrings
      * @throws IllegalAccessException if the queryString set does
@@ -74,40 +62,17 @@ public class BooleanQuery extends MultiStringQuery {
      * anything but SingleStringQueries
      */
     @Override
-    public void setQueryStrings(QueryStrings queryStrings) {
-        if (clauses.size() != queryStrings.size()) {
-            throw new IllegalArgumentException("QueryStrings' size ("+
-                    queryStrings.size()+") must equal clauses size ("+
-                    clauses.size());
+    public Set<String> setQueryStrings(QueryStrings queryStrings) {
+        Set<String> used = new HashSet<>();
+        for (BooleanClause clause : clauses) {
+            used.addAll(clause.getQuery().setQueryStrings(queryStrings));
         }
-        Set<String> queryStringNames = queryStrings.names();
-        //test for complete overlap
-        for (String name : queryStringNames) {
-            if (! clauses.containsKey(name)) {
-                throw new IllegalArgumentException("QueryStrings has '"+
-                        name+"' but I can't find a clause with that name");
-            }
-        }
-
-        for (String name : clauses.keySet()) {
-            if (!queryStringNames.contains(name)) {
-                throw new IllegalArgumentException("I can't find '"+
-                        name+"' in queryStrings!");
-            }
-            Query q = clauses.get(name).getQuery();
-            if (! (q instanceof SingleStringQuery)) {
-                throw new IllegalArgumentException("Sorry, currently only support setting query strings " +
-                        "in clauses containing SingleStringQueries.  " +
-                        "We do not yet support full recursion for setting query strings.");
-            }
-            ((SingleStringQuery)q).setQueryString(queryStrings.getStringByName(name));
-        }
-
+        return used;
     }
 
     public List<BooleanClause> get(BooleanClause.OCCUR occur) {
         List<BooleanClause> ret = new ArrayList<>();
-        for (BooleanClause clause : clauses.values()) {
+        for (BooleanClause clause : clauses) {
             if (clause.getOccur().equals(occur)) {
                 ret.add(clause.deepCopy());
             }
@@ -116,7 +81,8 @@ public class BooleanQuery extends MultiStringQuery {
     }
 
     public List<BooleanClause> getClauses() {
-        return new ArrayList(clauses.values());
+        //defensive copy?
+        return clauses;
     }
 
     @Override

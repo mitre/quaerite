@@ -150,9 +150,9 @@ public class TestESClient {
         SearchClient client = SearchClientFactory.getClient(TMDB_URL);
         LuceneQuery q = new LuceneQuery("title", "psycho");
         BooleanQuery bq = new BooleanQuery();
-        bq.addClause(new BooleanClause("must_not", BooleanClause.OCCUR.MUST_NOT,
+        bq.addClause(new BooleanClause(BooleanClause.OCCUR.MUST_NOT,
                 new TermQuery("_id", "539")));
-        bq.addClause(new BooleanClause("should", BooleanClause.OCCUR.SHOULD,
+        bq.addClause(new BooleanClause(BooleanClause.OCCUR.SHOULD,
                 q));
         QueryRequest queryRequest = new QueryRequest(bq,
                 null, client.getDefaultIdField());
@@ -185,8 +185,8 @@ public class TestESClient {
         q2.setTie(new TIE(0.3f));
 
         BooleanQuery bq = new BooleanQuery();
-        bq.addClause(new BooleanClause("should1", BooleanClause.OCCUR.SHOULD, q1));
-        bq.addClause(new BooleanClause("should2", BooleanClause.OCCUR.SHOULD, q2));
+        bq.addClause(new BooleanClause(BooleanClause.OCCUR.SHOULD, q1));
+        bq.addClause(new BooleanClause(BooleanClause.OCCUR.SHOULD, q2));
         QueryRequest queryRequest = new QueryRequest(bq,
                 null, client.getDefaultIdField());
         queryRequest.addFieldsToRetrieve("_id");

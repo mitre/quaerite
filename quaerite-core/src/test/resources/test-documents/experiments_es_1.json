@@ -58,9 +58,9 @@
                 "type": "best_fields",
                 "qf": [
                   "title"
-                ]
-              },
-              "queryStringName": "should_1"
+                ],
+                "queryStringName": "should_1"
+              }
             }
           ],
           "must_not": [
@@ -71,9 +71,9 @@
                   "good",
                   "bad",
                   "ugly"
-                ]
-              },
-              "queryStringName": "must_not_1"
+                ],
+                "queryStringName": "must_not_1"
+              }
             }
           ]
         }

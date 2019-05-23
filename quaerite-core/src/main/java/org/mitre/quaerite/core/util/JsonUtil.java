@@ -17,7 +17,9 @@
 package org.mitre.quaerite.core.util;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -63,11 +65,26 @@ public class JsonUtil {
 
     public static String getSingleChildName(JsonObject object) {
         if (object.keySet().size() != 1) {
-            throw new IllegalArgumentException("Expected only a single child, but found: "+object.keySet().size());
+            throw new IllegalArgumentException(
+                    "Expected only a single child, but found: "+object.keySet().size()+
+                    " -> "+object);
         }
         for (String s : object.keySet()) {
             return s;
         }
         throw new IllegalArgumentException("Expected only a single child, but found: "+object.keySet().size());
+    }
+
+    public static String getSingleChildNameNot(JsonObject object, String ... names) {
+        Set<String> ignore = new HashSet<>();
+        for (String n : names) {
+            ignore.add(n);
+        }
+        for (String n : object.keySet()) {
+            if (! ignore.contains(n)) {
+                return n;
+            }
+        }
+        return null;
     }
 }

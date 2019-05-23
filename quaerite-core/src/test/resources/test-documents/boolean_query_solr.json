@@ -20,15 +20,15 @@
           "must": [
             {
               "edismax": {
-                "qf": "title"
-              },
-              "queryStringName": "must1"
+                "qf": "title",
+                "queryStringName": "must1"
+              }
             },
             {
               "lucene": {
-                "field": "producer"
-              },
-              "queryStringName": "must2"
+                "field": "producer",
+                "queryStringName": "must2"
+              }
             }
           ],
           "filter": [

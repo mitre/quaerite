@@ -16,8 +16,13 @@
  */
 package org.mitre.quaerite.core.queries;
 
+import java.util.Set;
+
+import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.features.Feature;
 
 public abstract class Query implements Feature {
+
+    public abstract Set<String> setQueryStrings(QueryStrings queryStrings);
 
 }

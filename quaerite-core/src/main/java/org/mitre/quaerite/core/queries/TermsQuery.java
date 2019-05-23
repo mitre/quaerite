@@ -60,8 +60,10 @@ public class TermsQuery extends SingleStringQuery {
     }
 
     @Override
-    public Object deepCopy() {
-        return new TermsQuery(field, terms);
+    public TermsQuery deepCopy() {
+        TermsQuery tqs = new TermsQuery(field, terms);
+        tqs.setQueryStringName(getQueryStringName());
+        return tqs;
     }
 
     @Override

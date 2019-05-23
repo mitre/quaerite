@@ -29,6 +29,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.features.Feature;
@@ -45,19 +46,17 @@ import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.scoreaggregators.NDCGAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
-import org.mitre.quaerite.core.serializers.QuerySerializer;
 
 public class TestExperimentSet {
-
 
     @Test
     public void testLoadingExperiments() throws Exception {
 
         ExperimentSet experimentSet = null;
         try (Reader reader =
-                new BufferedReader(new InputStreamReader(
-                        getClass().getResourceAsStream("/test-documents/experiments_solr_1.json"),
-                        StandardCharsets.UTF_8))) {
+                     new BufferedReader(new InputStreamReader(
+                             getClass().getResourceAsStream("/test-documents/experiments_solr_1.json"),
+                             StandardCharsets.UTF_8))) {
             experimentSet = ExperimentSet.fromJson(reader);
 
         }
@@ -65,10 +64,10 @@ public class TestExperimentSet {
         Map<String, Experiment> map = experimentSet.getExperiments();
         Experiment peopleTitle = map.get("people_title");
         assertEquals("people_title", peopleTitle.getName());
-        EDisMaxQuery query = (EDisMaxQuery)peopleTitle.getQuery();
+        EDisMaxQuery query = (EDisMaxQuery) peopleTitle.getQuery();
         Feature qf = query.getQF();
         assertEquals(QF.class, qf.getClass());
-        List<WeightableField> fields = ((WeightableListFeature)qf).getWeightableFields();
+        List<WeightableField> fields = ((WeightableListFeature) qf).getWeightableFields();
         assertEquals(2, fields.size());
         assertEquals("people", fields.get(0).getFeature());
         assertEquals("title", fields.get(1).getFeature());
@@ -107,10 +106,10 @@ public class TestExperimentSet {
         Map<String, Experiment> map = revivified.getExperiments();
         Experiment peopleTitle = map.get("people_title");
         assertEquals("people_title", peopleTitle.getName());
-        EDisMaxQuery query = (EDisMaxQuery)peopleTitle.getQuery();
+        EDisMaxQuery query = (EDisMaxQuery) peopleTitle.getQuery();
         Feature qf = query.getQF();
         assertEquals(QF.class, qf.getClass());
-        List<WeightableField> fields = ((WeightableListFeature)qf).getWeightableFields();
+        List<WeightableField> fields = ((WeightableListFeature) qf).getWeightableFields();
         assertEquals(2, fields.size());
         assertEquals("people", fields.get(0).getFeature());
         assertEquals("title", fields.get(1).getFeature());
@@ -134,21 +133,17 @@ public class TestExperimentSet {
         Query q = experimentSet.getExperiments().get("title").getQuery();
         assertEquals(BooleanQuery.class, q.getClass());
 
-        BooleanQuery bq = (BooleanQuery)q;
+        BooleanQuery bq = (BooleanQuery) q;
         QueryStrings queryStrings = new QueryStrings();
         queryStrings.addQueryString("should_1", "should1query");
 
-        boolean ex = false;
-        try {
-            bq.setQueryStrings(queryStrings);
+        Set<String> used = bq.setQueryStrings(queryStrings);
+        if (used.size() != bq.getClauses().size()) {
             //must_not_1 is not set
             fail("should have thrown exception");
-        } catch (IllegalArgumentException e) {
-            ex = true;
         }
-        assertTrue(ex);
+        boolean ex = false;
         //test duplicate key
-        ex = false;
         try {
             queryStrings.addQueryString("should_1", "should1query");
             fail("can't add duplicate key");
@@ -156,16 +151,12 @@ public class TestExperimentSet {
             ex = true;
         }
         assertTrue(ex);
-        ex = false;
         //test bad query string
         queryStrings.addQueryString("unknown", "unknown");
-        try {
-            bq.setQueryStrings(queryStrings);
+        used = bq.setQueryStrings(queryStrings);
+        if (used.contains("unknown")) {
             fail("can't add unknown query string");
-        } catch (IllegalArgumentException e) {
-            ex = true;
         }
-        assertTrue(ex);
         //now do it correctly
         queryStrings = new QueryStrings();
         queryStrings.addQueryString("should_1", "should1query");
@@ -176,7 +167,7 @@ public class TestExperimentSet {
         assertEquals(1, shoulds.size());
         Query should = shoulds.get(0).getQuery();
         assertEquals(MultiMatchQuery.class, should.getClass());
-        MultiMatchQuery mm = (MultiMatchQuery)should;
+        MultiMatchQuery mm = (MultiMatchQuery) should;
         assertTrue(new MultiMatchType("best_fields").equals(mm.getMultiMatchType()));
         assertEquals("should1query", mm.getQueryString());
 
@@ -189,7 +180,7 @@ public class TestExperimentSet {
         Query boosting = experimentSet.getExperiments().get("boostingExperiment").getQuery();
         assertEquals(BoostingQuery.class, boosting.getClass());
 
-        assertEquals((float)0.001, ((BoostingQuery)boosting).getNegativeBoost().getValue(), 0.1);
+        assertEquals((float) 0.001, ((BoostingQuery) boosting).getNegativeBoost().getValue(), 0.1);
 
 
     }

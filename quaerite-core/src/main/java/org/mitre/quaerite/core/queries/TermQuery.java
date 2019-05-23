@@ -34,8 +34,10 @@ public class TermQuery extends SingleStringQuery {
     }
 
     @Override
-    public Object deepCopy() {
-        return new TermQuery(field, getQueryString());
+    public TermQuery deepCopy() {
+        TermQuery tq = new TermQuery(field, getQueryString());
+        tq.setQueryStringName(getQueryStringName());
+        return tq;
     }
 
     public String getField() {

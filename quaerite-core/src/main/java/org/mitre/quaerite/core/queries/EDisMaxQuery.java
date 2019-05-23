@@ -86,7 +86,7 @@ public class EDisMaxQuery extends DisMaxQuery {
         cp.bf = (bf != null) ? (BF)bf.deepCopy() : null;
         cp.qf = (qf != null) ? (QF)qf.deepCopy() : null;
         cp.tie = (tie != null) ? new TIE(tie.getValue()) : null;
-        cp.setQueryString(getQueryString());
+        setQueryString(getQueryString());
         return cp;
     }
 

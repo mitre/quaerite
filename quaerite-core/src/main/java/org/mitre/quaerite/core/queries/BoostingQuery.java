@@ -16,7 +16,9 @@
  */
 package org.mitre.quaerite.core.queries;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.features.NegativeBoost;
@@ -26,26 +28,22 @@ import org.mitre.quaerite.core.features.NegativeBoost;
  * equivalent in Solr.  Instead, set the boost directly
  * in the queries within the clauses in a {@link BooleanQuery}
  */
-public class BoostingQuery extends MultiStringQuery {
+public class BoostingQuery extends Query {
 
     public static final String POSITIVE_QUERY_STRING_NAME = "positive";
     public static final String NEGATIVE_QUERY_STRING_NAME = "negative";
 
-    final SingleStringQuery positiveQuery;
-    final SingleStringQuery negativeQuery;
+    final Query positiveQuery;
+    final Query negativeQuery;
     final NegativeBoost negativeBoost;
 
     /**
-     * For now, this only works with SingleStringQueries...
-     * In the future, this may be completely recursive and allow for
-     * just {@link Query}
-     *
      * @param positiveQuery
      * @param negativeQuery
      * @param negativeBoost
      */
-    public BoostingQuery(SingleStringQuery positiveQuery,
-                         SingleStringQuery negativeQuery, NegativeBoost negativeBoost) {
+    public BoostingQuery(Query positiveQuery,
+                         Query negativeQuery, NegativeBoost negativeBoost) {
         this.positiveQuery = positiveQuery;
         this.negativeQuery = negativeQuery;
         this.negativeBoost = negativeBoost;
@@ -56,11 +54,11 @@ public class BoostingQuery extends MultiStringQuery {
         return "boosting";
     }
 
-    public SingleStringQuery getPositiveQuery() {
+    public Query getPositiveQuery() {
         return positiveQuery;
     }
 
-    public SingleStringQuery getNegativeQuery() {
+    public Query getNegativeQuery() {
         return negativeQuery;
     }
 
@@ -83,7 +81,8 @@ public class BoostingQuery extends MultiStringQuery {
      * not equal the clauses' queryString set
      */
     @Override
-    public void setQueryStrings(QueryStrings queryStrings) {
+    public Set<String> setQueryStrings(QueryStrings queryStrings) {
+        //we might loosen these requirements later
         if (queryStrings.getStringByName(POSITIVE_QUERY_STRING_NAME) == null) {
             throw new IllegalArgumentException("queryStrings must contain: "+
                     POSITIVE_QUERY_STRING_NAME);
@@ -93,8 +92,10 @@ public class BoostingQuery extends MultiStringQuery {
                     NEGATIVE_QUERY_STRING_NAME);
 
         }
-        this.positiveQuery.setQueryString(queryStrings.getStringByName(POSITIVE_QUERY_STRING_NAME));
-        this.negativeQuery.setQueryString(queryStrings.getStringByName(NEGATIVE_QUERY_STRING_NAME));
+        Set<String> used = new HashSet<>();
+        used.addAll(this.positiveQuery.setQueryStrings(queryStrings));
+        used.addAll(this.negativeQuery.setQueryStrings(queryStrings));
+        return used;
     }
 
     @Override
