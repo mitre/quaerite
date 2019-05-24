@@ -23,6 +23,8 @@ import org.mitre.quaerite.core.features.BQ;
 import org.mitre.quaerite.core.features.PF;
 import org.mitre.quaerite.core.features.PF2;
 import org.mitre.quaerite.core.features.PF3;
+import org.mitre.quaerite.core.features.PS2;
+import org.mitre.quaerite.core.features.PS3;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.TIE;
 
@@ -30,6 +32,9 @@ public class EDisMaxQuery extends DisMaxQuery {
 
     PF2 pf2;
     PF3 pf3;
+    PS2 ps2;
+    PS3 ps3;
+
     public EDisMaxQuery() {
         super(null);
     }
@@ -38,11 +43,11 @@ public class EDisMaxQuery extends DisMaxQuery {
         super(queryString);
     }
 
-    public void setPf2(PF2 pf2) {
+    public void setPF2(PF2 pf2) {
         this.pf2 = pf2;
     }
 
-    public void setPf3(PF3 pf3) {
+    public void setPF3(PF3 pf3) {
         this.pf3 = pf3;
     }
 
@@ -91,10 +96,36 @@ public class EDisMaxQuery extends DisMaxQuery {
         return cp;
     }
 
-    public PF2 getPF2() {
+
+    public PF2 getPf2() {
         return pf2;
     }
-    public PF3 getPF3() {
+
+    public void setPf2(PF2 pf2) {
+        this.pf2 = pf2;
+    }
+
+    public PF3 getPf3() {
         return pf3;
+    }
+
+    public void setPf3(PF3 pf3) {
+        this.pf3 = pf3;
+    }
+
+    public PS2 getPs2() {
+        return ps2;
+    }
+
+    public void setPs2(PS2 ps2) {
+        this.ps2 = ps2;
+    }
+
+    public PS3 getPs3() {
+        return ps3;
+    }
+
+    public void setPs3(PS3 ps3) {
+        this.ps3 = ps3;
     }
 }

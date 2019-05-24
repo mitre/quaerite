@@ -20,7 +20,6 @@ import static org.mitre.quaerite.core.serializers.FeatureFactorySerializer.VALUE
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -41,14 +40,23 @@ import com.google.gson.JsonSerializer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.QueryStrings;
+import org.mitre.quaerite.core.features.BF;
+import org.mitre.quaerite.core.features.BQ;
 import org.mitre.quaerite.core.features.Boost;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.FloatFeature;
 import org.mitre.quaerite.core.features.Fuzziness;
+import org.mitre.quaerite.core.features.IntFeature;
 import org.mitre.quaerite.core.features.MultiMatchType;
 import org.mitre.quaerite.core.features.NegativeBoost;
 import org.mitre.quaerite.core.features.PF;
+import org.mitre.quaerite.core.features.PF2;
+import org.mitre.quaerite.core.features.PF3;
+import org.mitre.quaerite.core.features.PS;
+import org.mitre.quaerite.core.features.PS2;
+import org.mitre.quaerite.core.features.PS3;
 import org.mitre.quaerite.core.features.QF;
+import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.TIE;
@@ -63,7 +71,6 @@ import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.MultiFieldQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
-import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.queries.SingleStringQuery;
 import org.mitre.quaerite.core.queries.TermQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
@@ -217,8 +224,37 @@ public class QuerySerializer extends AbstractFeatureSerializer
 
     Query buildEDisMax(JsonObject obj) {
         Query q = new EDisMaxQuery();
+
+
+        deserializeEDisMax((EDisMaxQuery)q, obj);
         deserializeDisMax((DisMaxQuery)q, obj);
         return q;
+    }
+
+    private void deserializeEDisMax(EDisMaxQuery q, JsonObject obj) {
+        if (obj.has("pf2")) {
+            PF2 pf2 = new PF2();
+            for (String f : toStringList(obj.get("pf2"))) {
+                pf2.add(new WeightableField(f));
+            }
+            q.setPF2(pf2);
+        }
+        if (obj.has("pf3")) {
+            PF2 pf2 = new PF2();
+            for (String f : toStringList(obj.get("pf3"))) {
+                pf2.add(new WeightableField(f));
+            }
+            q.setPF2(pf2);
+        }
+
+        if (obj.has("ps2")) {
+            q.setPs2(new PS2(obj.getAsJsonPrimitive("ps2").getAsInt()));
+
+        }
+        if (obj.has("ps3")) {
+            q.setPs3(new PS3(obj.getAsJsonPrimitive("ps3").getAsInt()));
+
+        }
     }
 
     Query buildDisMax(JsonObject obj) {
@@ -228,22 +264,27 @@ public class QuerySerializer extends AbstractFeatureSerializer
     }
 
     void deserializeDisMax(DisMaxQuery q, JsonObject obj) {
-        List<String> pfs = toStringList(obj.get("pf"));
-        if (pfs.size() > 0) {
+        if (obj.has("pf")) {
             PF pf = new PF();
             for (String f : toStringList(obj.get("pf"))) {
                 pf.add(new WeightableField(f));
             }
-            q.setPf(pf);
+            q.setPF(pf);
         }
-        //TODO -- stub add in bq and bf
-        /*
+        if (obj.has("bf")) {
+            List<String> bfs = toStringList(obj.get("bf"));
+            BF bf = new BF(bfs);
+            q.setBF(bf);
+        }
         if (obj.has("bq")) {
-            BQ bq = new BQ(obj.get("bq").getAsString());
+            List<String> bqs = toStringList(obj.get("bq"));
+            BQ bq = new BQ(bqs);
+            q.setBQ(bq);
         }
-
-        BF bf = new BF();
-        */
+        if (obj.has("ps")) {
+            int ps = obj.getAsJsonPrimitive().getAsInt();
+            q.setPS(new PS(ps));
+        }
         deserializeMultiField((MultiFieldQuery)q, obj);
     }
 
@@ -486,8 +527,6 @@ public class QuerySerializer extends AbstractFeatureSerializer
                 posObj.addProperty(QUERY_STRING_NAME, qSName);
             }
         }
-
-
         ret.add("negative", negObj);
         ret.add("negativeBoost", new JsonPrimitive(query.getNegativeBoost().getValue()));
         return ret;
@@ -594,12 +633,33 @@ public class QuerySerializer extends AbstractFeatureSerializer
     }
 
     private void serializeEDisMaxComponents(EDisMaxQuery query, JsonObject obj) {
-        //stub
+        if (query.getPf2() != null) {
+            obj.add("pf2", serializeFeature(query.getPf2()));
+        }
+        if (query.getPf3() != null) {
+            obj.add("pf3", serializeFeature(query.getPf3()));
+        }
+        if (query.getPs2() != null) {
+            obj.add("ps2", serializeFeature(query.getPf2()));
+        }
+        if (query.getPs3() != null) {
+            obj.add("ps3", serializeFeature(query.getPf2()));
+        }
     }
 
     private void serializeDisMaxComponents(DisMaxQuery query, JsonObject obj) {
-        //stub
-//        throw new IllegalArgumentException("not yet supported");
+        if (query.getBF() != null) {
+            obj.add("bf", serializeFeature(query.getBF()));
+        }
+        if (query.getBQ() != null) {
+            obj.add("bq", serializeFeature(query.getBQ()));
+        }
+        if (query.getPF() != null) {
+            obj.add("ps", serializeFeature(query.getPF()));
+        }
+        if (query.getPS() != null) {
+            obj.add("ps", serializeFeature(query.getPS()));
+        }
     }
 
     private void serializeMultiFieldComponents(MultiFieldQuery query, JsonObject obj) {
@@ -634,6 +694,8 @@ public class QuerySerializer extends AbstractFeatureSerializer
             return jsonFields;
         } else if (feature instanceof FloatFeature) {
             return new JsonPrimitive(((FloatFeature)feature).getValue());
+        } else if (feature instanceof IntFeature) {
+            return new JsonPrimitive(((IntFeature)feature).getValue());
         } else if (feature instanceof StringFeature) {
             return new JsonPrimitive(feature.toString());
         } else if (feature instanceof StringListFeature) {

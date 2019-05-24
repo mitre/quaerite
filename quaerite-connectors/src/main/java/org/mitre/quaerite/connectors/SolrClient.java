@@ -222,7 +222,33 @@ public class SolrClient extends SearchClient {
 
     private void addEdisMaxParams(EDisMaxQuery query, CustomHandler handler, StringBuilder sb) {
         sb.append("defType=edismax");
-        //TODO: stub ...need to add edismax stuff pf2, ps2
+        int i = 0;
+        if (query.getPf2() != null) {
+            sb.append("&pf2=");
+            for (WeightableField f : query.getPf2().getWeightableFields()) {
+                if (i++ > 0) {
+                    sb.append(encode(" "));
+                }
+                sb.append(encode(f.toString()));
+            }
+        }
+        i = 0;
+        if (query.getPf3() != null) {
+            sb.append("&pf3=");
+            for (WeightableField f : query.getPf3().getWeightableFields()) {
+                if (i++ > 0) {
+                    sb.append(encode(" "));
+                }
+                sb.append(encode(f.toString()));
+            }
+        }
+        if (query.getPs2() != null) {
+            sb.append("&ps2="+query.getPs2().getValue());
+        }
+        if (query.getPs3() != null) {
+            sb.append("&ps2="+query.getPs3().getValue());
+        }
+
         addDisMaxParams((DisMaxQuery) query, handler, sb);
     }
 
@@ -258,6 +284,29 @@ public class SolrClient extends SearchClient {
                                 "%.0f%s",
                                 qop.getMmFloat()*100f, "%")));
             }
+        }
+        if (query.getBQ() != null) {
+            for (String bq : query.getBQ().getAll()) {
+                sb.append("&bq=").append(encode(bq));
+            }
+        }
+        if (query.getBF() != null) {
+            for (String bf : query.getBF().getAll()) {
+                sb.append("&bq=").append(encode(bf));
+            }
+        }
+        i = 0;
+        if (query.getPF() != null) {
+            sb.append("&pf=");
+            for (WeightableField f : query.getPF().getWeightableFields()) {
+                if (i++ > 0) {
+                    sb.append(encode(" "));
+                }
+                sb.append(encode(f.toString()));
+            }
+        }
+        if (query.getPS() != null) {
+            sb.append("&ps="+query.getPS().getValue());
         }
     }
 

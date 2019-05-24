@@ -19,14 +19,17 @@ package org.mitre.quaerite.core.queries;
 
 import org.mitre.quaerite.core.features.BF;
 import org.mitre.quaerite.core.features.BQ;
+import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.PF;
+import org.mitre.quaerite.core.features.PS;
 
 public class DisMaxQuery extends MultiFieldQuery {
 
 
-    protected PF pf;
-    protected BQ bq;
     protected BF bf;
+    protected BQ bq;
+    protected PF pf;
+    protected PS ps;
 
 
     public DisMaxQuery() {
@@ -37,30 +40,55 @@ public class DisMaxQuery extends MultiFieldQuery {
         super(queryString);
     }
 
-    public void setPf(PF pf) {
-        this.pf = pf;
-    }
-
     @Override
     public String getName() {
         return "dismax";
     }
 
+    public BF getBF() {
+        return bf;
+    }
+
+    public void setBF(BF bf) {
+        this.bf = bf;
+    }
+
+    public BQ getBQ() {
+        return bq;
+    }
+
+    public void setBQ(BQ bq) {
+        this.bq = bq;
+    }
+
+    public PF getPF() {
+        return pf;
+    }
+
+    public void setPF(PF pf) {
+        this.pf = pf;
+    }
+
+    public PS getPS() {
+        return ps;
+    }
+
+    public void setPS(PS ps) {
+        this.ps = ps;
+    }
+
     @Override
     public DisMaxQuery deepCopy() {
         DisMaxQuery cp = new DisMaxQuery();
-        cp.pf = (pf == null) ? null : pf.deepCopy();
         cp.bq = (bq == null) ? null : bq.deepCopy();
         cp.bf = (bf == null) ? null : bf.deepCopy();
+        cp.pf = (pf == null) ? null : pf.deepCopy();
+        cp.ps = (ps == null) ? null : ps.deepCopy();
         cp.qf = (qf == null) ? null : qf.deepCopy();
         cp.tie = (tie == null) ? null : tie.deepCopy();
         cp.setQueryString(getQueryString());
         cp.setQueryStringName(getQueryStringName());
         cp.setQueryOperator(getQueryOperator());
         return cp;
-    }
-
-    public PF getPF() {
-        return pf;
     }
 }

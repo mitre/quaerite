@@ -61,6 +61,35 @@ public class MathUtil {
         return getRandomFloat(adjustedMin, adjustedMax);
     }
 
+    public static float calcMutatedWeight(Integer currentValue, int min, int max, double amplitude) {
+        if (amplitude < 0 || amplitude > 1.0) {
+            throw new IllegalArgumentException("amplitude must be >= 0 and <= 1");
+        }
+        if (min == max) {
+            return min;
+        }
+        int curr;
+        if (currentValue == null) {
+            curr = (int)(((double)(max+min))/2.0);
+        } else {
+            curr = currentValue;
+        }
+        curr = (curr < min) ? min: curr;
+        curr = (curr > max) ? max : curr;
+
+        int distBelow = (int)(amplitude*(double)(curr-min));
+        int distAbove = (int)(amplitude*(double)(max-curr));
+
+        int adjustedMin = curr-distBelow;
+        int adjustedMax = curr+distAbove;
+        adjustedMin = (adjustedMin < min) ? min : adjustedMin;
+        adjustedMax = (adjustedMax > max) ? max : adjustedMax;
+
+        return getRandomInt(adjustedMin, adjustedMax);
+    }
+
+
+
     public static float getRandomFloat(float min, float max) {
         //TODO -- fix potential overflow/underflow
         return min + RANDOM.nextFloat() * (max - min);
