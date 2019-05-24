@@ -280,3 +280,7 @@ _Quaerite_ relies on an in-process H2 database.  To view the contents:
 Navigate in a browser to: `http://localhost:8082`
 
 And enter the full path for the `.mv.db` file (without the file suffix): `jdbc:h2:C:/data/my_db/h2_database`
+
+**NOTE:** The Genetic Algorithm exports all experiments (including all parameters) to the `-o output` directory.
+If there is any need/interest for any of the code to output more diagnostics
+and/or logging, please open a ticket.
