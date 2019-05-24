@@ -18,7 +18,7 @@ package org.mitre.quaerite.core.features;
 
 public class PS3 extends IntFeature {
 
-    private static final String NAME = "ps";
+    private static final String NAME = "ps3";
 
     public PS3(int value) {
         super(NAME, value);

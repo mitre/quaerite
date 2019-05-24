@@ -193,6 +193,9 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
         Feature ret = null;
         try {
             ret = (Feature)method.invoke(q);
+            if (ret == null) {
+                System.out.println(method + " : " + q);
+            }
             methodCache.put(name, method);
         } catch (Exception e) {
             throw new RuntimeException(e);

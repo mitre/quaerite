@@ -61,10 +61,10 @@
         },
         "pf2": {
           "fields": [
-            "title",
-            "overview",
-            "people",
-            "content"
+            "title2",
+            "overview2",
+            "people2",
+            "content2"
           ],
           "defaultWeights": [
             "0.0",
@@ -76,10 +76,10 @@
         },
         "pf3": {
           "fields": [
-            "title",
-            "overview",
-            "people",
-            "content"
+            "title3",
+            "overview3",
+            "people3",
+            "content3"
           ],
           "defaultWeights": [
             "0.0",
@@ -89,10 +89,35 @@
           "minSetSize": 0,
           "maxSetSize": 1
         },
+        "ps": [
+          1,
+          2,
+          3
+        ],
+        "ps2": [
+          2,
+          3,
+          4
+        ],
+        "ps3": [
+          3,
+          4,
+          3
+        ],
         "tie": [
           0.0,
           0.1,
           0.2
+        ],
+        "bf" : [
+          "bf1",
+          "bf2",
+          "bf3"
+        ],
+        "bq" : [
+          "bq1",
+          "bq2",
+          "bq3"
         ]
       }
     }

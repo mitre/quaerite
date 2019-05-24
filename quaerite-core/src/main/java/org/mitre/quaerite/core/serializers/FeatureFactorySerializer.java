@@ -40,8 +40,10 @@ import org.mitre.quaerite.core.features.Boost;
 import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.FloatFeature;
 import org.mitre.quaerite.core.features.Fuzziness;
+import org.mitre.quaerite.core.features.IntFeature;
 import org.mitre.quaerite.core.features.MultiMatchType;
 import org.mitre.quaerite.core.features.NegativeBoost;
+import org.mitre.quaerite.core.features.PS2;
 import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.StringFeature;
@@ -51,6 +53,7 @@ import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
 import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
 import org.mitre.quaerite.core.features.factories.FloatFeatureFactory;
+import org.mitre.quaerite.core.features.factories.IntFeatureFactory;
 import org.mitre.quaerite.core.features.factories.QueryFactory;
 import org.mitre.quaerite.core.features.factories.QueryOperatorFeatureFactory;
 import org.mitre.quaerite.core.features.factories.StringListFeatureFactory;
@@ -94,6 +97,8 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             return buildWeightableFeatureFactory(paramName, featureSetObj);
         } else if (FloatFeature.class.isAssignableFrom(clazz)) {
             return buildFloatFeatureFactory(paramName, jsonFeatureFactory);
+        } else if (IntFeature.class.isAssignableFrom(clazz)) {
+            return buildIntFeatureFactory(paramName, jsonFeatureFactory);
         } else if (StringFeature.class.isAssignableFrom(clazz)) {
             return buildStringFeatureFactory(paramName, jsonFeatureFactory);
         } else if (StringListFeature.class.isAssignableFrom(clazz)) {
@@ -102,9 +107,11 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             return createQueryFactory((JsonObject)jsonFeatureFactory);
         } else if (CustomHandler.class.isAssignableFrom(clazz)) {
             return buildCustomHandlerFactory(jsonFeatureFactory.getAsJsonObject());
+        } else {
+            throw new IllegalArgumentException("Sorry, I can't yet handle: " + paramName);
         }
-            throw new IllegalArgumentException("Sorry, I can't yet handle: "+paramName);
-        }
+    }
+
 
     private FeatureFactory buildCustomHandlerFactory(JsonObject obj) {
         CustomHandlerFactory customHandlerFactory = new CustomHandlerFactory();
@@ -177,12 +184,19 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
     }
 
     private QueryFactory buildEDisMaxFactory(JsonObject obj) {
+        //TODO -- PICK UP HERE
         QueryFactory<EDisMaxQuery> factory = new  QueryFactory<>("edismax", EDisMaxQuery.class);
         if (obj.has("pf2")) {
-            factory.add(buildWeightableFeatureFactory("pf2", obj.getAsJsonObject("pf2")));
+            factory.add(buildFeatureFactory("pf2", obj.get("pf2")));
         }
         if (obj.has("pf3")) {
-            factory.add(buildWeightableFeatureFactory("pf3", obj.getAsJsonObject("pf3")));
+            factory.add(buildFeatureFactory("pf3", obj.get("pf3")));
+        }
+        if (obj.has("ps2")) {
+            factory.add(buildFeatureFactory("ps2", obj.get("ps2")));
+        }
+        if (obj.has("ps3")) {
+            factory.add(buildFeatureFactory("ps3", obj.get("ps3")));
         }
         addDismaxFeatures(factory, obj);
         return factory;
@@ -190,7 +204,16 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
 
     private void addDismaxFeatures(QueryFactory<? extends DisMaxQuery> factory, JsonObject obj) {
         if (obj.has("pf")) {
-            factory.add(buildWeightableFeatureFactory("pf", obj.getAsJsonObject("pf")));
+            factory.add(buildFeatureFactory("pf", obj.get("pf")));
+        }
+        if (obj.has("ps")) {
+            factory.add(buildFeatureFactory("ps", obj.get("ps")));
+        }
+        if (obj.has("bq")) {
+            factory.add(buildFeatureFactory("bq", obj.get("bq")));
+        }
+        if (obj.has("bf")) {
+            factory.add(buildFeatureFactory("bf", obj.get("bf")));
         }
         addMultiFieldFeatures(factory, obj);
     }
@@ -281,6 +304,17 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             throw new IllegalArgumentException(e);
         }
     }
+    private FeatureFactory buildIntFeatureFactory(String name, JsonElement intArr) {
+        List<Integer> values = toIntList(intArr);
+        Class clazz = null;
+        try {
+            clazz = Class.forName(getClassName(name));
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException(e);
+        }
+        return new IntFeatureFactory(clazz, values);
+
+    }
 
     private FeatureFactory buildFloatFeatureFactory(String name, JsonElement floatArr) {
         List<Float> values = toFloatList(floatArr);
@@ -356,7 +390,6 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
     }
 
     private FeatureFactory buildWeightableFeatureFactory(String paramName, JsonObject obj) {
-
         List<String> fields = toStringList(obj.get(FIELDS_KEY).getAsJsonArray());
 
         List<Float> defaultWeights = toFloatList(obj.get(DEFAULT_WEIGHT_KEY));

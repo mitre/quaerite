@@ -23,6 +23,7 @@ import org.mitre.quaerite.core.features.BQ;
 import org.mitre.quaerite.core.features.PF;
 import org.mitre.quaerite.core.features.PF2;
 import org.mitre.quaerite.core.features.PF3;
+import org.mitre.quaerite.core.features.PS;
 import org.mitre.quaerite.core.features.PS2;
 import org.mitre.quaerite.core.features.PS3;
 import org.mitre.quaerite.core.features.QF;
@@ -41,14 +42,6 @@ public class EDisMaxQuery extends DisMaxQuery {
 
     public EDisMaxQuery(String queryString) {
         super(queryString);
-    }
-
-    public void setPF2(PF2 pf2) {
-        this.pf2 = pf2;
-    }
-
-    public void setPF3(PF3 pf3) {
-        this.pf3 = pf3;
     }
 
     @Override
@@ -83,12 +76,15 @@ public class EDisMaxQuery extends DisMaxQuery {
     @Override
     public EDisMaxQuery deepCopy() {
         EDisMaxQuery cp = new EDisMaxQuery();
-        cp.pf = (pf != null ) ? (PF)pf.deepCopy() : null;
-        cp.pf2 = (pf2 != null ) ? (PF2)pf2.deepCopy() : null;
-        cp.pf3 = (pf3 != null ) ? (PF3)pf3.deepCopy() : null;
-        cp.bq = (bq != null) ? (BQ)bq.deepCopy() : null;
-        cp.bf = (bf != null) ? (BF)bf.deepCopy() : null;
-        cp.qf = (qf != null) ? (QF)qf.deepCopy() : null;
+        cp.pf = (pf != null ) ? pf.deepCopy() : null;
+        cp.pf2 = (pf2 != null ) ? pf2.deepCopy() : null;
+        cp.pf3 = (pf3 != null ) ? pf3.deepCopy() : null;
+        cp.ps = (ps != null) ? ps.deepCopy() : null;
+        cp.ps2 = (ps2 != null) ? ps2.deepCopy() : null;
+        cp.ps3 = (ps3 != null) ? ps3.deepCopy() : null;
+        cp.bq = (bq != null) ? bq.deepCopy() : null;
+        cp.bf = (bf != null) ? bf.deepCopy() : null;
+        cp.qf = (qf != null) ? qf.deepCopy() : null;
         cp.tie = (tie != null) ? new TIE(tie.getValue()) : null;
         cp.setQueryString(getQueryString());
         cp.setQueryStringName(getQueryStringName());

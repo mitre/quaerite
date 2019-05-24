@@ -355,7 +355,7 @@ public class ExperimentDB implements Closeable {
     public void clearSearchResults() throws SQLException {
         String sql = "DROP TABLE SEARCH_RESULTS";
         executeSQL(connection, sql);
-        initScorers();
+        initSearchResults();
     }
 
     public void addScoreAggregator(ScoreAggregator scoreAggregator) throws SQLException {

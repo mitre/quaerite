@@ -60,8 +60,8 @@ public class IntFeatureFactory<T extends IntFeature>
 
     @Override
     public T random() {
-        float f = integers.get(random.nextInt(integers.size()));
-        return newInstance(f);
+        int i = integers.get(random.nextInt(integers.size()));
+        return newInstance(i);
     }
 
 
@@ -69,8 +69,8 @@ public class IntFeatureFactory<T extends IntFeature>
     @Override
     public List<T> permute(int maxSize) {
         List<T> ret = new ArrayList<>();
-        for (float f : integers) {
-            ret.add(newInstance(f));
+        for (int i : integers) {
+            ret.add(newInstance(i));
         }
         return ret;
     }
@@ -91,6 +91,9 @@ public class IntFeatureFactory<T extends IntFeature>
 
     @Override
     public Pair<T, T> crossover(T parentA, T parentB) {
+        if (parentA == null) {
+            System.out.println(parentA + " : "+ parentB);
+        }
         if (MathUtil.RANDOM.nextFloat() > 0.5) {
             return Pair.of(parentB, parentA);
         } else {
@@ -98,12 +101,22 @@ public class IntFeatureFactory<T extends IntFeature>
         }
     }
 
-    private T newInstance(float f) {
+    private T newInstance(int i) {
         try {
-            Constructor cstr = clazz.getConstructor(float.class);
-            return (T)cstr.newInstance(f);
+            Constructor cstr = clazz.getConstructor(int.class);
+            return (T)cstr.newInstance(i);
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "IntFeatureFactory{" +
+                "min=" + min +
+                ", max=" + max +
+                ", integers=" + integers +
+                ", clazz=" + clazz +
+                '}';
     }
 }

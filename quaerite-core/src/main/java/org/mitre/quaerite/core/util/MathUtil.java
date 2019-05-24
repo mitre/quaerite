@@ -61,7 +61,7 @@ public class MathUtil {
         return getRandomFloat(adjustedMin, adjustedMax);
     }
 
-    public static float calcMutatedWeight(Integer currentValue, int min, int max, double amplitude) {
+    public static int calcMutatedWeight(Integer currentValue, int min, int max, double amplitude) {
         if (amplitude < 0 || amplitude > 1.0) {
             throw new IllegalArgumentException("amplitude must be >= 0 and <= 1");
         }
@@ -84,7 +84,9 @@ public class MathUtil {
         int adjustedMax = curr+distAbove;
         adjustedMin = (adjustedMin < min) ? min : adjustedMin;
         adjustedMax = (adjustedMax > max) ? max : adjustedMax;
-
+        if (adjustedMin == adjustedMax) {
+            return adjustedMin;
+        }
         return getRandomInt(adjustedMin, adjustedMax);
     }
 

@@ -84,7 +84,109 @@
           ],
           "minSetSize": 1,
           "maxSetSize": 3
-        }
+        },
+        "pf": {
+          "fields": [
+            "title",
+            "tb_title",
+            "tss_title",
+            "overview",
+            "tb_overview",
+            "tss_overview",
+            "people",
+            "tb_people",
+            "tss_people",
+            "text",
+            "tb_text",
+            "tss_text"
+          ],
+          "defaultWeights": [
+            "0.0",
+            "1.0",
+            "5.0",
+            "10.0"
+          ],
+          "tie": [
+            0.0,
+            0.1,
+            0.2
+          ],
+          "minSetSize": 1,
+          "maxSetSize": 3
+        },
+        "pf2": {
+          "fields": [
+            "title",
+            "tb_title",
+            "tss_title",
+            "overview",
+            "tb_overview",
+            "tss_overview",
+            "people",
+            "tb_people",
+            "tss_people",
+            "text",
+            "tb_text",
+            "tss_text"
+          ],
+          "defaultWeights": [
+            "0.0",
+            "1.0",
+            "5.0",
+            "10.0"
+          ],
+          "tie": [
+            0.0,
+            0.1,
+            0.2
+          ],
+          "minSetSize": 1,
+          "maxSetSize": 3
+        },
+        "pf3": {
+          "fields": [
+            "title",
+            "tb_title",
+            "tss_title",
+            "overview",
+            "tb_overview",
+            "tss_overview",
+            "people",
+            "tb_people",
+            "tss_people",
+            "text",
+            "tb_text",
+            "tss_text"
+          ],
+          "defaultWeights": [
+            "0.0",
+            "1.0",
+            "5.0",
+            "10.0"
+          ],
+          "tie": [
+            0.0,
+            0.1,
+            0.2
+          ],
+          "minSetSize": 1,
+          "maxSetSize": 3
+        },
+        "ps": [
+          0,
+          1,
+          2
+        ],
+        "ps2": [
+          0,
+          1,
+          2
+        ],
+        "ps3": [
+          0,
+          1,
+          2
+        ]
       }
     }
   }

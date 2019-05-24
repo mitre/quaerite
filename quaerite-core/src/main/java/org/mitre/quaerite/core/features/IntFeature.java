@@ -47,7 +47,7 @@ public class IntFeature extends AbstractFeature<IntFeature> {
         if (this == o) return true;
         if (!(o instanceof IntFeature)) return false;
         IntFeature that = (IntFeature) o;
-        return Float.compare(that.v, v) == 0;
+        return Integer.compare(that.v, v) == 0;
     }
 
     @Override

@@ -367,6 +367,7 @@ public class TestQueryFactory {
 
     private void assertWithinBounds(List<EDisMaxQuery> queries) {
 
+        //add ps, ps2, ps3
         int minQf = 100;
         int maxQf = -1;
         int minPf = 100;
@@ -375,6 +376,12 @@ public class TestQueryFactory {
         int maxPf2 = -1;
         int minPf3 = 100;
         int maxPf3 = -1;
+        int minPs = 1;
+        int maxPs = 3;
+        int minPs2 = 2;
+        int maxPs2 = 4;
+        int minPs3 = 3;
+        int maxPs3 = 5;
         float minTie = 100;
         float maxTie = -1.0f;
 
@@ -391,23 +398,41 @@ public class TestQueryFactory {
             if (q.getPF().size() > maxPf) {
                 maxPf = q.getPF().size();
             }
-            if (q.getPF2().size() < minPf2) {
-                minPf2 = q.getPF2().size();
+            if (q.getPf2().size() < minPf2) {
+                minPf2 = q.getPf2().size();
             }
-            if (q.getPF2().size() > maxPf2) {
-                maxPf2 = q.getPF2().size();
+            if (q.getPf2().size() > maxPf2) {
+                maxPf2 = q.getPf2().size();
             }
-            if (q.getPF3().size() < minPf3) {
-                minPf3 = q.getPF3().size();
+            if (q.getPf3().size() < minPf3) {
+                minPf3 = q.getPf3().size();
             }
-            if (q.getPF3().size() > maxPf3) {
-                maxPf3 = q.getPF3().size();
+            if (q.getPf3().size() > maxPf3) {
+                maxPf3 = q.getPf3().size();
             }
             if (q.getTie().getValue() < minTie) {
                 minTie = q.getTie().getValue();
             }
             if (q.getTie().getValue() > maxTie) {
                 maxTie = q.getTie().getValue();
+            }
+            if (q.getPS().getValue() < minPs) {
+                minPs = q.getPS().getValue();
+            }
+            if (q.getPS().getValue() > maxPs) {
+                maxPs = q.getPS().getValue();
+            }
+            if (q.getPs2().getValue() < minPs2) {
+                minPs = q.getPS().getValue();
+            }
+            if (q.getPs2().getValue() > maxPs2) {
+                maxPs2 = q.getPs2().getValue();
+            }
+            if (q.getPs3().getValue() < minPs3) {
+                minPs = q.getPs3().getValue();
+            }
+            if (q.getPs3().getValue() > maxPs3) {
+                maxPs3 = q.getPs3().getValue();
             }
         }
         assertEquals(1, minQf);

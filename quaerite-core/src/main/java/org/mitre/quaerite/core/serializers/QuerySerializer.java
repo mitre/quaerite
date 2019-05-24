@@ -237,14 +237,14 @@ public class QuerySerializer extends AbstractFeatureSerializer
             for (String f : toStringList(obj.get("pf2"))) {
                 pf2.add(new WeightableField(f));
             }
-            q.setPF2(pf2);
+            q.setPf2(pf2);
         }
         if (obj.has("pf3")) {
-            PF2 pf2 = new PF2();
+            PF3 pf3 = new PF3();
             for (String f : toStringList(obj.get("pf3"))) {
-                pf2.add(new WeightableField(f));
+                pf3.add(new WeightableField(f));
             }
-            q.setPF2(pf2);
+            q.setPf3(pf3);
         }
 
         if (obj.has("ps2")) {
@@ -263,7 +263,7 @@ public class QuerySerializer extends AbstractFeatureSerializer
         return q;
     }
 
-    void deserializeDisMax(DisMaxQuery q, JsonObject obj) {
+    static void deserializeDisMax(DisMaxQuery q, JsonObject obj) {
         if (obj.has("pf")) {
             PF pf = new PF();
             for (String f : toStringList(obj.get("pf"))) {
@@ -282,13 +282,13 @@ public class QuerySerializer extends AbstractFeatureSerializer
             q.setBQ(bq);
         }
         if (obj.has("ps")) {
-            int ps = obj.getAsJsonPrimitive().getAsInt();
+            int ps = obj.get("ps").getAsJsonPrimitive().getAsInt();
             q.setPS(new PS(ps));
         }
         deserializeMultiField((MultiFieldQuery)q, obj);
     }
 
-    void deserializeMultiField(MultiFieldQuery q, JsonObject obj) {
+    static void deserializeMultiField(MultiFieldQuery q, JsonObject obj) {
         QF qf = new QF();
         int fields = 0;
         for (String f : toStringList(obj.get("qf"))) {
@@ -640,10 +640,10 @@ public class QuerySerializer extends AbstractFeatureSerializer
             obj.add("pf3", serializeFeature(query.getPf3()));
         }
         if (query.getPs2() != null) {
-            obj.add("ps2", serializeFeature(query.getPf2()));
+            obj.add("ps2", serializeFeature(query.getPs2()));
         }
         if (query.getPs3() != null) {
-            obj.add("ps3", serializeFeature(query.getPf2()));
+            obj.add("ps3", serializeFeature(query.getPs3()));
         }
     }
 

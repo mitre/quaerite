@@ -43,7 +43,8 @@ public class AbstractFeatureSerializer {
                 clazzName = clazzName.substring(0,1).toUpperCase(Locale.US)+
                         clazzName.substring(1);
             }
-            if (clazzName.endsWith("S")) {
+            //this is to handle urls
+            if (! clazzName.equals("PS") && clazzName.endsWith("S")) {
                 clazzName = clazzName.substring(0, clazzName.length()-1);
             }
             return DEFAULT_CLASS_NAME_SPACE + clazzName;
@@ -119,6 +120,22 @@ public class AbstractFeatureSerializer {
         }
     }
 
+    static List<Integer> toIntList(JsonElement intArr) {
+        if (intArr == null) {
+            return Collections.emptyList();
+        } else if (intArr.isJsonPrimitive()) {
+            return Collections.singletonList(intArr.getAsInt());
+        } else if (intArr.isJsonArray()) {
+            List<Integer> ret = new ArrayList<>();
+            for (JsonElement el : ((JsonArray)intArr)) {
+                ret.add(el.getAsJsonPrimitive().getAsInt());
+            }
+            return ret;
+        } else {
+            throw new IllegalArgumentException("Did not expect json object: "+intArr);
+        }
+    }
+
     JsonElement stringListJsonArr(List<String> strings) {
         if (strings.size() == 0) {
             return JsonNull.INSTANCE;
@@ -153,7 +170,7 @@ public class AbstractFeatureSerializer {
         try {
             return Class.forName(clazzName);
         } catch (Exception e) {
-            throw new JsonParseException(e.getMessage());
+            throw new JsonParseException(clazzName+" -> " + e.getMessage());
         }
     }
 

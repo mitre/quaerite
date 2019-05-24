@@ -70,6 +70,7 @@ public abstract class AbstractCLI {
             experimentDB.clearExperiments();
             experimentDB.clearScorers();
             experimentDB.clearScores();
+            experimentDB.clearSearchResults();
         }
         ExperimentSet experiments = null;
         try (Reader reader = Files.newBufferedReader(experimentsJson, StandardCharsets.UTF_8)) {

@@ -47,6 +47,35 @@ public class TestSolrExamples {
     }
 
     @Test
+    public void runGenerateRandom() throws Exception {
+        for (int i = 1; i <= 5; i++) {
+            Path featuresPath = CWD.resolve("solr/experiment_features_solr_"+i+".json");
+            System.out.println("running: "+featuresPath);
+            GenerateExperiments.main(
+                    new String[]{
+                            "-f", featuresPath.toAbsolutePath().toString(),
+                            "-e", "C:/data/quaerite/examples/rand_solr_experiments_"+i+".json",
+                            "-r", "10"
+                    }
+            );
+        }
+
+        for (int i = 1; i <= 5; i++) {
+            Path exPath = Paths.get("C:/data/quaerite/examples/solr/rand_solr_experiments_"+i+".json");
+            System.out.println("running experiments: "+exPath);
+            RunExperiments.main(
+                    new String[]{
+                            "-db", "C:/data/quaerite/test_db"+(i+10),
+                            "-e", "C:/data/quaerite/examples/rand_solr_experiments_"+i+".json",
+                            "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
+                            "-r", "C:/data/quaerite/examples/experiments_output_solr_"+i
+                    }
+            );
+        }
+
+    }
+
+    @Test
     public void runExperimentsSolr() throws Exception {
         for (int i = 1; i <= 2; i++) {
             Path experimentsPath = CWD.resolve("solr/experiments_solr_"+i+".json");
