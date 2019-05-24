@@ -18,7 +18,7 @@ package org.mitre.quaerite.core.scorers;
 
 
 import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 
 /**
  * How many queries had 0 results returned
@@ -36,8 +36,8 @@ public class ZeroResults extends AbstractRankScorer {
     }
 
     @Override
-    public double score(Judgments judgments, ResultSet resultSet) {
-        if (resultSet.size() == 0) {
+    public double score(Judgments judgments, SearchResultSet searchResultSet) {
+        if (searchResultSet.size() == 0) {
             return 1;
         }
         return 0;

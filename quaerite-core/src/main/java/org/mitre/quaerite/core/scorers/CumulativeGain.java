@@ -18,7 +18,7 @@ package org.mitre.quaerite.core.scorers;
 
 
 import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 
 public class CumulativeGain extends AbstractRankScorer {
 
@@ -27,11 +27,11 @@ public class CumulativeGain extends AbstractRankScorer {
     }
 
     @Override
-    public double score(Judgments judgments, ResultSet resultSet) {
+    public double score(Judgments judgments, SearchResultSet searchResultSet) {
 
         double sum = 0.0;
-        for (int i = 0; i < atN && i < resultSet.size(); i++) {
-            String id = resultSet.get(i);
+        for (int i = 0; i < atN && i < searchResultSet.size(); i++) {
+            String id = searchResultSet.get(i);
             if (judgments.containsJudgment(id)) {
                 sum += judgments.getJudgment(id);
             }

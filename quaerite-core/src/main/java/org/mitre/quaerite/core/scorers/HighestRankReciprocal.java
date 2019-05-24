@@ -18,7 +18,7 @@ package org.mitre.quaerite.core.scorers;
 
 
 import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 
 /**
     Reciprocal of the highest single hit; {@link HighestRank#NOT_FOUND} otherwise.
@@ -31,8 +31,8 @@ public class HighestRankReciprocal extends HighestRank {
     }
 
     @Override
-    public double score(Judgments judgments, ResultSet resultSet) {
-        double rank = super.score(judgments, resultSet);
+    public double score(Judgments judgments, SearchResultSet searchResultSet) {
+        double rank = super.score(judgments, searchResultSet);
         if (rank <= 0) {
             return NOT_FOUND;
         }

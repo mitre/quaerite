@@ -28,6 +28,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 
 /**
@@ -81,7 +82,7 @@ public class QueryRunnerDBClient implements Closeable {
     }
 
     public void insertSearchResults(String querySet, String query, String experimentName,
-                                    org.mitre.quaerite.core.ResultSet results) throws SQLException {
+                                    SearchResultSet results) throws SQLException {
         String json = GSON.toJson(results);
         insertResults.setString(1, querySet);
         insertResults.setString(2, query);

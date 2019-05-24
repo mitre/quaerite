@@ -43,7 +43,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.math3.analysis.function.Sin;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.connectors.QueryRequest;
@@ -57,9 +56,8 @@ import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.QueryStrings;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.queries.Query;
-import org.mitre.quaerite.core.queries.SingleStringQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.scoreaggregators.DistributionalScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
@@ -301,15 +299,15 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         QueryRequest q = new QueryRequest(termsQuery, null, idField);
         q.addFieldsToRetrieve(idField);
         q.setNumResults(expected * 2);
-        ResultSet resultSet;
+        SearchResultSet searchResultSet;
         try {
-            resultSet = searchClient.search(q);
+            searchResultSet = searchClient.search(q);
         } catch (SearchClientException | IOException e) {
             throw new RuntimeException(e);
         }
         Set<String> localValid = new HashSet<>();
-        for (int i = 0; i < resultSet.size(); i++) {
-            String id = resultSet.get(i);
+        for (int i = 0; i < searchResultSet.size(); i++) {
+            String id = searchResultSet.get(i);
             if (localValid.contains(id)) {
                 LOG.warn("Found non-unique key: " + id);
             }
@@ -385,18 +383,18 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             }
             queryRequest.setNumResults(maxRows);
 
-            ResultSet resultSet = null;
+            SearchResultSet searchResultSet = null;
             try {
-                resultSet = searchClient.search(queryRequest);
+                searchResultSet = searchClient.search(queryRequest);
             } catch (SearchClientException | IOException e) {
-                //TODO add exception to resultSet and log
+                //TODO add exception to searchResultSet and log
                 e.printStackTrace();
             }
             dbClient.insertSearchResults(judgments.getQuerySet(), judgments.getQueryInfo().getQueryId(),
-                    experiment.getName(), resultSet);
+                    experiment.getName(), searchResultSet);
 
             for (ScoreAggregator scoreAggregator : scoreAggregators) {
-                scoreAggregator.add(judgments, resultSet);
+                scoreAggregator.add(judgments, searchResultSet);
             }
             dbClient.insertScores(judgments.getQueryInfo(), experiment.getName(), scoreAggregators);
         }

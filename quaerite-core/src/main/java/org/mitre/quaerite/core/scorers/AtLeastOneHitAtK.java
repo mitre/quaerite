@@ -18,7 +18,7 @@ package org.mitre.quaerite.core.scorers;
 
 
 import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 
 /**
  * Returns 1 if there was any hit in the results; 0 otherwise.
@@ -30,10 +30,10 @@ public class AtLeastOneHitAtK extends AbstractRankScorer {
     }
 
     @Override
-    public double score(Judgments judgments, ResultSet resultSet) {
+    public double score(Judgments judgments, SearchResultSet searchResultSet) {
 
-        for (int i = 0; i < atN && i < resultSet.size(); i++) {
-            if (judgments.containsJudgment(resultSet.get(i))) {
+        for (int i = 0; i < atN && i < searchResultSet.size(); i++) {
+            if (judgments.containsJudgment(searchResultSet.get(i))) {
                 return 1;
             }
         }

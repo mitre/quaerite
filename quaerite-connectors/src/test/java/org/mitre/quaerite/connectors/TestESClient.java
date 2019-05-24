@@ -19,8 +19,6 @@ package org.mitre.quaerite.connectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import javax.naming.directory.SearchResult;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,7 +35,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.QueryStrings;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.features.MultiMatchType;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.QueryOperator;
@@ -125,7 +123,7 @@ public class TestESClient {
         QueryRequest queryRequest = new QueryRequest(
                 new LuceneQuery("title", "psycho"),
                 null, client.getDefaultIdField());
-        ResultSet result = client.search(queryRequest);
+        SearchResultSet result = client.search(queryRequest);
         Set<String> hits = new HashSet<>();
         for (int i = 0; i < result.size(); i++) {
             hits.add(result.get(i));
@@ -164,7 +162,7 @@ public class TestESClient {
 
 //        queryRequest.addFilterQueries(bq);
         queryRequest.setNumResults(100);
-        ResultSet result = client.search(queryRequest);
+        SearchResultSet result = client.search(queryRequest);
         Set<String> hits = new HashSet<>();
         for (int i = 0; i < result.size(); i++) {
             hits.add(result.get(i));
@@ -196,7 +194,7 @@ public class TestESClient {
                 null, client.getDefaultIdField());
         queryRequest.addFieldsToRetrieve("_id");
         queryRequest.setNumResults(1000);
-        ResultSet result = client.search(queryRequest);
+        SearchResultSet result = client.search(queryRequest);
         Set<String> hits = new HashSet<>();
         for (int i = 0; i < result.size(); i++) {
             hits.add(result.get(i));
@@ -244,7 +242,7 @@ public class TestESClient {
         q.setQueryStrings(qStrings);
 
         SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
-        ResultSet rs = searchClient.search(new QueryRequest(q));
+        SearchResultSet rs = searchClient.search(new QueryRequest(q));
         assertEquals(1, rs.getTotalHits());
         assertTrue(rs.getIds().contains("374430"));
 

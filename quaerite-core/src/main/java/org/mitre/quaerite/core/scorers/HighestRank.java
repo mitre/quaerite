@@ -18,7 +18,7 @@ package org.mitre.quaerite.core.scorers;
 
 
 import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 
 /**
  * Highest single rank; {@link #NOT_FOUND} if not found
@@ -30,10 +30,10 @@ public class HighestRank extends AbstractRankScorer {
     }
 
     @Override
-    public double score(Judgments judgments, ResultSet resultSet) {
+    public double score(Judgments judgments, SearchResultSet searchResultSet) {
 
-        for (int i = 0; i < getAtN() && i < resultSet.size(); i++) {
-            if (judgments.containsJudgment(resultSet.get(i))) {
+        for (int i = 0; i < getAtN() && i < searchResultSet.size(); i++) {
+            if (judgments.containsJudgment(searchResultSet.get(i))) {
                 return i+1;
             }
         }

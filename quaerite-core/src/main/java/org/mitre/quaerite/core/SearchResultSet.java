@@ -19,14 +19,14 @@ package org.mitre.quaerite.core;
 import java.util.Collection;
 import java.util.List;
 
-public class ResultSet {
+public class SearchResultSet {
 
     private final long totalHits;
     private final long queryTime;
     private final long elapsedTime;
     private final List<String> ids;
 
-    public ResultSet(long totalHits, long queryTime, long elapsedTime, List<String> ids) {
+    public SearchResultSet(long totalHits, long queryTime, long elapsedTime, List<String> ids) {
         this.totalHits = totalHits;
         this.queryTime = queryTime;
         this.elapsedTime = elapsedTime;
@@ -54,7 +54,7 @@ public class ResultSet {
 
     @Override
     public String toString() {
-        return "ResultSet{" +
+        return "SearchResultSet{" +
                 "totalHits=" + totalHits +
                 ", queryTime=" + queryTime +
                 ", elapsedTime=" + elapsedTime +

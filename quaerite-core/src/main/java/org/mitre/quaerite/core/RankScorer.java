@@ -19,6 +19,6 @@ package org.mitre.quaerite.core;
 public interface RankScorer {
 
     String getName();
-    double score(Judgments judgments, ResultSet resultSet);
+    double score(Judgments judgments, SearchResultSet searchResultSet);
 
 }

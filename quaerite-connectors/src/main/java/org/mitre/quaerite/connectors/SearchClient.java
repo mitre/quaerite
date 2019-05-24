@@ -46,13 +46,13 @@ import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.ExperimentConfig;
 import org.mitre.quaerite.core.FacetResult;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.stats.TokenDF;
 
 public abstract class SearchClient implements Closeable {
 
-    public abstract ResultSet search(QueryRequest query) throws SearchClientException, IOException;
+    public abstract SearchResultSet search(QueryRequest query) throws SearchClientException, IOException;
     public abstract FacetResult facet(QueryRequest query) throws SearchClientException, IOException;
     static Logger LOG = Logger.getLogger(SearchClient.class);
 

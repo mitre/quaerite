@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.QueryStrings;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.WeightableField;
@@ -119,12 +119,12 @@ public class TestSolrClient {
     public void testQuery() throws Exception {
         SearchClient client = SearchClientFactory.getClient(TMDB_URL);
         QueryRequest queryRequest = new QueryRequest(new LuceneQuery("title", "psycho"), null, "id");
-        ResultSet resultSet = client.search(queryRequest);
-        assertEquals(9, resultSet.getTotalHits());
+        SearchResultSet searchResultSet = client.search(queryRequest);
+        assertEquals(9, searchResultSet.getTotalHits());
         for (String id : new String[]{
                 "539", "11252", "1359", "10576", "12662", "27723", "35683", "10726", "214250"
         }) {
-            assertTrue(resultSet.getIds().contains(id));
+            assertTrue(searchResultSet.getIds().contains(id));
         }
     }
 
@@ -232,7 +232,7 @@ public class TestSolrClient {
         q.setQueryStrings(qStrings);
 
         SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
-        ResultSet rs = searchClient.search(new QueryRequest(q));
+        SearchResultSet rs = searchClient.search(new QueryRequest(q));
         assertEquals(1, rs.getTotalHits());
         assertTrue(rs.getIds().contains("374430"));
 

@@ -18,7 +18,7 @@ package org.mitre.quaerite.core.scorers;
 
 
 import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 
 /**
  * This ignores quaerite scores and answers the question: of
@@ -38,10 +38,10 @@ public class RecallAtK extends AbstractRankScorer {
     }
 
     @Override
-    public double score(Judgments judgments, ResultSet resultSet) {
+    public double score(Judgments judgments, SearchResultSet searchResultSet) {
         int hits = 0;
-        for (int i = 0; i < atN && i < resultSet.size(); i++) {
-            if (judgments.containsJudgment(resultSet.get(i))) {
+        for (int i = 0; i < atN && i < searchResultSet.size(); i++) {
+            if (judgments.containsJudgment(searchResultSet.get(i))) {
                 hits++;
             }
         }

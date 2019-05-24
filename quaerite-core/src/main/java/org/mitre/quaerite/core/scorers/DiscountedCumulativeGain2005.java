@@ -18,7 +18,7 @@ package org.mitre.quaerite.core.scorers;
 
 import org.apache.commons.math3.util.FastMath;
 import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 
 
 /**
@@ -37,11 +37,11 @@ public class DiscountedCumulativeGain2005 extends DiscountedCumulativeGain {
     }
 
     @Override
-    public double score(Judgments judgments, ResultSet resultSet) {
+    public double score(Judgments judgments, SearchResultSet searchResultSet) {
         int rank = 1;
         double sum = 0;
-        for (int i = 0; i < atN && i < resultSet.size(); i++) {
-            String id = resultSet.get(i);
+        for (int i = 0; i < atN && i < searchResultSet.size(); i++) {
+            String id = searchResultSet.get(i);
             if (judgments.containsJudgment(id)) {
                 double rel = judgments.getJudgment(id);
                 sum += (FastMath.pow(2,rel)-1)/ FastMath.log(2,rank+1);

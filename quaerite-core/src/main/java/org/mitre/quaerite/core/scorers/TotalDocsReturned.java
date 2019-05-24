@@ -20,7 +20,7 @@ package org.mitre.quaerite.core.scorers;
 
 
 import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 
 public class TotalDocsReturned extends AbstractRankScorer {
 
@@ -35,8 +35,8 @@ public class TotalDocsReturned extends AbstractRankScorer {
 
 
     @Override
-    public double score(Judgments judgments, ResultSet resultSet) {
-        return resultSet.getTotalHits();
+    public double score(Judgments judgments, SearchResultSet searchResultSet) {
+        return searchResultSet.getTotalHits();
     }
 
     @Override

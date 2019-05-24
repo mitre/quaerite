@@ -48,6 +48,7 @@ import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.scoreaggregators.DistributionalScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregatorListSerializer;
@@ -456,9 +457,9 @@ public class ExperimentDB implements Closeable {
      * @param querySet
      * @param query
      * @param experimentName
-     * @return {@link org.mitre.quaerite.core.ResultSet} or null if not found
+     * @return {@link SearchResultSet} or null if not found
      */
-    public org.mitre.quaerite.core.ResultSet
+    public SearchResultSet
         getSearchResults(String querySet, String query, String experimentName) throws SQLException {
         selectResults.clearParameters();
         selectResults.setString(1, querySet);
@@ -468,7 +469,7 @@ public class ExperimentDB implements Closeable {
         try (ResultSet rs = selectResults.executeQuery()) {
             while (rs.next()) {
                 String json = rs.getString(1);
-                return GSON.fromJson(json, org.mitre.quaerite.core.ResultSet.class);
+                return GSON.fromJson(json, SearchResultSet.class);
             }
         }
         return null;

@@ -25,13 +25,13 @@ import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.QueryStrings;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 
 
 public class TestNDCG {
     static Judgments JUDGMENTS = new Judgments(new QueryInfo("",
             new QueryStrings(), 1));
-    static ResultSet RESULT_SET;
+    static SearchResultSet RESULT_SET;
     @BeforeAll
     public static void setUp() {
 
@@ -46,7 +46,7 @@ public class TestNDCG {
         for (int i = 1; i <= 6; i++) {
             ids.add(Integer.toString(i));
         }
-        RESULT_SET = new ResultSet(1000, 10, 100, ids);
+        RESULT_SET = new SearchResultSet(1000, 10, 100, ids);
     }
 
 

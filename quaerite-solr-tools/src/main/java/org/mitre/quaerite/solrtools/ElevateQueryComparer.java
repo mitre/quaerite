@@ -57,8 +57,7 @@ import org.apache.log4j.Logger;
 import org.mitre.quaerite.connectors.QueryRequest;
 import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientFactory;
-import org.mitre.quaerite.core.ResultSet;
-import org.mitre.quaerite.core.queries.LuceneQuery;
+import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.queries.TermQuery;
 
 public class ElevateQueryComparer {
@@ -289,7 +288,7 @@ public class ElevateQueryComparer {
 
     private static boolean indexContains(String id, SearchClient searchClient) throws Exception {
         QueryRequest qr = new QueryRequest(new TermQuery("id",id));
-        ResultSet rs = searchClient.search(qr);
+        SearchResultSet rs = searchClient.search(qr);
         return rs.getIds().size() > 0;
     }
 

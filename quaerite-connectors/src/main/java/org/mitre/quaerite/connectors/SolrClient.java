@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,7 +44,7 @@ import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.QueryOperator;
@@ -89,7 +88,7 @@ public class SolrClient extends SearchClient {
     }
 
     @Override
-    public ResultSet search(QueryRequest query) throws SearchClientException, IOException {
+    public SearchResultSet search(QueryRequest query) throws SearchClientException, IOException {
 
         String url = generateRequestURL(query);
         if (LOG.isTraceEnabled()) {
@@ -108,7 +107,7 @@ public class SolrClient extends SearchClient {
     }
 
 
-    private ResultSet translateResponse(long totalTime, JsonElement root) throws IOException {
+    private SearchResultSet translateResponse(long totalTime, JsonElement root) throws IOException {
         //TODO: figure out what queryTime means/is as diff from total
         long queryTime = 0;
         List<String> ids = new ArrayList();
@@ -121,7 +120,7 @@ public class SolrClient extends SearchClient {
                 ids.add(id);
             }
         }
-        return new ResultSet(totalHits, queryTime, totalTime, ids);
+        return new SearchResultSet(totalHits, queryTime, totalTime, ids);
     }
 
     String generateRequestURL(QueryRequest queryRequest) {
@@ -490,7 +489,7 @@ public class SolrClient extends SearchClient {
             int idSize = 10000;
             try {
                 QueryRequest queryRequest = buildQueryRequest(idField, start, idSize, filterQueries);
-                ResultSet rs = search(queryRequest);
+                SearchResultSet rs = search(queryRequest);
                 while (rs.size() > 0) {
                     Set<String> set = new HashSet<>();
                     for (int i = 0; i < rs.size(); i++) {

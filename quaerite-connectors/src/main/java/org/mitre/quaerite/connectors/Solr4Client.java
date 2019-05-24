@@ -16,35 +16,18 @@
  */
 package org.mitre.quaerite.connectors;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.mitre.quaerite.core.FacetResult;
-import org.mitre.quaerite.core.ResultSet;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
-import org.mitre.quaerite.core.stats.TokenDF;
 
 /**
  * This should work on versions of Solr back to Solr 4.x

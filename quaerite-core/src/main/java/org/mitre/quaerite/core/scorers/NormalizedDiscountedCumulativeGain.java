@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 
 
 public class NormalizedDiscountedCumulativeGain extends AbstractRankScorer {
@@ -33,20 +33,20 @@ public class NormalizedDiscountedCumulativeGain extends AbstractRankScorer {
     }
 
     @Override
-    public double score(Judgments judgments, ResultSet resultSet) {
+    public double score(Judgments judgments, SearchResultSet searchResultSet) {
 
         if (dcg == null) {
             dcg = new DiscountedCumulativeGain2002(atN);
         }
 
         final double idealDCG = calculateIdeal(dcg, judgments,
-                Math.min(atN, resultSet.size()), resultSet.getTotalHits(),
-                resultSet.getQueryTime(),
-                resultSet.getElapsedTime());
+                Math.min(atN, searchResultSet.size()), searchResultSet.getTotalHits(),
+                searchResultSet.getQueryTime(),
+                searchResultSet.getElapsedTime());
         if (idealDCG == 0) {
             return 0.0;
         }
-        return dcg.score(judgments, resultSet)/idealDCG;
+        return dcg.score(judgments, searchResultSet)/idealDCG;
     }
 
     @Override
@@ -63,7 +63,7 @@ public class NormalizedDiscountedCumulativeGain extends AbstractRankScorer {
                 break;
             }
         }
-        return dcg.score(judgments, new ResultSet(totalHits, queryTime,
+        return dcg.score(judgments, new SearchResultSet(totalHits, queryTime,
                 elapsedTime, bestResults));
     }
 

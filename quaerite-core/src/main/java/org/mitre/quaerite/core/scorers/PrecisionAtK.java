@@ -17,7 +17,7 @@
 package org.mitre.quaerite.core.scorers;
 
 import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 
 /**
  * This ignores quaerite scores and answers the question: of
@@ -31,17 +31,17 @@ public class PrecisionAtK extends AbstractRankScorer {
     }
 
     @Override
-    public double score(Judgments judgments, ResultSet resultSet) {
-        if (resultSet.size() == 0) {
+    public double score(Judgments judgments, SearchResultSet searchResultSet) {
+        if (searchResultSet.size() == 0) {
             return 0.0;
         }
         int hits = 0;
-        for (int i = 0; i < atN && i < resultSet.size(); i++) {
-            if (judgments.containsJudgment(resultSet.get(i))) {
+        for (int i = 0; i < atN && i < searchResultSet.size(); i++) {
+            if (judgments.containsJudgment(searchResultSet.get(i))) {
                 hits++;
             }
         }
-        return (double)hits/(double)resultSet.size();
+        return (double)hits/(double) searchResultSet.size();
     }
 
     @Override

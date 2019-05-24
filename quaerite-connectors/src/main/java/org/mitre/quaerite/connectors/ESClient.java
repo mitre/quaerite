@@ -37,7 +37,7 @@ import com.google.gson.JsonPrimitive;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.WeightableField;
 import org.mitre.quaerite.core.queries.BooleanClause;
@@ -91,7 +91,7 @@ public class ESClient extends SearchClient {
     }
 
     @Override
-    public ResultSet search(QueryRequest query) throws SearchClientException, IOException {
+    public SearchResultSet search(QueryRequest query) throws SearchClientException, IOException {
         long start = System.currentTimeMillis();
         String jsonQuery = buildJsonQuery(query, Collections.EMPTY_LIST);
         JsonResponse json = postJson(url + "_search", jsonQuery);
@@ -102,7 +102,7 @@ public class ESClient extends SearchClient {
         return scrapeIds(root, start);
     }
 
-    private ResultSet scrapeIds(JsonElement root, long start) throws IOException, SearchClientException {
+    private SearchResultSet scrapeIds(JsonElement root, long start) throws IOException, SearchClientException {
         long queryTime = JsonUtil.getPrimitive(root, "took", -1l);
         JsonObject hits = (JsonObject) ((JsonObject) root).get("hits");
         long totalHits = getTotalHits(hits);
@@ -116,7 +116,7 @@ public class ESClient extends SearchClient {
             }
         }
         long elapsed = System.currentTimeMillis() - start;
-        return new ResultSet(totalHits, queryTime, elapsed, ids);
+        return new SearchResultSet(totalHits, queryTime, elapsed, ids);
 
     }
 
@@ -498,21 +498,21 @@ public class ESClient extends SearchClient {
                 response = postJson(url + "_search?scroll=5m", GSON.toJson(q));
                 JsonObject root = (JsonObject) response.getJson();
                 String scrollId = JsonUtil.getPrimitive(root, "_scroll_id", "");
-                ResultSet resultSet = scrapeIds(root, System.currentTimeMillis());
+                SearchResultSet searchResultSet = scrapeIds(root, System.currentTimeMillis());
 
                 Map<String, String> nextScroll = new HashMap<>();
                 nextScroll.put("scroll", "5m");
                 nextScroll.put("scroll_id", scrollId);
 
-                while (resultSet.size() > 0) {
+                while (searchResultSet.size() > 0) {
                     Set<String> set = new HashSet<>();
-                    set.addAll(resultSet.getIds());
+                    set.addAll(searchResultSet.getIds());
                     LOG.debug("adding "+set.size());
                     addSet(ids, set);
                     String u = esBase + "_search/scroll";
                     response = postJson(u, GSON.toJson(nextScroll));
                     root = (JsonObject) response.getJson();
-                    resultSet = scrapeIds(root, System.currentTimeMillis());
+                    searchResultSet = scrapeIds(root, System.currentTimeMillis());
                 }
             } finally {
                 LOG.debug("id grabber adding poison");

@@ -23,11 +23,11 @@ import java.util.Map;
 
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 
 public interface ScoreAggregator {
 
-    void add(Judgments judgments, ResultSet resultSet);
+    void add(Judgments judgments, SearchResultSet searchResultSet);
 
     //summary statistics for a given querySet
     Map<String, Double> getSummaryStatistics(String querySet);

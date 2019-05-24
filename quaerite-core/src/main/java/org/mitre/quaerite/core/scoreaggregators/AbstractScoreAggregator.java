@@ -17,7 +17,6 @@
  */
 package org.mitre.quaerite.core.scoreaggregators;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
-import org.mitre.quaerite.core.ResultSet;
+import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.scorers.AbstractRankScorer;
 
 
@@ -64,11 +63,11 @@ public abstract class AbstractScoreAggregator implements ScoreAggregator {
      * NOTE: This needs to be thread safe!
      *
      * @param judgments
-     * @param resultSet
+     * @param searchResultSet
      */
     @Override
-    public void add(Judgments judgments, ResultSet resultSet) {
-        double result = scorer.score(judgments, resultSet);
+    public void add(Judgments judgments, SearchResultSet searchResultSet) {
+        double result = scorer.score(judgments, searchResultSet);
         scores.put(judgments.getQueryInfo(), result);
         QueryInfo defaultQueryInfo = null;
         //also keep track of all results together
