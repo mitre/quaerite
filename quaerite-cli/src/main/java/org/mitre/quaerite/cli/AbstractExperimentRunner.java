@@ -66,6 +66,7 @@ import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 import org.mitre.quaerite.core.scoreaggregators.SummingScoreAggregator;
 import org.mitre.quaerite.core.util.MapUtil;
 import org.mitre.quaerite.db.ExperimentDB;
+import org.mitre.quaerite.db.QueryRunnerDBClient;
 
 public abstract class AbstractExperimentRunner extends AbstractCLI {
     static final Judgments POISON = new Judgments(new QueryInfo("", new QueryStrings(), -1));
@@ -140,7 +141,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
         executorService.shutdown();
         executorService.shutdownNow();
-        insertScores(experimentDB, experimentName, scoreAggregators);
+        //insertScores(experimentDB, experimentName, scoreAggregators);
         experimentDB.insertScoresAggregated(experimentName, scoreAggregators);
         if (logResults) {
             logResults(experimentName, scoreAggregators);
@@ -190,6 +191,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
     }
 
+    /*
     private void insertScores(ExperimentDB experimentDB, String experimentName, List<ScoreAggregator> scoreAggregators)
             throws SQLException {
         Set<QueryInfo> queries = scoreAggregators.get(0).getScores().keySet();
@@ -203,8 +205,9 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             }
             experimentDB.insertScores(queryInfo, experimentName, scoreAggregators, tmpScores);
         }
-
     }
+
+     */
 
     //TODO -- make this multi threaded
 
@@ -326,10 +329,11 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         private final Query query;//thread safe clone of the query
         private final List<ScoreAggregator> scoreAggregators;
         private final SearchClient searchClient;
+        private final QueryRunnerDBClient dbClient;
 
         public QueryRunner(String idField, int maxRows, ArrayBlockingQueue<Judgments> judgments,
                            Experiment experiment, ExperimentDB experimentDB,
-                           List<ScoreAggregator> scoreAggregators) throws IOException, SearchClientException {
+                           List<ScoreAggregator> scoreAggregators) throws SQLException, IOException, SearchClientException {
             this.idField = idField;
             this.maxRows = maxRows;
             this.queue = judgments;
@@ -337,26 +341,41 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             this.query = experiment.getQuery();
             this.searchClient = SearchClientFactory.getClient(experiment.getSearchServerUrl());
             this.scoreAggregators = scoreAggregators;
+            this.dbClient = experimentDB.getQueryRunnerDBClient(scoreAggregators);
         }
 
         @Override
         public Integer call() throws Exception {
 
-            while (true) {
-                Judgments judgments = queue.poll();
-                if (judgments.equals(POISON)) {
+            try {
+                while (true) {
+                    Judgments judgments = queue.poll();
+                    if (judgments.equals(POISON)) {
 //                    LOG.trace(threadNum + ": scorer thread hit poison. stopping now");
-                    return 1;
+                        return 1;
+                    }
+                    scoreEach(judgments, scoreAggregators);
                 }
-                executeTest(judgments, scoreAggregators);
+            } finally {
+                Exception ex = null;
+                try {
+                    dbClient.executeBatch();
+                } catch (SQLException e) {
+                    ex = e;
+                }
+                try {
+                    dbClient.close();
+                } catch (Exception e) {
+                    ex = e;
+                }
+                searchClient.close();
+                if (ex != null) {
+                    throw ex;
+                }
             }
         }
 
-        private void executeTest(Judgments judgments, List<ScoreAggregator> scoreAggregators) throws SQLException {
-            scoreEach(judgments, scoreAggregators);
-        }
-
-        private void scoreEach(Judgments judgments, List<ScoreAggregator> scoreAggregators) {
+        private void scoreEach(Judgments judgments, List<ScoreAggregator> scoreAggregators) throws SQLException {
             query.setQueryStrings(judgments.getQueryStrings());
 
             QueryRequest queryRequest = new QueryRequest(query, experiment.getCustomHandler(), idField);
@@ -373,9 +392,13 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
                 //TODO add exception to resultSet and log
                 e.printStackTrace();
             }
+            dbClient.insertSearchResults(judgments.getQuerySet(), judgments.getQueryInfo().getQueryId(),
+                    experiment.getName(), resultSet);
+
             for (ScoreAggregator scoreAggregator : scoreAggregators) {
                 scoreAggregator.add(judgments, resultSet);
             }
+            dbClient.insertScores(judgments.getQueryInfo(), experiment.getName(), scoreAggregators);
         }
     }
 

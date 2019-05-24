@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.Experiment;
@@ -55,9 +57,9 @@ import org.mitre.quaerite.core.stats.ExperimentScorePair;
 
 public class ExperimentDB implements Closeable {
 
-    static Logger LOG = Logger.getLogger(ExperimentDB.class);
-    static Object[] INSERT_SCORE_LOCK = new Object[0];
+    private static Gson GSON = new GsonBuilder().create();
 
+    static Logger LOG = Logger.getLogger(ExperimentDB.class);
     final Connection connection;
     private final PreparedStatement selectExperiments;
     private final PreparedStatement insertExperiments;
@@ -74,10 +76,9 @@ public class ExperimentDB implements Closeable {
 
     private PreparedStatement selectQueryComparisons;
 
-    private PreparedStatement insertScores;
     private PreparedStatement insertScoresAggregated;
 
-    private PreparedStatement selectScores;
+    private PreparedStatement selectResults;
     //cache of upserting scores keyed by scorer name
     private Map<String, PreparedStatement> upsertScoreStatements = new HashMap<>();
     private Map<String, PreparedStatement> selectScoreStatements = new HashMap<>();
@@ -142,12 +143,14 @@ public class ExperimentDB implements Closeable {
         getQuerySets = connection.prepareStatement(
                 "select query_set from judgments group by query_set"
         );
+
     }
 
     private void initTables() throws SQLException {
         initExperiments();
         initJudgments();
         initScorers();
+        initSearchResults();
     }
 
     private void dropTables() throws SQLException {
@@ -156,6 +159,7 @@ public class ExperimentDB implements Closeable {
         executeSQL(connection, "drop table if exists scorers");
         executeSQL(connection, "drop table if exists scores");
         executeSQL(connection, "drop table if exists scores_aggregated");
+        executeSQL(connection, "drop table if exists search_results");
     }
 
 
@@ -191,6 +195,28 @@ public class ExperimentDB implements Closeable {
         executeSQL(connection, sql);
     }
 
+    private void initSearchResults() throws SQLException {
+        //this table stores the literal search results
+        //returned from the search clients
+        String sql = "CREATE TABLE IF NOT EXISTS " +
+                "SEARCH_RESULTS( " +
+                "QUERY_SET VARCHAR(256),"+
+                "QUERY VARCHAR(256), " +
+                "EXPERIMENT_NAME VARCHAR(256),"+
+                "JSON VARCHAR(100000));";
+        executeSQL(connection, sql);
+
+        sql = "ALTER TABLE SEARCH_RESULTS " +
+                " ADD CONSTRAINT IF NOT EXISTS " +
+                " UQ_SEARCH_RESULTS UNIQUE(QUERY_SET, QUERY, EXPERIMENT_NAME);";
+        executeSQL(connection, sql);
+
+        //TODO: add indices to this table
+        selectResults = connection.prepareStatement(
+                "select json from search_results where (query_set=? and query=? and experiment_name=?)"
+        );
+
+    }
 
     static boolean executeSQL(Connection connection, String sql) throws SQLException{
         try (Statement st = connection.createStatement()) {
@@ -325,6 +351,12 @@ public class ExperimentDB implements Closeable {
         initScorers();
     }
 
+    public void clearSearchResults() throws SQLException {
+        String sql = "DROP TABLE SEARCH_RESULTS";
+        executeSQL(connection, sql);
+        initScorers();
+    }
+
     public void addScoreAggregator(ScoreAggregator scoreAggregator) throws SQLException {
         String json = ScoreAggregatorListSerializer.toJson(scoreAggregator);
         insertScoreAggregators.clearParameters();
@@ -362,9 +394,7 @@ public class ExperimentDB implements Closeable {
             }
             dropCreateScoreTables(scoreAggregators);
         }
-        if (insertScores == null) {
-            initInsertScores(scoreAggregators);
-        }
+
 
     }
 
@@ -421,37 +451,27 @@ public class ExperimentDB implements Closeable {
 
     }
 
-    private void initInsertScores(List<ScoreAggregator> scoreAggregators) throws SQLException {
-        StringBuilder insertSql = new StringBuilder();
-        insertSql.append("insert into SCORES (QUERY_SET, QUERY, QUERY_COUNT, EXPERIMENT");
-        for (ScoreAggregator scoreAggregator : scoreAggregators) {
-            insertSql.append(", ");
-            insertSql.append(scoreAggregator.getName());
-        }
-        insertSql.append(") VALUES (?,?,?,?");
-        for (ScoreAggregator scoreAggregator : scoreAggregators) {
-            insertSql.append(", ");
-            insertSql.append("?");
-        }
-        insertSql.append(")");
-        insertScores = connection.prepareStatement(insertSql.toString());
-    }
-
-    public void insertScores(QueryInfo queryInfo,
-                             String experiment, List<ScoreAggregator> scoreAggregators, Map<String, Double> scores) throws SQLException {
-        synchronized (INSERT_SCORE_LOCK) {
-            insertScores.clearParameters();
-            insertScores.setString(1, queryInfo.getQuerySet());
-            insertScores.setString(2, queryInfo.getQueryId());
-            insertScores.setInt(3, queryInfo.getQueryCount());
-            insertScores.setString(4, experiment);
-            int i = 5;
-            //TODO: check that score is not null
-            for (ScoreAggregator scoreAggregator : scoreAggregators) {
-                insertScores.setDouble(i++, scores.get(scoreAggregator.getName()));
+    /**
+     * NOT THREAD SAFE
+     * @param querySet
+     * @param query
+     * @param experimentName
+     * @return {@link org.mitre.quaerite.core.ResultSet} or null if not found
+     */
+    public org.mitre.quaerite.core.ResultSet
+        getSearchResults(String querySet, String query, String experimentName) throws SQLException {
+        selectResults.clearParameters();
+        selectResults.setString(1, querySet);
+        selectResults.setString(2, query);
+        selectResults.setString(3, experimentName);
+        //TODO: maybe add checks for more than one result?
+        try (ResultSet rs = selectResults.executeQuery()) {
+            while (rs.next()) {
+                String json = rs.getString(1);
+                return GSON.fromJson(json, org.mitre.quaerite.core.ResultSet.class);
             }
-            insertScores.execute();
         }
+        return null;
     }
 
     public void insertScoresAggregated(String experimentName,
@@ -758,4 +778,8 @@ public class ExperimentDB implements Closeable {
         return experiments;
     }
 
+    public QueryRunnerDBClient getQueryRunnerDBClient(
+            List<ScoreAggregator> scoreAggregators) throws SQLException{
+        return new QueryRunnerDBClient(connection, scoreAggregators);
+    }
 }

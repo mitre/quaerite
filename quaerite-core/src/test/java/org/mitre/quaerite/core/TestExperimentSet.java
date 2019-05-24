@@ -49,7 +49,6 @@ import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.scoreaggregators.NDCGAggregator;
 import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
-import sun.util.locale.LocaleUtils;
 
 public class TestExperimentSet {
 

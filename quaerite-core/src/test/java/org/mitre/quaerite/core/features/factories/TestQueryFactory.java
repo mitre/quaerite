@@ -231,7 +231,6 @@ public class TestQueryFactory {
         int iterations = 10000;
         for (int i = 0; i < iterations; i++) {
             EDisMaxQuery q = qf.random();
-            System.out.println(q);
             QueryOperator op = q.getQueryOperator();
             //for generating experiments, we want to ensure that
             //query operators are specified

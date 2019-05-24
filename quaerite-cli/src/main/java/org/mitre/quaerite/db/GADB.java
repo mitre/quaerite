@@ -148,6 +148,4 @@ public class GADB extends ExperimentDB {
                 "; test size: "+test.getJudgmentsList().size());
         return new TrainTestJudmentListPair(train, test);
     }
-
-
 }

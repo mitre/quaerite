@@ -51,9 +51,10 @@ public class TestSolrExamples {
         for (int i = 1; i <= 2; i++) {
             Path experimentsPath = CWD.resolve("solr/experiments_solr_"+i+".json");
             System.out.println("running: " + experimentsPath);
+
             RunExperiments.main(
                     new String[]{
-                            "-db", "C:/data/quaerite/test_db5",
+                            "-db", "C:/data/quaerite/test_db"+(i+5),
                             "-e", experimentsPath.toAbsolutePath().toString(),
                             "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
                             "-r", "C:/data/quaerite/examples/experiments_output_solr_"+i
