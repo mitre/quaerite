@@ -216,9 +216,7 @@ public class TestQueryFactory {
                 newReader("/test-documents/experiment_features_solr_queryOp.json")
         );
         QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>) experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
-        for (EDisMaxQuery q : qf.permute(10000)) {
-            System.out.println(q);
-        }
+
         assertEquals(1120, qf.permute(10000).size());
 
         float minFloat = -0.8f;
@@ -233,6 +231,7 @@ public class TestQueryFactory {
         int iterations = 10000;
         for (int i = 0; i < iterations; i++) {
             EDisMaxQuery q = qf.random();
+            System.out.println(q);
             QueryOperator op = q.getQueryOperator();
             //for generating experiments, we want to ensure that
             //query operators are specified
