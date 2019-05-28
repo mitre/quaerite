@@ -67,7 +67,8 @@ import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.db.QueryRunnerDBClient;
 
 public abstract class AbstractExperimentRunner extends AbstractCLI {
-    static final Judgments POISON = new Judgments(new QueryInfo("", new QueryStrings(), -1));
+    static final Judgments POISON = new Judgments(new QueryInfo("",
+            "", new QueryStrings(), -1));
 
     static Logger LOG = Logger.getLogger(AbstractExperimentRunner.class);
 
@@ -266,7 +267,10 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         int invalidQueries = 0;
         JudgmentList retList = new JudgmentList();
         for (Judgments j : judgmentList.getJudgmentsList()) {
-            Judgments winnowedJugments = new Judgments(new QueryInfo(j.getQuerySet(), j.getQueryStrings(), j.getQueryCount()));
+            //defensively copy
+            Judgments winnowedJugments = new Judgments(
+                    new QueryInfo(j.getQueryInfo().getQueryId(),
+                            j.getQuerySet(), j.getQueryStrings(), j.getQueryCount()));
             for (Map.Entry<String, Double> e : j.getSortedJudgments().entrySet()) {
                 if (valid.contains(e.getKey())) {
                     winnowedJugments.addJudgment(e.getKey(), e.getValue());
@@ -390,7 +394,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
                 //TODO add exception to searchResultSet and log
                 e.printStackTrace();
             }
-            dbClient.insertSearchResults(judgments.getQuerySet(), judgments.getQueryInfo().getQueryId(),
+            dbClient.insertSearchResults(judgments.getQueryInfo(),
                     experiment.getName(), searchResultSet);
 
             for (ScoreAggregator scoreAggregator : scoreAggregators) {

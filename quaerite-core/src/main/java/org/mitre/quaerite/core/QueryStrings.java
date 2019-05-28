@@ -35,17 +35,7 @@ public class QueryStrings {
 
 
     Map<String, String> map = new HashMap<>();
-    String id = null;
-    boolean idIsUpdateable;
 
-    public QueryStrings() {
-        idIsUpdateable = true;
-    }
-
-    public QueryStrings(String queryId) {
-        this.id = queryId;
-        idIsUpdateable = false;
-    }
     /**
      * Default helper method that calls {@link #addQueryString(String, String)}
      * with {@link #DEFAULT_QUERY_NAME}.
@@ -70,31 +60,7 @@ public class QueryStrings {
                     " already exists!");
         }
         map.put(name, queryString);
-        updateId();
     }
-
-    private void updateId() {
-        if (! idIsUpdateable) {
-            return;
-        }
-        //if this is only a single query string request
-        //use the query string by itself
-        if (map.keySet().size() == 1 && map.keySet().contains(QueryStrings.DEFAULT_QUERY_NAME)) {
-            id = map.get(QueryStrings.DEFAULT_QUERY_NAME);
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder();
-        int i = 0;
-        for (Map.Entry<String, String> e : map.entrySet()) {
-            if (i++ > 0) {
-                sb.append(";");
-            }
-            sb.append(e.getKey()+":"+e.getValue());
-        }
-        id = sb.toString();
-    }
-
 
     public String getStringByName(String name) {
         if (map.containsKey(name)) {
@@ -129,9 +95,5 @@ public class QueryStrings {
 
     public Set<String> names() {
         return map.keySet();
-    }
-
-    public String getId() {
-        return id;
     }
 }

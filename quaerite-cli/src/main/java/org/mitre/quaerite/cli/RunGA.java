@@ -179,9 +179,9 @@ public class RunGA extends AbstractExperimentRunner {
         GADB gaDb = GADB.openAndDrop(gaPaths.dbPath);
         //gaDb = GADB.open(gaPaths.dbPath);
 
-        loadJudgments(gaDb, gaPaths.testJudgmentsFile, true);
+        QueryLoader.loadJudgments(gaDb, gaPaths.testJudgmentsFile, true);
         JudgmentList testJudgments = gaDb.getJudgments();
-        loadJudgments(gaDb, gaPaths.trainJudgmentsFile, false);
+        QueryLoader.loadJudgments(gaDb, gaPaths.trainJudgmentsFile, false);
         JudgmentList allJudgments = gaDb.getJudgments();
         gaDb.initTrainTest(testJudgments, allJudgments);
 
@@ -207,7 +207,7 @@ public class RunGA extends AbstractExperimentRunner {
 
         GADB gaDb = GADB.openAndDrop(gaPaths.dbPath);
 
-        loadJudgments(gaDb, gaPaths.judgmentsFile, true);
+        QueryLoader.loadJudgments(gaDb, gaPaths.judgmentsFile, true);
 
         if (gaPaths.seedExperiments != null) {
             loadSeed(gaDb, gaPaths.seedExperiments, gaConfig.getNFolds());

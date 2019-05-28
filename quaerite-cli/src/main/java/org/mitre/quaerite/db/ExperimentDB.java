@@ -81,7 +81,6 @@ public class ExperimentDB implements Closeable {
 
     private PreparedStatement selectResults;
     //cache of upserting scores keyed by scorer name
-    private Map<String, PreparedStatement> upsertScoreStatements = new HashMap<>();
     private Map<String, PreparedStatement> selectScoreStatements = new HashMap<>();
 
     public static ExperimentDB openAndDrop(Path dbDir) throws SQLException, IOException {
@@ -126,11 +125,11 @@ public class ExperimentDB implements Closeable {
         );
 
         selectJudgments = connection.prepareStatement(
-                "select json from judgments where query=?"
+                "select json from judgments where query_id=?"
         );
 
         insertJudgments = connection.prepareStatement(
-                "insert into judgments (query_set, query, query_count, json) values (?,?,?,?)"
+                "insert into judgments (query_id, query_set, query_count, json) values (?,?,?,?)"
         );
 
         selectScoreAggregators = connection.prepareStatement(
@@ -185,14 +184,10 @@ public class ExperimentDB implements Closeable {
 
     private void initJudgments() throws SQLException {
         String sql = "CREATE TABLE IF NOT EXISTS JUDGMENTS ("+
+                "QUERY_ID VARCHAR(256) PRIMARY KEY,"+
                 "QUERY_SET VARCHAR(256),"+
-                "QUERY VARCHAR(256),"+
                 "QUERY_COUNT INTEGER,"+
                 "JSON VARCHAR(10000));";
-        executeSQL(connection, sql);
-        sql = "ALTER TABLE JUDGMENTS " +
-                " ADD CONSTRAINT IF NOT EXISTS " +
-                " UQ_JUDGMENTS UNIQUE(QUERY_SET, QUERY);";
         executeSQL(connection, sql);
     }
 
@@ -201,20 +196,19 @@ public class ExperimentDB implements Closeable {
         //returned from the search clients
         String sql = "CREATE TABLE IF NOT EXISTS " +
                 "SEARCH_RESULTS( " +
-                "QUERY_SET VARCHAR(256),"+
-                "QUERY VARCHAR(256), " +
+                "QUERY_ID VARCHAR(256), " +
                 "EXPERIMENT_NAME VARCHAR(256),"+
                 "JSON VARCHAR(100000));";
         executeSQL(connection, sql);
 
         sql = "ALTER TABLE SEARCH_RESULTS " +
                 " ADD CONSTRAINT IF NOT EXISTS " +
-                " UQ_SEARCH_RESULTS UNIQUE(QUERY_SET, QUERY, EXPERIMENT_NAME);";
+                " UQ_SEARCH_RESULTS UNIQUE(QUERY_ID, EXPERIMENT_NAME);";
         executeSQL(connection, sql);
 
         //TODO: add indices to this table
         selectResults = connection.prepareStatement(
-                "select json from search_results where (query_set=? and query=? and experiment_name=?)"
+                "select json from search_results where (query_id=? and experiment_name=?)"
         );
 
     }
@@ -275,8 +269,8 @@ public class ExperimentDB implements Closeable {
     public void addJudgment(Judgments judgments)
             throws SQLException {
         insertJudgments.clearParameters();
-        insertJudgments.setString(1, judgments.getQuerySet());
-        insertJudgments.setString(2, judgments.getQueryInfo().getQueryId());
+        insertJudgments.setString(1, judgments.getQueryInfo().getQueryId());
+        insertJudgments.setString(2, judgments.getQuerySet());
         //this is to use later, potentially, in weighting scores for more frequent queries
         insertJudgments.setInt(3, judgments.getQueryCount());
         insertJudgments.setString(4, judgments.toJson());
@@ -312,16 +306,16 @@ public class ExperimentDB implements Closeable {
         return list;
     }
 
-    public Judgments getJudgments(String query) throws SQLException {
+    public Judgments getJudgments(String queryId) throws SQLException {
         selectJudgments.clearParameters();
-        selectJudgments.setString(1, query);
+        selectJudgments.setString(1, queryId);
         try (ResultSet rs = selectAllJudgments.executeQuery()) {
             if (rs.next()) {
                 String json = rs.getString(1);
                 return Judgments.fromJson(json);
             }
         }
-        throw new IllegalArgumentException("I couldn't find a judgment for query="+query);
+        throw new IllegalArgumentException("I couldn't find a judgment for query_id="+queryId);
     }
 
 
@@ -406,8 +400,8 @@ public class ExperimentDB implements Closeable {
 
         StringBuilder sql = new StringBuilder();
         sql.append("CREATE TABLE SCORES (" +
+                "QUERY_ID VARCHAR(1024) NOT NULL, " +
                 "QUERY_SET VARCHAR(1024) NOT NULL, " +
-                "QUERY VARCHAR(1024) NOT NULL, " +
                 "QUERY_COUNT INT, "+
                 "EXPERIMENT VARCHAR(1024) NOT NULL, ");
         int i = 0;
@@ -421,10 +415,10 @@ public class ExperimentDB implements Closeable {
         executeSQL(connection, sql.toString());
 
         executeSQL(connection,
-                "ALTER TABLE SCORES ADD PRIMARY KEY (QUERY_SET, QUERY, EXPERIMENT)");
+                "ALTER TABLE SCORES ADD PRIMARY KEY (QUERY_ID, EXPERIMENT)");
 
         executeSQL(connection,
-                "CREATE INDEX SCORES_QUERY_IDX on SCORES(QUERY_SET, QUERY)");
+                "CREATE INDEX SCORES_QUERY_IDX on SCORES(QUERY_SET, QUERY_ID)");
         executeSQL(connection,
                 "CREATE INDEX SCORES_EXPERIMENT_IDX on SCORES(EXPERIMENT)");
 
@@ -454,17 +448,15 @@ public class ExperimentDB implements Closeable {
 
     /**
      * NOT THREAD SAFE
-     * @param querySet
-     * @param query
+     * @param queryId
      * @param experimentName
      * @return {@link SearchResultSet} or null if not found
      */
-    public SearchResultSet
-        getSearchResults(String querySet, String query, String experimentName) throws SQLException {
+    public SearchResultSet getSearchResults(String queryId,
+                                            String experimentName) throws SQLException {
         selectResults.clearParameters();
-        selectResults.setString(1, querySet);
-        selectResults.setString(2, query);
-        selectResults.setString(3, experimentName);
+        selectResults.setString(1, queryId);
+        selectResults.setString(2, experimentName);
         //TODO: maybe add checks for more than one result?
         try (ResultSet rs = selectResults.executeQuery()) {
             while (rs.next()) {
@@ -545,7 +537,8 @@ public class ExperimentDB implements Closeable {
     public Map<String, Double> getScores(String querySet, String experimentName, String scorerName) throws SQLException {
         PreparedStatement selectScores = selectScoreStatements.get(scorerName);
         if (selectScores == null) {
-            selectScores = connection.prepareStatement("select query, "+scorerName+" from scores where query_set=? and experiment=?");
+            selectScores = connection.prepareStatement("select query_id, "
+                    +scorerName+" from scores where query_set=? and experiment=?");
             selectScoreStatements.put(scorerName, selectScores);
         }
         selectScores.clearParameters();
@@ -554,9 +547,9 @@ public class ExperimentDB implements Closeable {
         Map<String, Double> values = new HashMap<>();
         try(ResultSet rs = selectScores.executeQuery()) {
             while (rs.next()) {
-                String query = rs.getString(1);
+                String queryId = rs.getString(1);
                 double d = rs.getDouble(2);
-                values.put(query, d);
+                values.put(queryId, d);
             }
         }
         return values;
@@ -650,7 +643,8 @@ public class ExperimentDB implements Closeable {
         executeSQL(connection, "drop table if exists query_comparisons");
         StringBuilder sql = new StringBuilder()
                 .append("create table query_comparisons (")
-                .append("query_set varchar(1024) not null, query varchar(1024) not null");
+                .append("query_id varchar(1024) primary key, " +
+                        "query_set varchar(1024) not null");
         int i = 0;
         for (String experiment : experiments) {
             sql.append(",").append(experiment).append(" double ");
@@ -662,22 +656,15 @@ public class ExperimentDB implements Closeable {
         executeSQL(connection, sql.toString());
         sql.setLength(0);
 
-        sql.append("ALTER TABLE query_comparisons ")
-            .append(" ADD CONSTRAINT IF NOT EXISTS ")
-            .append(" UQ_query_comparisons PRIMARY KEY(QUERY_SET, QUERY);");
-        executeSQL(connection, sql.toString());
 
-        sql.setLength(0);
-
-        sql.append("insert into query_comparisons (query_set, query)(");
-        sql.append("select query_set, query from scores group by query_set, query)");
+        sql.append("insert into query_comparisons (query_id, query_set)(");
+        sql.append("select query_id, query_set from scores group by query_set, query)");
         executeSQL(connection, sql.toString());
         sql.setLength(0);
         for (String experiment : experiments) {
             String s = "update query_comparisons c set c."+experiment+" =" +
                     " select s."+scorer+" from scores s where (" +
-                    " s.query_set=c.query_set and" +
-                    " s.query=c.query and" +
+                    " s.query_id=c.query_id and" +
                     " s.experiment='"+experiment+"');";
             executeSQL(connection, s);
         }

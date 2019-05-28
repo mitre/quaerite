@@ -29,7 +29,7 @@ import org.mitre.quaerite.core.SearchResultSet;
 
 
 public class TestNDCG {
-    static Judgments JUDGMENTS = new Judgments(new QueryInfo("",
+    static Judgments JUDGMENTS = new Judgments(new QueryInfo("0","",
             new QueryStrings(), 1));
     static SearchResultSet RESULT_SET;
     @BeforeAll

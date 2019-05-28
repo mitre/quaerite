@@ -27,7 +27,7 @@ import com.google.gson.Gson;
 
 /**
  * This class captures the judgments about a single specific query
- * The id is the document id in Solr
+ * The id is the document id in Solr/Elastic
  */
 public class Judgments {
     private static Gson GSON = new Gson();
@@ -47,16 +47,16 @@ public class Judgments {
         this.queryInfo = queryInfo;
     }
 
-    public void addJudgment(String id, double relevance) {
-        judgments.put(id, relevance);
+    public void addJudgment(String documentId, double relevance) {
+        judgments.put(documentId, relevance);
         synchronized (lock) {
             updated = true;
         }
     }
 
-    public double getJudgment(String id) {
-        return judgments.containsKey(id) ?
-                judgments.get(id) : NO_JUDGMENT;
+    public double getJudgment(String documentId) {
+        return judgments.containsKey(documentId) ?
+                judgments.get(documentId) : NO_JUDGMENT;
     }
 
     public boolean containsJudgment(String id) {

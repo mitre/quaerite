@@ -17,6 +17,8 @@
  */
 package org.mitre.quaerite.core.scoreaggregators;
 
+import static org.mitre.quaerite.core.QueryInfo.DEFAULT_QUERY_SET;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
+import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.scorers.AbstractRankScorer;
 
@@ -71,8 +74,9 @@ public abstract class AbstractScoreAggregator implements ScoreAggregator {
         scores.put(judgments.getQueryInfo(), result);
         QueryInfo defaultQueryInfo = null;
         //also keep track of all results together
-        if (!judgments.getQuerySet().equals(QueryInfo.DEFAULT_QUERY_SET)) {
-            defaultQueryInfo = new QueryInfo(QueryInfo.DEFAULT_QUERY_SET, judgments.getQueryStrings(), judgments.getQueryCount());
+        if (!judgments.getQuerySet().equals(DEFAULT_QUERY_SET)) {
+            defaultQueryInfo = new QueryInfo(judgments.getQueryInfo().getQueryId(),
+                    DEFAULT_QUERY_SET, judgments.getQueryStrings(), judgments.getQueryCount());
             scores.put(defaultQueryInfo, result);
         }
         synchronized (lock) {

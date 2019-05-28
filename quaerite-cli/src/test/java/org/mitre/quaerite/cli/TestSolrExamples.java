@@ -23,7 +23,7 @@ import java.nio.file.Paths;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled
+@Disabled("Solr tmdb instance has to be running")
 public class TestSolrExamples {
     //TODO -- make all the working files tmp files/put in tmp directory
     //turn these into actual tests that check the output

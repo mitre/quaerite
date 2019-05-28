@@ -119,7 +119,7 @@ public class FindFeatures extends AbstractCLI {
         Path judgmentsFile = getPath(commandLine, "j", false);
         ExperimentDB db = ExperimentDB.open(dbDir);
         if (judgmentsFile != null) {
-            loadJudgments(db, judgmentsFile, true);
+            QueryLoader.loadJudgments(db, judgmentsFile, true);
         }
         SearchClient searchClient = SearchClientFactory.getClient(searchServerUrl);
         String[] fields = commandLine.getOptionValue("f").split(",");

@@ -145,12 +145,12 @@ public class RunExperiments extends AbstractExperimentRunner {
 
         try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
             if (judgments != null && experiments != null) {
-                loadJudgments(experimentDB, judgments, true);
+                QueryLoader.loadJudgments(experimentDB, judgments, true);
                 ExperimentSet experimentSet = addExperiments(experimentDB, experiments, false, true);
                 runExperiments = new RunExperiments(experimentSet.getExperimentConfig());
                 freshStart = false;
             } else if (judgments != null) {
-                loadJudgments(experimentDB, judgments, true);
+                QueryLoader.loadJudgments(experimentDB, judgments, true);
             } else if (experiments != null) {
                 ExperimentSet experimentSet = addExperiments(experimentDB, experiments, true, freshStart);
                 runExperiments = new RunExperiments(experimentSet.getExperimentConfig());

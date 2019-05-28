@@ -18,17 +18,18 @@
 
 package org.mitre.quaerite.core;
 
-import java.util.Map;
 import java.util.Objects;
 
 public class QueryInfo {
 
     public static final String DEFAULT_QUERY_SET = "";
+    private final String queryId;
     private final String querySet;
     private final QueryStrings queryStrings;
     private final int queryCount;
 
-    public QueryInfo(String querySet, QueryStrings queryStrings, int queryCount) {
+    public QueryInfo(String queryId, String querySet, QueryStrings queryStrings, int queryCount) {
+        this.queryId = queryId;
         this.querySet = querySet;
         this.queryStrings = queryStrings;
         this.queryCount = queryCount;
@@ -47,29 +48,31 @@ public class QueryInfo {
     }
 
     public String getQueryId() {
-        return queryStrings.getId();
+        return queryId;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof QueryInfo)) return false;
         QueryInfo queryInfo = (QueryInfo) o;
         return queryCount == queryInfo.queryCount &&
-                querySet.equals(queryInfo.querySet) &&
-                queryStrings.equals(queryInfo.queryStrings);
+                Objects.equals(queryId, queryInfo.queryId) &&
+                Objects.equals(querySet, queryInfo.querySet) &&
+                Objects.equals(queryStrings, queryInfo.queryStrings);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(querySet, queryStrings, queryCount);
+        return Objects.hash(queryId, querySet, queryStrings, queryCount);
     }
 
     @Override
     public String toString() {
         return "QueryInfo{" +
-                "querySet='" + querySet + '\'' +
-                ", queryStrings='" + queryStrings + '\'' +
+                "queryId='" + queryId + '\'' +
+                ", querySet='" + querySet + '\'' +
+                ", queryStrings=" + queryStrings +
                 ", queryCount=" + queryCount +
                 '}';
     }

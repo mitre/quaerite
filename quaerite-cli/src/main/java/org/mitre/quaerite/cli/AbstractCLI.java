@@ -49,21 +49,7 @@ import org.mitre.quaerite.db.ExperimentDB;
 
 public abstract class AbstractCLI {
 
-    private static final String QUERY_SET = "querySet";
-    private static final String QUERY_ID = "queryId";
-    private static final String DOCUMENT_ID = "id";
-    private static final String RELEVANCE = "relevance";
-    private static final String COUNT = "count";
-
     static Logger LOG = Logger.getLogger(AbstractCLI.class);
-
-    private static Set<String> DEFINED_JUDGMENT_COLUMNS =
-            Collections.unmodifiableSet(
-                    new HashSet(
-                            Arrays.asList(new String[]{
-                                    QUERY_SET, QUERY_ID, DOCUMENT_ID, RELEVANCE, COUNT })
-                    )
-            );
 
     static ExperimentSet addExperiments(ExperimentDB experimentDB, Path experimentsJson, boolean merge, boolean freshStart) throws SQLException, IOException {
         if (freshStart) {
@@ -92,72 +78,6 @@ public abstract class AbstractCLI {
         return experiments;
     }
 
-    public static void loadJudgments(ExperimentDB experimentDB, Path file, boolean freshStart) throws IOException, SQLException {
-        if (freshStart) {
-            experimentDB.clearJudgments();
-        }
-        Map<String, Map<String, Judgments>> queries = new HashMap<>();
-        try (InputStream is = Files.newInputStream(file)) {
-            try (Reader reader = new InputStreamReader(new BOMInputStream(is), "UTF-8")) {
-                Iterable<CSVRecord> records = CSVFormat.EXCEL
-                        .withFirstRecordAsHeader().parse(reader);
-                boolean hasQuerySet = (((CSVParser) records).getHeaderMap().containsKey(QUERY_SET)) ? true : false;
-                boolean hasCount = (((CSVParser) records).getHeaderMap().containsKey(COUNT)) ? true : false;
-                boolean hasQueryId = (((CSVParser) records).getHeaderMap().containsKey(QUERY_ID)) ? true : false;
-                Set<String> queryStringNames = getQueryStringNames(((CSVParser)records).getHeaderMap().keySet());
-
-                for (CSVRecord record : records) {
-                    String querySet = (hasQuerySet) ? record.get(QUERY_SET) : QueryInfo.DEFAULT_QUERY_SET;
-                    QueryStrings queryStrings = getQueryStrings(hasQueryId, queryStringNames, record);
-                    String documentId = record.get("id");
-                    int count = (hasCount) ? Integer.parseInt(record.get(COUNT)) : 1;
-                    double relevanceScore =
-                            Double.parseDouble(record.get(RELEVANCE));
-                    Map<String, Judgments> querySetMap = queries.get(querySet);
-                    if (querySetMap == null) {
-                        querySetMap = new HashMap<>();
-                    }
-                    Judgments judgments = querySetMap.get(queryStrings.getId());
-                    if (judgments == null) {
-                        judgments = new Judgments(new QueryInfo(querySet, queryStrings, count));
-                    }
-                    judgments.addJudgment(documentId, relevanceScore);
-                    querySetMap.put(queryStrings.getId(), judgments);
-                    queries.put(querySet, querySetMap);
-                }
-            }
-        }
-        for (String querySet : queries.keySet()) {
-            for (Judgments judgments : queries.get(querySet).values()) {
-                experimentDB.addJudgment(judgments);
-            }
-        }
-    }
-
-    private static QueryStrings getQueryStrings(
-            boolean hasQueryId, Set<String> queryStringNames, CSVRecord record) {
-        QueryStrings queryStrings;
-        if (hasQueryId) {
-            queryStrings = new QueryStrings(record.get(QUERY_ID));
-        } else {
-            queryStrings = new QueryStrings();
-        }
-        for (String name : queryStringNames) {
-            queryStrings.addQueryString(name, record.get(name));
-        }
-        return queryStrings;
-    }
-
-    private static Set<String> getQueryStringNames(Set<String> keySet) {
-        Set<String> undefined = new HashSet<>();
-        for (String s : keySet) {
-            if (! DEFINED_JUDGMENT_COLUMNS.contains(s)) {
-                undefined.add(s);
-                LOG.debug("adding column for queryString:'"+s+"'");
-            }
-        }
-        return undefined;
-    }
 
 
 }

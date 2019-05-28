@@ -46,11 +46,11 @@ public class QueryRunnerDBClient implements Closeable {
 
     protected QueryRunnerDBClient(Connection connection, List<ScoreAggregator> scoreAggregators) throws SQLException {
         insertResults = connection.prepareStatement(
-                "insert into search_results (query_set, query, experiment_name, json) values (?,?,?,?)"
+                "insert into search_results (query_id, experiment_name, json) values (?,?,?)"
         );
 
         StringBuilder insertSql = new StringBuilder();
-        insertSql.append("insert into SCORES (QUERY_SET, QUERY, QUERY_COUNT, EXPERIMENT");
+        insertSql.append("insert into scores (query_id, query_set, query_count, experiment");
         for (ScoreAggregator scoreAggregator : scoreAggregators) {
             insertSql.append(", ");
             insertSql.append(scoreAggregator.getName());
@@ -67,8 +67,8 @@ public class QueryRunnerDBClient implements Closeable {
     public void insertScores(QueryInfo queryInfo,
                              String experimentName, List<ScoreAggregator> scoreAggregators) throws SQLException {
 
-        insertScores.setString(1, queryInfo.getQuerySet());
-        insertScores.setString(2, queryInfo.getQueryId());
+        insertScores.setString(1, queryInfo.getQueryId());
+        insertScores.setString(2, queryInfo.getQuerySet());
         insertScores.setInt(3, queryInfo.getQueryCount());
         insertScores.setString(4, experimentName);
 
@@ -81,13 +81,12 @@ public class QueryRunnerDBClient implements Closeable {
         insertScores.addBatch();
     }
 
-    public void insertSearchResults(String querySet, String query, String experimentName,
+    public void insertSearchResults(QueryInfo queryInfo, String experimentName,
                                     SearchResultSet results) throws SQLException {
         String json = GSON.toJson(results);
-        insertResults.setString(1, querySet);
-        insertResults.setString(2, query);
-        insertResults.setString(3, experimentName);
-        insertResults.setString(4, json);
+        insertResults.setString(1, queryInfo.getQueryId());
+        insertResults.setString(2, experimentName);
+        insertResults.setString(3, json);
         insertResults.addBatch();
     }
 

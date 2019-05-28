@@ -106,8 +106,9 @@ public class TestExperimentDB {
         db = ExperimentDB.open(DB_DIR);
 
         QueryStrings queryStrings = new QueryStrings();
-        queryStrings.setQuery("q1");
-        Judgments judgments = new Judgments(new QueryInfo("", queryStrings, 1));
+        queryStrings.setQuery("query1");
+        Judgments judgments = new Judgments(new QueryInfo("q1",
+                "", queryStrings, 1));
 
         judgments.addJudgment("id1", 2.0);
         judgments.addJudgment("id2", 4.0);
