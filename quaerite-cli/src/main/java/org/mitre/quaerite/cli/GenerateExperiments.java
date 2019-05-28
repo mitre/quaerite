@@ -23,11 +23,6 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -38,13 +33,8 @@ import org.apache.commons.cli.ParseException;
 import org.mitre.quaerite.core.Experiment;
 import org.mitre.quaerite.core.ExperimentFactory;
 import org.mitre.quaerite.core.ExperimentSet;
-import org.mitre.quaerite.core.features.Feature;
+import org.mitre.quaerite.core.scorers.Scorer;
 
-import org.mitre.quaerite.core.features.SimpleStringFeature;
-import org.mitre.quaerite.core.features.SimpleStringListFeature;
-import org.mitre.quaerite.core.features.factories.FeatureFactory;
-import org.mitre.quaerite.core.features.factories.FeatureFactories;
-import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
 
 public class GenerateExperiments extends AbstractCLI {
 
@@ -132,8 +122,8 @@ public class GenerateExperiments extends AbstractCLI {
              experimentFactory = ExperimentFactory.fromJson(reader);
         }
         ExperimentSet experimentSet = new ExperimentSet(experimentFactory.getGAConfig());
-        for (ScoreAggregator scoreAggregator : experimentFactory.getScoreAggregators()) {
-            experimentSet.addScoreAggregator(scoreAggregator);
+        for (Scorer scorer : experimentFactory.getScorers()) {
+            experimentSet.addScorer(scorer);
         }
         if (generateConfig.mode == MODE.PERMUTE) {
             for (Experiment experiment : experimentFactory.permute(generateConfig.max)) {

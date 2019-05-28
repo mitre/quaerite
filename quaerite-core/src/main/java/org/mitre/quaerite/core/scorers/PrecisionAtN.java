@@ -24,10 +24,10 @@ import org.mitre.quaerite.core.SearchResultSet;
  * the documents that had a quaerite score >= 0, what's
  * the best rank?
  */
-public class PrecisionAtK extends AbstractRankScorer {
+public class PrecisionAtN extends AbstractJudgmentScorer {
 
-    public PrecisionAtK(int atN) {
-        super(atN);
+    public PrecisionAtN(int atN) {
+        super("precision", atN);
     }
 
     @Override
@@ -36,23 +36,20 @@ public class PrecisionAtK extends AbstractRankScorer {
             return 0.0;
         }
         int hits = 0;
-        for (int i = 0; i < atN && i < searchResultSet.size(); i++) {
+        for (int i = 0; i < getAtN() && i < searchResultSet.size(); i++) {
             if (judgments.containsJudgment(searchResultSet.get(i))) {
                 hits++;
             }
         }
-        return (double)hits/(double) searchResultSet.size();
-    }
-
-    @Override
-    String _getName() {
-        return "p";
+        double val = (double)hits/(double) searchResultSet.size();
+        addScore(judgments.getQueryInfo(), val);
+        return val;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PrecisionAtK)) return false;
+        if (!(o instanceof PrecisionAtN)) return false;
         return super.equals(o);
     }
 }

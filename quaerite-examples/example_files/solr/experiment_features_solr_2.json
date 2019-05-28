@@ -1,7 +1,7 @@
 {
   "gaConfig": {
     "numThreads": 6,
-    "population": 20,
+    "population": 15,
     "generations": 5,
     "crossoverProbability": 0.2,
     "mutationProbability": 0.7,
@@ -9,11 +9,11 @@
     "reproductionProbability": 0.1,
     "nFolds": 3
   },
-  "scoreAggregators": [
+  "scorers": [
     {
-      "class": "NDCGAggregator",
+      "class": "NDCG",
+      "atN": 10,
       "params": {
-        "atK": 10,
         "useForTrain": true,
         "useForTest": true,
         "exportPMatrix": true

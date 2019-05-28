@@ -17,47 +17,53 @@
  */
 package org.mitre.quaerite.core.scorers;
 
-import java.util.Objects;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.mitre.quaerite.core.RankScorer;
+import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.SearchResultSet;
 
-public abstract class AbstractRankScorer implements RankScorer {
+public abstract class AbstractJudgmentScorer
+        extends DistributionalScoreAggregator implements JudgmentScorer {
 
     static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    public final int atN;
+    private boolean useForTrain = false;
+    private boolean useForTest = false;
+    private boolean exportPMatrix = false;
 
-    public AbstractRankScorer(int atN) {
-        this.atN = atN;
+
+    public AbstractJudgmentScorer(String name, int atN) {
+        super(name, atN);
     }
 
+    public abstract double score(Judgments judgments,
+                                 SearchResultSet searchResultSet);
 
-    @Override
-    public String getName() {
-        if (getAtN() > -1) {
-            return _getName() + "_" + getAtN();
-        }
-        return _getName();
+
+
+
+    public boolean getUseForTrain() {
+        return useForTrain;
     }
 
-    abstract String _getName();
-
-    public int getAtN() {
-        return atN;
+    public void setUseForTrain() {
+        this.useForTrain = true;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof AbstractRankScorer)) return false;
-        AbstractRankScorer that = (AbstractRankScorer) o;
-        return atN == that.atN;
+    public boolean getUseForTest() {
+        return useForTest;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(atN);
+    public void setUseForTest() {
+        this.useForTest = true;
+    }
+
+    public boolean getExportPMatrix() {
+        return exportPMatrix;
+    }
+
+    public void setExportPMatrix() {
+        this.exportPMatrix = true;
     }
 }

@@ -18,25 +18,21 @@
 
 package org.mitre.quaerite.core.scorers;
 
-
-import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
 
-public class TotalElapsedTime extends AbstractRankScorer {
+public class TotalElapsedTime extends SummingScoreAggregator
+    implements SearchResultSetScorer {
 
-    public TotalElapsedTime() {
-        super(-1);
+    public TotalElapsedTime(int atN) {
+        super("TotalElapsedTime", atN);
     }
 
     @Override
-    public String _getName() {
-        return "TotalElapsedTime";
-    }
-
-
-    @Override
-    public double score(Judgments judgments, SearchResultSet searchResultSet) {
-        return searchResultSet.getElapsedTime();
+    public double score(QueryInfo queryInfo, SearchResultSet searchResultSet) {
+        double elapsed = searchResultSet.getElapsedTime();
+        addScore(queryInfo, elapsed);
+        return elapsed;
     }
 
     @Override

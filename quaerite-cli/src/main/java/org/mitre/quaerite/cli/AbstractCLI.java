@@ -41,10 +41,7 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.Experiment;
 import org.mitre.quaerite.core.ExperimentSet;
-import org.mitre.quaerite.core.Judgments;
-import org.mitre.quaerite.core.QueryInfo;
-import org.mitre.quaerite.core.QueryStrings;
-import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
+import org.mitre.quaerite.core.scorers.Scorer;
 import org.mitre.quaerite.db.ExperimentDB;
 
 public abstract class AbstractCLI {
@@ -67,11 +64,11 @@ public abstract class AbstractCLI {
             experimentDB.addExperiment(experiment, merge);
         }
 
-        List<ScoreAggregator> scoreAggregators = experiments.getScoreAggregators();
-        if (scoreAggregators != null && scoreAggregators.size() > 0) {
+        List<Scorer> scorers = experiments.getScorers();
+        if (scorers != null && scorers.size() > 0) {
             experimentDB.clearScorers();
-            for (ScoreAggregator scoreAggregator : scoreAggregators) {
-                experimentDB.addScoreAggregator(scoreAggregator);
+            for (Scorer scorer : scorers) {
+                experimentDB.addScorer(scorer);
             }
         }
 

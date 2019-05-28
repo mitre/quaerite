@@ -59,9 +59,12 @@ import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.TermsQuery;
-import org.mitre.quaerite.core.scoreaggregators.DistributionalScoreAggregator;
-import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
-import org.mitre.quaerite.core.scoreaggregators.SummingScoreAggregator;
+import org.mitre.quaerite.core.scorers.AbstractJudgmentScorer;
+import org.mitre.quaerite.core.scorers.JudgmentScorer;
+import org.mitre.quaerite.core.scorers.Scorer;
+import org.mitre.quaerite.core.scorers.DistributionalScoreAggregator;
+import org.mitre.quaerite.core.scorers.SearchResultSetScorer;
+import org.mitre.quaerite.core.scorers.SummingScoreAggregator;
 import org.mitre.quaerite.core.util.MapUtil;
 import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.db.QueryRunnerDBClient;
@@ -95,8 +98,8 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
         ExperimentSet experimentSet = experimentDB.getExperiments();
         Experiment ex = experimentSet.getExperiment(experimentName);
-        List<ScoreAggregator> scoreAggregators = experimentSet.getScoreAggregators();
-        experimentDB.initScoreTable(scoreAggregators);
+        List<Scorer> scorers = experimentSet.getScorers();
+        experimentDB.initScoreTable(scorers);
         SearchClient searchClient = SearchClientFactory.getClient(ex.getSearchServerUrl());
 
         if (StringUtils.isBlank(experimentConfig.getIdField())) {
@@ -124,7 +127,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         for (int i = 0; i < experimentConfig.getNumThreads(); i++) {
             executorCompletionService.submit(
                     new QueryRunner(experimentConfig.getIdField(), experimentDB.getExperiments().getMaxRows(),
-                            queue, ex, experimentDB, scoreAggregators));
+                            queue, ex, experimentDB, scorers));
         }
 
         int completed = 0;
@@ -141,29 +144,29 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         executorService.shutdown();
         executorService.shutdownNow();
         //insertScores(experimentDB, experimentName, scoreAggregators);
-        experimentDB.insertScoresAggregated(experimentName, scoreAggregators);
+        experimentDB.insertScoresAggregated(experimentName, scorers);
         if (logResults) {
-            logResults(experimentName, scoreAggregators);
+            logResults(experimentName, scorers);
         }
     }
 
-    private void logResults(String experimentName, List<ScoreAggregator> scoreAggregators) {
+    private void logResults(String experimentName, List<Scorer> scorers) {
         StringBuilder result = new StringBuilder();
         LOG.info("Experiment: "+experimentName);
-        for (ScoreAggregator scoreAggregator : scoreAggregators) {
-            for (String querySetName : scoreAggregator.getQuerySets()) {
-                Map<String, Double> summaryStats = scoreAggregator.getSummaryStatistics(querySetName);
+        for (Scorer scorer : scorers) {
+            for (String querySetName : scorer.getQuerySets()) {
+                Map<String, Double> summaryStats = scorer.getSummaryStatistics(querySetName);
                 if (!StringUtils.isBlank(querySetName)) {
                     result.append("Query Set: ").append(querySetName);
                 } else {
                     result.append("All Queries: ");
                 }
-                result.append(scoreAggregator.getName());
+                result.append(scorer.getName());
                 result.append(" - ");
-                if (scoreAggregator instanceof SummingScoreAggregator) {
+                if (scorer instanceof SummingScoreAggregator) {
                     result.append("sum: ");
                     result.append(getValueString(summaryStats.get(SummingScoreAggregator.SUM)));
-                } else if (scoreAggregator instanceof DistributionalScoreAggregator) {
+                } else if (scorer instanceof DistributionalScoreAggregator) {
                     result.append("mean: ");
                     result.append(
                             getValueString(summaryStats.get(DistributionalScoreAggregator.MEAN)));
@@ -329,21 +332,21 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         private final ArrayBlockingQueue<Judgments> queue;
         private final Experiment experiment;
         private final Query query;//thread safe clone of the query
-        private final List<ScoreAggregator> scoreAggregators;
+        private final List<Scorer> scorers;
         private final SearchClient searchClient;
         private final QueryRunnerDBClient dbClient;
 
         public QueryRunner(String idField, int maxRows, ArrayBlockingQueue<Judgments> judgments,
                            Experiment experiment, ExperimentDB experimentDB,
-                           List<ScoreAggregator> scoreAggregators) throws SQLException, IOException, SearchClientException {
+                           List<Scorer> scorers) throws SQLException, IOException, SearchClientException {
             this.idField = idField;
             this.maxRows = maxRows;
             this.queue = judgments;
             this.experiment = experiment;
             this.query = experiment.getQuery();
             this.searchClient = SearchClientFactory.getClient(experiment.getSearchServerUrl());
-            this.scoreAggregators = scoreAggregators;
-            this.dbClient = experimentDB.getQueryRunnerDBClient(scoreAggregators);
+            this.scorers = scorers;
+            this.dbClient = experimentDB.getQueryRunnerDBClient(scorers);
         }
 
         @Override
@@ -356,7 +359,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 //                    LOG.trace(threadNum + ": scorer thread hit poison. stopping now");
                         return 1;
                     }
-                    scoreEach(judgments, scoreAggregators);
+                    scoreEach(judgments, scorers);
                 }
             } finally {
                 Exception ex = null;
@@ -377,7 +380,8 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             }
         }
 
-        private void scoreEach(Judgments judgments, List<ScoreAggregator> scoreAggregators) throws SQLException {
+        private void scoreEach(Judgments judgments,
+                               List<Scorer> scorers) throws SQLException {
             query.setQueryStrings(judgments.getQueryStrings());
 
             QueryRequest queryRequest = new QueryRequest(query, experiment.getCustomHandler(), idField);
@@ -397,10 +401,17 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             dbClient.insertSearchResults(judgments.getQueryInfo(),
                     experiment.getName(), searchResultSet);
 
-            for (ScoreAggregator scoreAggregator : scoreAggregators) {
-                scoreAggregator.add(judgments, searchResultSet);
+            for (Scorer scorer : scorers) {
+                if (scorer instanceof JudgmentScorer) {
+                    ((JudgmentScorer)scorer).score(judgments, searchResultSet);
+                } else if (scorer instanceof SearchResultSetScorer) {
+                    ((SearchResultSetScorer)scorer).score(judgments.getQueryInfo(), searchResultSet);
+                } else {
+                    throw new IllegalArgumentException("Scorer class not yet supported: "+
+                            scorer.getClass());
+                }
             }
-            dbClient.insertScores(judgments.getQueryInfo(), experiment.getName(), scoreAggregators);
+            dbClient.insertScores(judgments.getQueryInfo(), experiment.getName(), scorers);
         }
     }
 
@@ -408,7 +419,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     ////////////DUMP RESULTS
     static void dumpResults(ExperimentDB experimentDB,
                             List<String> querySets,
-                            List<ScoreAggregator> targetScorers, Path outputDir, boolean isTest) throws Exception {
+                            List<Scorer> targetScorers, Path outputDir, boolean isTest) throws Exception {
         if (! Files.isDirectory(outputDir)) {
             Files.createDirectories(outputDir);
         }
@@ -428,13 +439,15 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
         String orderByPriority1 = null;
         String orderByPriority2 = null;
-        for (ScoreAggregator scoreAggregator : experimentDB.getExperiments().getScoreAggregators()) {
-            if (isTest && scoreAggregator.getUseForTest()) {
-                orderByPriority1 = scoreAggregator.getPrimaryStatisticName();
+        for (Scorer scorer : experimentDB.getExperiments().getScorers()) {
+            if (isTest && scorer instanceof AbstractJudgmentScorer &&
+                    ((AbstractJudgmentScorer)scorer).getUseForTest()) {
+                orderByPriority1 = scorer.getPrimaryStatisticName();
                 break;
             }
-            if (scoreAggregator.getUseForTrain()) {
-                orderByPriority2 = scoreAggregator.getPrimaryStatisticName();
+            if (scorer instanceof AbstractJudgmentScorer &&
+                    ((AbstractJudgmentScorer)scorer).getUseForTrain()) {
+                orderByPriority2 = scorer.getPrimaryStatisticName();
             }
         }
         String orderBy = "";
@@ -465,21 +478,23 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
     }
 
-    private static void dumpSignificanceMatrices(String querySet, List<ScoreAggregator> targetScorers, ExperimentDB experimentDB, Path outputDir) throws Exception {
+    private static void dumpSignificanceMatrices(String querySet,
+                                                 List<Scorer> targetScorers, ExperimentDB experimentDB, Path outputDir) throws Exception {
         TTest tTest = new TTest();
-        for (ScoreAggregator scorer : targetScorers) {
-            if (scorer.getExportPMatrix()) {
+        for (Scorer scorer : targetScorers) {
+            if (scorer instanceof AbstractJudgmentScorer &&
+                    ((AbstractJudgmentScorer)scorer).getExportPMatrix()) {
                 Map<String, Double> aggregatedScores = experimentDB.getKeyExperimentScore(scorer);
 
                 Map<String, Double> sorted = MapUtil.sortByDescendingValue(aggregatedScores);
                 List<String> experiments = new ArrayList();
                 experiments.addAll(sorted.keySet());
-                writeMatrix(tTest, scorer, querySet, experiments, experimentDB, outputDir);
+                writeMatrix(tTest, (AbstractJudgmentScorer)scorer, querySet, experiments, experimentDB, outputDir);
             }
         }
     }
 
-    private static void writeMatrix(TTest tTest, ScoreAggregator scorer, String querySet,
+    private static void writeMatrix(TTest tTest, AbstractJudgmentScorer scorer, String querySet,
                                     List<String> experiments, ExperimentDB experimentDB, Path outputDir) throws Exception {
 
         String fileName = "sig_diffs_" + scorer.getName() + (

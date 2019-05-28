@@ -40,7 +40,7 @@ import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.Query;
-import org.mitre.quaerite.core.scoreaggregators.AtLeastOneHitAtKAggregator;
+import org.mitre.quaerite.core.scorers.AtLeastOneAtN;
 import org.mitre.quaerite.db.ExperimentDB;
 
 public class TestExperimentDB {
@@ -75,10 +75,10 @@ public class TestExperimentDB {
         }
         experiment.addFilterQueries(filterQueries);
         db.addExperiment(experiment);
-        db.addScoreAggregator(new AtLeastOneHitAtKAggregator(1));
-        db.addScoreAggregator(new AtLeastOneHitAtKAggregator(3));
-        db.addScoreAggregator(new AtLeastOneHitAtKAggregator(5));
-        db.addScoreAggregator(new AtLeastOneHitAtKAggregator(10));
+        db.addScorer(new AtLeastOneAtN(1));
+        db.addScorer(new AtLeastOneAtN(3));
+        db.addScorer(new AtLeastOneAtN(5));
+        db.addScorer(new AtLeastOneAtN(10));
         db.close();
 
         db = ExperimentDB.open(DB_DIR);

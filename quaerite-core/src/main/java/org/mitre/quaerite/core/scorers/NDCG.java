@@ -16,40 +16,52 @@
  */
 package org.mitre.quaerite.core.scorers;
 
+import java.util.ArrayList;
+import java.util.List;
 
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.SearchResultSet;
 
-/**
- * Returns 1 if there was any hit in the results; 0 otherwise.
- */
-public class AtLeastOneHitAtK extends AbstractRankScorer {
 
-    public AtLeastOneHitAtK(int atN) {
-        super(atN);
+public class NDCG extends DiscountedCumulativeGain2002 {
+
+    public NDCG(int atN) {
+        super("ndcg", atN);
     }
 
     @Override
     public double score(Judgments judgments, SearchResultSet searchResultSet) {
 
-        for (int i = 0; i < atN && i < searchResultSet.size(); i++) {
-            if (judgments.containsJudgment(searchResultSet.get(i))) {
-                return 1;
-            }
+        final double idealDCG = calculateIdeal(judgments,
+                Math.min(getAtN(), searchResultSet.size()), searchResultSet.getTotalHits(),
+                searchResultSet.getQueryTime(),
+                searchResultSet.getElapsedTime());
+        if (idealDCG == 0) {
+            return 0.0;
         }
-        return 0.0;
+        double score = _score(judgments, searchResultSet)/idealDCG;
+        addScore(judgments.getQueryInfo(), score);
+        return score;
     }
 
-    @Override
-    String _getName() {
-        return "AtLeastOneHitAtK";
+
+    private double calculateIdeal(Judgments judgments, int size, long totalHits,
+                                  long queryTime, long elapsedTime) {
+        List<String> bestResults = new ArrayList<>();
+        for (String id : judgments.getSortedJudgments().keySet()) {
+            bestResults.add(id);
+            if (bestResults.size() >= size) {
+                break;
+            }
+        }
+        return _score(judgments, new SearchResultSet(totalHits, queryTime,
+                elapsedTime, bestResults));
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AtLeastOneHitAtK)) return false;
+        if (!(o instanceof NDCG)) return false;
         return super.equals(o);
     }
-
 }

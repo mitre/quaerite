@@ -1,16 +1,20 @@
 {
-  "scoreAggregators": [
+  "scorers": [
     {
-      "class": "AtLeastOneHitAtKAggregator",
+      "class": "AtLeastOneAtN",
+      "atN": 30
+    },
+    {
+      "class": "NDCG",
       "params": {
-        "atK": 30,
+        "atK": 10,
         "useForTrain": true
       }
     },
     {
-      "class": "NDCGAggregator",
+      "class": "NDCG",
       "params": {
-        "atK": 10,
+        "atK": 20,
         "useForTrain": true
       }
     }

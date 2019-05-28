@@ -25,17 +25,27 @@ import org.mitre.quaerite.core.SearchResultSet;
  * Kalervo Järvelin, Jaana Kekäläinen: Cumulated gain-based evaluation of IR techniques.
  * ACM Transactions on Information Systems 20(4), 422–446 (2002)
  */
-public class DiscountedCumulativeGain2002 extends DiscountedCumulativeGain {
+public class DiscountedCumulativeGain2002 extends AbstractJudgmentScorer {
 
     public DiscountedCumulativeGain2002(int atN) {
-        super(atN);
+        super("DCG2002", atN);
+    }
+
+    protected DiscountedCumulativeGain2002(String name, int atN) {
+        super (name, atN);
     }
 
     @Override
     public double score(Judgments judgments, SearchResultSet searchResultSet) {
+        double score = _score(judgments, searchResultSet);
+        addScore(judgments.getQueryInfo(), score);
+        return score;
+    }
+
+    protected double _score(Judgments judgments, SearchResultSet searchResultSet) {
         int rank = 1;
         double sum = 0;
-        for (int i = 0; i < atN && i < searchResultSet.size(); i++) {
+        for (int i = 0; i < getAtN() && i < searchResultSet.size(); i++) {
             String id = searchResultSet.get(i);
             if (judgments.containsJudgment(id)) {
                 double rel = judgments.getJudgment(id);
@@ -47,14 +57,10 @@ public class DiscountedCumulativeGain2002 extends DiscountedCumulativeGain {
     }
 
     @Override
-    String _getName() {
-        return "dcg2002";
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof DiscountedCumulativeGain2002)) return false;
         return super.equals(o);
     }
+
 }

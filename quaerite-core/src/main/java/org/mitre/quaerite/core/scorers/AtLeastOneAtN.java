@@ -21,37 +21,33 @@ import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.SearchResultSet;
 
 /**
- * This ignores quaerite scores and answers the question: of
- * the documents that had a quaerite score >= 0, what's
- * the best rank?
+ * Returns 1 if there was any hit in the results; 0 otherwise.
  */
-public class RecallAtK extends AbstractRankScorer {
+public class AtLeastOneAtN extends SummingScoreAggregator
+    implements JudgmentScorer {
 
-
-    public RecallAtK(int atK) {
-        super(atK);
-    }
-
-    @Override
-    String _getName() {
-        return "r";
+    public AtLeastOneAtN(int atN) {
+        super("AtLeastOneAtN", atN);
     }
 
     @Override
     public double score(Judgments judgments, SearchResultSet searchResultSet) {
-        int hits = 0;
-        for (int i = 0; i < atN && i < searchResultSet.size(); i++) {
+        int val = 0;
+        for (int i = 0; i < getAtN() && i < searchResultSet.size(); i++) {
             if (judgments.containsJudgment(searchResultSet.get(i))) {
-                hits++;
+                val = 1;
+                break;
             }
         }
-        return (double)hits/(double)atN;
+        addScore(judgments.getQueryInfo(), val);
+        return val;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RecallAtK)) return false;
+        if (!(o instanceof AtLeastOneAtN)) return false;
         return super.equals(o);
     }
+
 }

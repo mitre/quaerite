@@ -4,12 +4,10 @@
     "numThreads": 5,
     "idField": "customIdField"
   },
-  "scoreAggregators": [
+  "scorers": [
     {
-      "class": "AtLeastOneHitAtKAggregator",
-      "params": {
-        "atK": 1
-      }
+      "class": "AtLeastOneAtN",
+      "atN": 1
     }
   ],
   "experiments": {

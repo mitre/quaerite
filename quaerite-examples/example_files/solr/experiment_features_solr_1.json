@@ -9,11 +9,11 @@
     "reproductionProbability": 0.1,
     "nFolds": 3
   },
-  "scoreAggregators": [
+  "scorers": [
     {
-      "class": "NDCGAggregator",
+      "class": "NDCG",
+      "atN": 10,
       "params": {
-        "atK": 10,
         "useForTrain": true,
         "useForTest": true,
         "exportPMatrix": true

@@ -9,11 +9,11 @@
     "reproductionProbability": 0.1,
     "nFolds": 3
   },
-  "scoreAggregators": [
+  "scorers": [
     {
-      "class": "NDCGAggregator",
+      "class": "NDCG",
+      "atN": 10,
       "params": {
-        "atK": 10,
         "useForTrain": true,
         "useForTest": true,
         "exportPMatrix": true
@@ -64,39 +64,28 @@
         "negative" : {
           "multi_match": {
             "type": [
-              "best_fields",
               "cross_fields",
-              "most_fields",
               "phrase"
             ],
             "qf": {
               "fields": [
                 "title",
-                "cast",
-                "people",
-                "directors"
+                "people"
               ],
               "defaultWeights": [
                 "0.0",
-                "1.0",
-                "7.0"
+                "1.0"
               ],
               "minSetSize": 1,
-              "maxSetSize": 4
+              "maxSetSize": 2
             },
             "tie": [
               0.0,
-              0.1,
               0.2
-            ],
-            "fuzziness": [
-              0,
-              1,
-              2
             ]
           }
         },
-        "negativeBoost": [1.0, 0.1, 0.01, 0.001]
+        "negativeBoost": [1.0, 0.001]
       }
     }
   }

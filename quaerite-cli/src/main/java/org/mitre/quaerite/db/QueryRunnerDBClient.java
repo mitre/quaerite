@@ -29,7 +29,7 @@ import com.google.gson.GsonBuilder;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
-import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
+import org.mitre.quaerite.core.scorers.Scorer;
 
 /**
  * To be used by a single scorer thread.  This class is not thread safe,
@@ -44,19 +44,19 @@ public class QueryRunnerDBClient implements Closeable {
     private PreparedStatement insertScores;
     private PreparedStatement insertResults;
 
-    protected QueryRunnerDBClient(Connection connection, List<ScoreAggregator> scoreAggregators) throws SQLException {
+    protected QueryRunnerDBClient(Connection connection, List<Scorer> scorers) throws SQLException {
         insertResults = connection.prepareStatement(
                 "insert into search_results (query_id, experiment_name, json) values (?,?,?)"
         );
 
         StringBuilder insertSql = new StringBuilder();
         insertSql.append("insert into scores (query_id, query_set, query_count, experiment");
-        for (ScoreAggregator scoreAggregator : scoreAggregators) {
+        for (Scorer scorer : scorers) {
             insertSql.append(", ");
-            insertSql.append(scoreAggregator.getName());
+            insertSql.append(scorer.getName());
         }
         insertSql.append(") VALUES (?,?,?,?");
-        for (ScoreAggregator scoreAggregator : scoreAggregators) {
+        for (Scorer scorer : scorers) {
             insertSql.append(", ");
             insertSql.append("?");
         }
@@ -65,7 +65,8 @@ public class QueryRunnerDBClient implements Closeable {
     }
 
     public void insertScores(QueryInfo queryInfo,
-                             String experimentName, List<ScoreAggregator> scoreAggregators) throws SQLException {
+                             String experimentName,
+                             List<Scorer> scorers) throws SQLException {
 
         insertScores.setString(1, queryInfo.getQueryId());
         insertScores.setString(2, queryInfo.getQuerySet());
@@ -74,7 +75,7 @@ public class QueryRunnerDBClient implements Closeable {
 
         int i = 5;
         //TODO: check that score is not null
-        for (ScoreAggregator scoreAggregator : scoreAggregators) {
+        for (Scorer scoreAggregator : scorers) {
             insertScores.setDouble(i++,
                     scoreAggregator.getScores().get(queryInfo));
         }

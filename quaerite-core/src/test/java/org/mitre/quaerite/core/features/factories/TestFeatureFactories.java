@@ -110,7 +110,7 @@ public class TestFeatureFactories {
     @Test
     public void testMultipleTrainScorers() throws Exception {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            ExperimentFactory.fromJson(newReader("/test-documents/experiment_features_solr_2.json")).getTrainScoreAggregator();
+            ExperimentFactory.fromJson(newReader("/test-documents/experiment_features_solr_2.json")).getTrainScorer();
         });
     }
 

@@ -34,7 +34,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.mitre.quaerite.core.ExperimentConfig;
-import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
+import org.mitre.quaerite.core.scorers.Scorer;
 import org.mitre.quaerite.db.ExperimentDB;
 
 public class DumpResults extends AbstractExperimentRunner {
@@ -104,18 +104,18 @@ public class DumpResults extends AbstractExperimentRunner {
             querySets.add("");
         }
         Files.createDirectories(outputDir);
-        List<ScoreAggregator> targetScoreAggregators = new ArrayList<>();
+        List<Scorer> targetScorers = new ArrayList<>();
         try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
             if (scorers.size() == 0) {
-                targetScoreAggregators.addAll(experimentDB.getExperiments().getScoreAggregators());
+                targetScorers.addAll(experimentDB.getExperiments().getScorers());
             } else  {
-                for (ScoreAggregator scoreAggregator : experimentDB.getExperiments().getScoreAggregators()) {
-                    if (scorers.contains(scoreAggregator.getName())) {
-                        targetScoreAggregators.add(scoreAggregator);
+                for (Scorer scorer : experimentDB.getExperiments().getScorers()) {
+                    if (scorers.contains(scorer.getName())) {
+                        targetScorers.add(scorer);
                     }
                 }
             }
-            dumpResults(experimentDB, querySets, targetScoreAggregators, outputDir, false);
+            dumpResults(experimentDB, querySets, targetScorers, outputDir, false);
         }
     }
 }

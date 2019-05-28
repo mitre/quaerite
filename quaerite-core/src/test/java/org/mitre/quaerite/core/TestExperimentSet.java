@@ -28,10 +28,10 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.MultiMatchType;
@@ -47,8 +47,9 @@ import org.mitre.quaerite.core.queries.MultiFieldQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.TermsQuery;
-import org.mitre.quaerite.core.scoreaggregators.NDCGAggregator;
-import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
+import org.mitre.quaerite.core.scorers.AbstractJudgmentScorer;
+import org.mitre.quaerite.core.scorers.Scorer;
+import org.mitre.quaerite.core.scorers.NDCG;
 
 public class TestExperimentSet {
 
@@ -63,7 +64,7 @@ public class TestExperimentSet {
             experimentSet = ExperimentSet.fromJson(reader);
 
         }
-        assertEquals(8, experimentSet.getScoreAggregators().size());
+        assertEquals(8, experimentSet.getScorers().size());
         Map<String, Experiment> map = experimentSet.getExperiments();
         Experiment peopleTitle = map.get("people_title");
         assertEquals("people_title", peopleTitle.getName());
@@ -75,16 +76,18 @@ public class TestExperimentSet {
         assertEquals("people", fields.get(0).getFeature());
         assertEquals("title", fields.get(1).getFeature());
 
-        List<ScoreAggregator> scoreAggregators = experimentSet.getScoreAggregators();
-        for (ScoreAggregator scoreAggregator : scoreAggregators) {
-            if (scoreAggregator instanceof NDCGAggregator) {
-                assertTrue(scoreAggregator.getExportPMatrix());
-                assertTrue(scoreAggregator.getUseForTrain());
-                assertFalse(scoreAggregator.getUseForTest());
+        List<Scorer> scorers = experimentSet.getScorers();
+        for (Scorer scorer : scorers) {
+            if (scorer instanceof NDCG) {
+                assertTrue(((AbstractJudgmentScorer) scorer).getExportPMatrix());
+                assertTrue(((AbstractJudgmentScorer) scorer).getUseForTrain());
+                assertFalse(((AbstractJudgmentScorer) scorer).getUseForTest());
+            } else if (scorer instanceof AbstractJudgmentScorer) {
+                assertFalse(((AbstractJudgmentScorer) scorer).getExportPMatrix());
+                assertFalse(((AbstractJudgmentScorer) scorer).getUseForTrain());
+                assertFalse(((AbstractJudgmentScorer) scorer).getUseForTest());
             } else {
-                assertFalse(scoreAggregator.getExportPMatrix());
-                assertFalse(scoreAggregator.getUseForTrain());
-                assertFalse(scoreAggregator.getUseForTest());
+                //do nothing
             }
         }
     }
@@ -203,56 +206,70 @@ public class TestExperimentSet {
         assertEquals(experimentSet, revivified);
 
 
-
         Experiment ex = experimentSet.getExperiment("unspecified");
         Query q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.UNSPECIFIED, ((MultiFieldQuery)q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.OPERATOR.UNSPECIFIED, ((MultiFieldQuery) q).getQueryOperator().getOperator());
 
 
         ex = experimentSet.getExperiment("query_and");
         q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.AND, ((MultiFieldQuery)q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.OPERATOR.AND, ((MultiFieldQuery) q).getQueryOperator().getOperator());
 
         ex = experimentSet.getExperiment("query_or_none");
         q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
-        assertEquals(QueryOperator.MM.NONE, ((MultiFieldQuery)q).getQueryOperator().getMM());
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery) q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.NONE, ((MultiFieldQuery) q).getQueryOperator().getMM());
 
         ex = experimentSet.getExperiment("query_or_int");
         q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
-        assertEquals(QueryOperator.MM.INTEGER, ((MultiFieldQuery)q).getQueryOperator().getMM());
-        assertEquals(2, ((MultiFieldQuery)q).getQueryOperator().getInt());
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery) q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.INTEGER, ((MultiFieldQuery) q).getQueryOperator().getMM());
+        assertEquals(2, ((MultiFieldQuery) q).getQueryOperator().getInt());
 
         ex = experimentSet.getExperiment("query_or_int_no_op");
         q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
-        assertEquals(QueryOperator.MM.INTEGER, ((MultiFieldQuery)q).getQueryOperator().getMM());
-        assertEquals(2, ((MultiFieldQuery)q).getQueryOperator().getInt());
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery) q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.INTEGER, ((MultiFieldQuery) q).getQueryOperator().getMM());
+        assertEquals(2, ((MultiFieldQuery) q).getQueryOperator().getInt());
 
         ex = experimentSet.getExperiment("query_or_percent_neg20");
         q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
-        assertEquals(QueryOperator.MM.FLOAT, ((MultiFieldQuery)q).getQueryOperator().getMM());
-        assertEquals(-0.20, ((MultiFieldQuery)q).getQueryOperator().getMmFloat(), 0.01);
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery) q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.FLOAT, ((MultiFieldQuery) q).getQueryOperator().getMM());
+        assertEquals(-0.20, ((MultiFieldQuery) q).getQueryOperator().getMmFloat(), 0.01);
 
         ex = experimentSet.getExperiment("query_or_percent_no_op_neg20");
         q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
-        assertEquals(QueryOperator.MM.FLOAT, ((MultiFieldQuery)q).getQueryOperator().getMM());
-        assertEquals(-0.20, ((MultiFieldQuery)q).getQueryOperator().getMmFloat(), 0.001);
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery) q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.FLOAT, ((MultiFieldQuery) q).getQueryOperator().getMM());
+        assertEquals(-0.20, ((MultiFieldQuery) q).getQueryOperator().getMmFloat(), 0.001);
 
         ex = experimentSet.getExperiment("query_or_percent_18");
         q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
-        assertEquals(QueryOperator.MM.FLOAT, ((MultiFieldQuery)q).getQueryOperator().getMM());
-        assertEquals(0.18, ((MultiFieldQuery)q).getQueryOperator().getMmFloat(), 0.01);
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery) q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.FLOAT, ((MultiFieldQuery) q).getQueryOperator().getMM());
+        assertEquals(0.18, ((MultiFieldQuery) q).getQueryOperator().getMmFloat(), 0.01);
 
         ex = experimentSet.getExperiment("query_or_percent_no_op_18");
         q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery)q).getQueryOperator().getOperator());
-        assertEquals(QueryOperator.MM.FLOAT, ((MultiFieldQuery)q).getQueryOperator().getMM());
-        assertEquals(0.18, ((MultiFieldQuery)q).getQueryOperator().getMmFloat(), 0.01);
+        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery) q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.MM.FLOAT, ((MultiFieldQuery) q).getQueryOperator().getMM());
+        assertEquals(0.18, ((MultiFieldQuery) q).getQueryOperator().getMmFloat(), 0.01);
 
+    }
+
+    @Test
+    public void testBadAtN() throws Exception {
+        //none of the scorers have an "atN" set
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> {
+                    try (Reader reader =
+                                 new BufferedReader(new InputStreamReader(
+                                         getClass().getResourceAsStream(
+                                                 "/test-documents/experiments_solr_no_atN.json"),
+                                         StandardCharsets.UTF_8))) {
+                        ExperimentSet.fromJson(reader);
+                    }
+                });
     }
 }

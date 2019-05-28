@@ -20,29 +20,28 @@ package org.mitre.quaerite.core.scorers;
 
 
 import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
 
-public class TotalQueryTime extends AbstractRankScorer {
+public class TotalQueryTime extends SummingScoreAggregator
+    implements SearchResultSetScorer {
 
-    public TotalQueryTime() {
-        super(-1);
+    public TotalQueryTime(int atN) {
+        super("TotalQueryTime", atN);
     }
 
-    @Override
-    public String _getName() {
-        return "TotalQueryTime";
-    }
-
-
-    @Override
-    public double score(Judgments judgments, SearchResultSet searchResultSet) {
-        return searchResultSet.getQueryTime();
-    }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof TotalQueryTime)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public double score(QueryInfo queryInfo, SearchResultSet searchResultSet) {
+        double qTime = searchResultSet.getQueryTime();
+        addScore(queryInfo, qTime);
+        return qTime;
     }
 }

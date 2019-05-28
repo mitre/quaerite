@@ -115,6 +115,9 @@ public abstract class SearchClient implements Closeable {
             if (status == 200) {
                 try (Reader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8))) {
                     JsonElement element =  parser.parse(reader);
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace(element);
+                    }
                     return new JsonResponse(200, element);
                 }
             } else {

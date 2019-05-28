@@ -25,23 +25,20 @@ import org.mitre.quaerite.core.SearchResultSet;
  */
 public class HighestRankReciprocal extends HighestRank {
 
-
     public HighestRankReciprocal(int atN) {
-        super(atN);
+        super("highestRankReciprocal", atN);
     }
 
     @Override
     public double score(Judgments judgments, SearchResultSet searchResultSet) {
-        double rank = super.score(judgments, searchResultSet);
-        if (rank <= 0) {
+        int rank = super._score(judgments, searchResultSet);
+        if (rank == NOT_FOUND) {
             return NOT_FOUND;
+        } else {
+            double ret = (double)1/rank;
+            addScore(judgments.getQueryInfo(), ret);
+            return ret;
         }
-        return (double)1/rank;
-    }
-
-    @Override
-    String _getName() {
-        return "HighestRankReciprocal";
     }
 
     @Override

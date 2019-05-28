@@ -64,8 +64,8 @@ public class TestNDCG {
 
     @Test
     public void testNDCG() {
-        NormalizedDiscountedCumulativeGain ndcg =
-                new NormalizedDiscountedCumulativeGain(10);
+        NDCG ndcg =
+                new NDCG(10);
         Assertions.assertEquals(0.785, ndcg.score(JUDGMENTS, RESULT_SET), 0.001);
     }
 }

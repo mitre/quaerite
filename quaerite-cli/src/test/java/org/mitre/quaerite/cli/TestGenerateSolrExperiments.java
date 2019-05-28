@@ -34,8 +34,8 @@ import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.features.QueryOperator;
-import org.mitre.quaerite.core.scoreaggregators.NDCGAggregator;
-import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
+import org.mitre.quaerite.core.scorers.NDCG;
+import org.mitre.quaerite.core.scorers.Scorer;
 
 
 public class TestGenerateSolrExperiments {
@@ -67,10 +67,10 @@ public class TestGenerateSolrExperiments {
             set = ExperimentSet.fromJson(reader);
         }
         assertEquals(960, set.getExperiments().size());
-        assertEquals(1, set.getScoreAggregators().size());
+        assertEquals(1, set.getScorers().size());
 
-        ScoreAggregator scoreAggregator = set.getScoreAggregators().get(0);
-        assertEquals(NDCGAggregator.class, scoreAggregator.getClass());
+        Scorer scorer = set.getScorers().get(0);
+        assertEquals(NDCG.class, scorer.getClass());
 
         List<Experiment> experiments = new ArrayList<>(set.getExperiments().values());
         for (int i = 0; i < 10; i++) {

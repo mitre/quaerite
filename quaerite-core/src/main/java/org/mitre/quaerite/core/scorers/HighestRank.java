@@ -23,26 +23,33 @@ import org.mitre.quaerite.core.SearchResultSet;
 /**
  * Highest single rank; {@link #NOT_FOUND} if not found
  */
-public class HighestRank extends AbstractRankScorer {
+public class HighestRank extends AbstractJudgmentScorer {
     public final static int NOT_FOUND = -1;
+
     public HighestRank(int atN) {
-        super(atN);
+        super("highestRank", atN);
+    }
+
+    protected HighestRank(String name, int atN) {
+        super(name, atN);
     }
 
     @Override
     public double score(Judgments judgments, SearchResultSet searchResultSet) {
+        int highest = _score(judgments, searchResultSet);
+        if (highest != NOT_FOUND) {
+            addScore(judgments.getQueryInfo(), highest);
+        }
+        return NOT_FOUND;
+    }
 
+    protected int _score(Judgments judgments, SearchResultSet searchResultSet) {
         for (int i = 0; i < getAtN() && i < searchResultSet.size(); i++) {
             if (judgments.containsJudgment(searchResultSet.get(i))) {
                 return i+1;
             }
         }
         return NOT_FOUND;
-    }
-
-    @Override
-    String _getName() {
-        return "HighestRank";
     }
 
     @Override

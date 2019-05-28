@@ -29,18 +29,18 @@ import org.mitre.quaerite.core.SearchResultSet;
  * Machine learning (ICML '05).
  * ACM, New York, NY, USA, 89-96. DOI=10.1145/1102351.1102363
  */
-public class DiscountedCumulativeGain2005 extends DiscountedCumulativeGain {
+public class DiscountedCumulativeGain2005 extends DiscountedCumulativeGain2002 {
 
 
     public DiscountedCumulativeGain2005(int atN) {
-        super(atN);
+        super("DCG2005", atN);
     }
 
     @Override
-    public double score(Judgments judgments, SearchResultSet searchResultSet) {
+    protected double _score(Judgments judgments, SearchResultSet searchResultSet) {
         int rank = 1;
         double sum = 0;
-        for (int i = 0; i < atN && i < searchResultSet.size(); i++) {
+        for (int i = 0; i < getAtN() && i < searchResultSet.size(); i++) {
             String id = searchResultSet.get(i);
             if (judgments.containsJudgment(id)) {
                 double rel = judgments.getJudgment(id);
@@ -49,11 +49,6 @@ public class DiscountedCumulativeGain2005 extends DiscountedCumulativeGain {
             rank++;
         }
         return sum;
-    }
-
-    @Override
-    String _getName() {
-        return "dcg2005";
     }
 
     @Override

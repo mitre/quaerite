@@ -72,14 +72,14 @@ public class TestESExamplesAdvanced {
 
         GenerateExperiments.main(new String[]{
                 "-f", CWD.resolve("es/experiment_features_es_1.json").toAbsolutePath().toString(),
-                "-e", "C:/data/quaerite/examples/experiments_es_1.json",
+                "-e", "C:/data/quaerite/examples/experiments_es_advanced_1.json",
                 "-p",
                 "-m", "50"
         });
         RunExperiments.main(
                 new String[]{
-                        "-db", "C:/data/quaerite/test_db3",
-                        "-e", "C:/data/quaerite/examples/experiments_es_1.json",
+                        "-db", "C:/data/quaerite/dbs/test_db3",
+                        "-e", "C:/data/quaerite/examples/experiments_es_advanced_1.json",
                         "-j", CWD.resolve("movie_judgments_boosting.csv").toAbsolutePath().toString(),
                         "-r", "C:/data/quaerite/examples/reports"
                 }

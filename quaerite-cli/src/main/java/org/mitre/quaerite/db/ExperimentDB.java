@@ -49,10 +49,11 @@ import org.mitre.quaerite.core.JudgmentList;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
-import org.mitre.quaerite.core.scoreaggregators.DistributionalScoreAggregator;
-import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
-import org.mitre.quaerite.core.scoreaggregators.ScoreAggregatorListSerializer;
-import org.mitre.quaerite.core.scoreaggregators.SummingScoreAggregator;
+import org.mitre.quaerite.core.scorers.AbstractJudgmentScorer;
+import org.mitre.quaerite.core.scorers.Scorer;
+import org.mitre.quaerite.core.scorers.DistributionalScoreAggregator;
+import org.mitre.quaerite.core.scorers.SummingScoreAggregator;
+import org.mitre.quaerite.core.serializers.ScorerListSerializer;
 import org.mitre.quaerite.core.stats.ExperimentNameScorePair;
 import org.mitre.quaerite.core.stats.ExperimentScorePair;
 
@@ -72,8 +73,8 @@ public class ExperimentDB implements Closeable {
 
     private final PreparedStatement getQuerySets;
 
-    private final PreparedStatement selectScoreAggregators;
-    private final PreparedStatement insertScoreAggregators;
+    private final PreparedStatement selectScorers;
+    private final PreparedStatement insertScorers;
 
     private PreparedStatement selectQueryComparisons;
 
@@ -132,10 +133,10 @@ public class ExperimentDB implements Closeable {
                 "insert into judgments (query_id, query_set, query_count, json) values (?,?,?,?)"
         );
 
-        selectScoreAggregators = connection.prepareStatement(
+        selectScorers = connection.prepareStatement(
             "select name, json from SCORERS"
         );
-        insertScoreAggregators = connection.prepareStatement(
+        insertScorers = connection.prepareStatement(
                 "merge into scorers KEY(name) values ((select max(id) from " +
                         "scorers s where s.name=?), ?, ?)"
         );
@@ -255,12 +256,12 @@ public class ExperimentDB implements Closeable {
                 experimentSet.addExperiment(ex);
             }
         }
-        try (ResultSet resultSet = selectScoreAggregators.executeQuery()) {
+        try (ResultSet resultSet = selectScorers.executeQuery()) {
             while (resultSet.next()) {
                 String name = resultSet.getString(1);
                 String json = resultSet.getString(2);
-                ScoreAggregator rankScorer = ScoreAggregatorListSerializer.fromJson(json);
-                experimentSet.addScoreAggregator(rankScorer);
+                Scorer scorer = ScorerListSerializer.fromJson(json);
+                experimentSet.addScorer(scorer);
             }
         }
         return experimentSet;
@@ -277,10 +278,12 @@ public class ExperimentDB implements Closeable {
         insertJudgments.execute();
     }
 
-    public Set<String> extractQuerySets(List<ScoreAggregator> scoreAggregators) {
+    public Set<String> extractQuerySets(List<Scorer> scorers) {
         Set<String> querySets = new HashSet<>();
-        for (ScoreAggregator aggregator : scoreAggregators) {
-            querySets.addAll(aggregator.getQuerySets());
+        for (Scorer scorer : scorers) {
+            if (scorer instanceof AbstractJudgmentScorer) {
+                querySets.addAll(((AbstractJudgmentScorer)scorer).getQuerySets());
+            }
         }
         return querySets;
     }
@@ -352,28 +355,28 @@ public class ExperimentDB implements Closeable {
         initSearchResults();
     }
 
-    public void addScoreAggregator(ScoreAggregator scoreAggregator) throws SQLException {
-        String json = ScoreAggregatorListSerializer.toJson(scoreAggregator);
-        insertScoreAggregators.clearParameters();
-        insertScoreAggregators.setString(1, scoreAggregator.getName());
-        insertScoreAggregators.setString(2, scoreAggregator.getName());
-        insertScoreAggregators.setString(3, ScoreAggregatorListSerializer.toJson(scoreAggregator));
-        insertScoreAggregators.execute();
+    public void addScorer(Scorer scorer) throws SQLException {
+        String json = ScorerListSerializer.toJson(scorer);
+        insertScorers.clearParameters();
+        insertScorers.setString(1, scorer.getName());
+        insertScorers.setString(2, scorer.getName());
+        insertScorers.setString(3, json);
+        insertScorers.execute();
     }
 
-    public void initScoreTable(List<ScoreAggregator> scoreAggregators) throws SQLException {
+    public void initScoreTable(List<Scorer> scorers) throws SQLException {
         boolean mismatch = false;
         boolean tableProbDoesntExist = false;
         try(Statement st = connection.createStatement()) {
             try (ResultSet rs = st.executeQuery("select * from scores limit 1")) {
                 ResultSetMetaData metaData = rs.getMetaData();
                 //4 = queryset query querycount experiment
-                if (metaData.getColumnCount() != scoreAggregators.size()+4) {
+                if (metaData.getColumnCount() != scorers.size()+4) {
                     mismatch = true;
                 }
                 if (! mismatch) {
-                    for (int i = 0; i < scoreAggregators.size(); i++) {
-                        if (!metaData.getColumnName(i + 5).equalsIgnoreCase(scoreAggregators.get(i).getName())) {
+                    for (int i = 0; i < scorers.size(); i++) {
+                        if (!metaData.getColumnName(i + 5).equalsIgnoreCase(scorers.get(i).getName())) {
                             mismatch = true;
                             break;
                         }
@@ -387,13 +390,12 @@ public class ExperimentDB implements Closeable {
             if (mismatch) {
                 LOG.warn("dropping score table to reload with new columns");
             }
-            dropCreateScoreTables(scoreAggregators);
+            dropCreateScoreTables(scorers);
         }
-
 
     }
 
-    private void dropCreateScoreTables(List<ScoreAggregator> scoreAggregators) throws SQLException {
+    private void dropCreateScoreTables(List<Scorer> scorers) throws SQLException {
         executeSQL(connection, "drop table if exists scores");
         executeSQL(connection, "drop index if exists scores_query_idx");
         executeSQL(connection, "drop index if exists scores_experiment_idx");
@@ -405,11 +407,11 @@ public class ExperimentDB implements Closeable {
                 "QUERY_COUNT INT, "+
                 "EXPERIMENT VARCHAR(1024) NOT NULL, ");
         int i = 0;
-        for (ScoreAggregator scoreAggregator : scoreAggregators) {
+        for (Scorer scorer : scorers) {
             if (i++ > 0) {
                 sql.append(",");
             }
-            sql.append(scoreAggregator.getName()).append(" DOUBLE");
+            sql.append(scorer.getName()).append(" DOUBLE");
         }
         sql.append(")");
         executeSQL(connection, sql.toString());
@@ -427,16 +429,16 @@ public class ExperimentDB implements Closeable {
         sql.append("create table scores_aggregated (query_set varchar(256) not null," +
                 "experiment varchar(256) not null, ");
         i = 0;
-        for (ScoreAggregator scoreAggregator : scoreAggregators) {
+        for (Scorer scorer : scorers) {
             if (i++ > 0) {
                 sql.append(",");
             }
             int j = 0;
-            for (String statistic : scoreAggregator.getStatistics()) {
+            for (String statistic : ((Scorer)scorer).getStatistics()) {
                 if (j++ > 0) {
                     sql.append(",");
                 }
-                sql.append(scoreAggregator.getName()+"_"+statistic).append(" DOUBLE");
+                sql.append(scorer.getName()+"_"+statistic).append(" DOUBLE");
             }
         }
         sql.append(")");
@@ -468,22 +470,22 @@ public class ExperimentDB implements Closeable {
     }
 
     public void insertScoresAggregated(String experimentName,
-                                       List<ScoreAggregator> scoreAggregators) throws SQLException {
+                                       List<Scorer> scorers) throws SQLException {
 
         if (insertScoresAggregated == null) {
-            initInsertScoresAggregated(scoreAggregators);
+            initInsertScoresAggregated(scorers);
         }
-        Set<String> querySets = extractQuerySets(scoreAggregators);
+        Set<String> querySets = extractQuerySets(scorers);
         for (String querySet : querySets) {
             insertScoresAggregated.clearParameters();
             insertScoresAggregated.setString(1, querySet);
             insertScoresAggregated.setString(2, experimentName);
             int i = 3;
-            for (ScoreAggregator scoreAggregator : scoreAggregators) {
+            for (Scorer scorer : scorers) {
                 Map<String, Double> statValues =
-                        scoreAggregator.getSummaryStatistics(querySet);
+                        scorer.getSummaryStatistics(querySet);
 
-                for (String stat : scoreAggregator.getStatistics()) {
+                for (String stat : scorer.getStatistics()) {
                     insertScoresAggregated.setDouble(i++, statValues.get(stat));
                 }
             }
@@ -492,21 +494,21 @@ public class ExperimentDB implements Closeable {
 
     }
 
-    private void initInsertScoresAggregated(List<ScoreAggregator> scoreAggregators) throws SQLException {
+    private void initInsertScoresAggregated(List<Scorer> scorers) throws SQLException {
         StringBuilder sb = new StringBuilder();
         sb.append("insert into scores_aggregated (QUERY_SET, EXPERIMENT,");
         int i = 0;
-        for (ScoreAggregator scoreAggregator : scoreAggregators) {
-            for (String statName : scoreAggregator.getStatistics()) {
+        for (Scorer scorer : scorers) {
+            for (String statName : scorer.getStatistics()) {
                 if (i++ > 0) {
                     sb.append(", ");
                 }
-                sb.append(scoreAggregator.getName()).append("_").append(statName);
+                sb.append(scorer.getName()).append("_").append(statName);
             }
         }
         sb.append(" ) values ( ?,?");
-        for (ScoreAggregator scoreAggregator : scoreAggregators) {
-            for (String statName : scoreAggregator.getStatistics()) {
+        for (Scorer scorer : scorers) {
+            for (String statName : scorer.getStatistics()) {
                 sb.append(",?");
             }
         }
@@ -594,15 +596,15 @@ public class ExperimentDB implements Closeable {
         return false;
     }
 
-    public Map<String, Double> getKeyExperimentScore(ScoreAggregator scoreAggregator) throws SQLException {
+    public Map<String, Double> getKeyExperimentScore(Scorer scorer) throws SQLException {
         Map<String, Double> map = new HashMap<>();
         String columnName;
-        if (scoreAggregator instanceof SummingScoreAggregator) {
-            columnName = scoreAggregator.getName()+"_"+SummingScoreAggregator.SUM;
-        } else if (scoreAggregator instanceof DistributionalScoreAggregator) {
-            columnName = scoreAggregator.getName()+"_"+DistributionalScoreAggregator.MEAN;
+        if (scorer instanceof SummingScoreAggregator) {
+            columnName = ((SummingScoreAggregator)scorer).getName()+"_"+SummingScoreAggregator.SUM;
+        } else if (scorer instanceof DistributionalScoreAggregator) {
+            columnName = ((DistributionalScoreAggregator)scorer).getName()+"_"+DistributionalScoreAggregator.MEAN;
         } else {
-            throw new IllegalArgumentException("I don't yet support: "+ scoreAggregator.getClass());
+            throw new IllegalArgumentException("I don't yet support: "+ scorer.getClass());
         }
         String sql = "select experiment, "+columnName+" from scores_aggregated";
         try (Statement st = connection.createStatement()) {
@@ -689,9 +691,9 @@ public class ExperimentDB implements Closeable {
         return selectQueryComparisons.executeQuery();
     }
 
-    public void addScoreAggregators(Collection<ScoreAggregator> scoreAggregators) throws SQLException {
-        for (ScoreAggregator scoreAggregator : scoreAggregators) {
-            addScoreAggregator(scoreAggregator);
+    public void addScoreAggregators(Collection<Scorer> scorers) throws SQLException {
+        for (Scorer scorer : scorers) {
+            addScorer(scorer);
         }
     }
 
@@ -767,7 +769,7 @@ public class ExperimentDB implements Closeable {
     }
 
     public QueryRunnerDBClient getQueryRunnerDBClient(
-            List<ScoreAggregator> scoreAggregators) throws SQLException{
-        return new QueryRunnerDBClient(connection, scoreAggregators);
+            List<Scorer> scorers) throws SQLException{
+        return new QueryRunnerDBClient(connection, scorers);
     }
 }

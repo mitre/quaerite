@@ -1,10 +1,8 @@
 {
-  "scoreAggregators": [
+  "scorers": [
     {
-      "class": "NDCGAggregator",
-      "params": {
-        "atK": 10
-      }
+      "class": "NDCG",
+      "atN": 10
     }
   ],
   "featureSets" : {

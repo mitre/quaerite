@@ -94,6 +94,10 @@ public class ESClient extends SearchClient {
     public SearchResultSet search(QueryRequest query) throws SearchClientException, IOException {
         long start = System.currentTimeMillis();
         String jsonQuery = buildJsonQuery(query, Collections.EMPTY_LIST);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(jsonQuery);
+        }
+        //System.out.println(jsonQuery);
         JsonResponse json = postJson(url + "_search", jsonQuery);
         if (json.getStatus() != 200) {
             throw new SearchClientException(json.getMsg());

@@ -17,30 +17,29 @@
 package org.mitre.quaerite.core.scorers;
 
 
-import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
 
 /**
  * How many queries had 0 results returned
  */
-public class ZeroResults extends AbstractRankScorer {
+public class ZeroResults extends SummingScoreAggregator implements SearchResultSetScorer {
 
 
     public ZeroResults() {
-        super(1);
+        super("ZeroResults", 1);
     }
 
     @Override
-    String _getName() {
-        return "ZeroResults";
-    }
-
-    @Override
-    public double score(Judgments judgments, SearchResultSet searchResultSet) {
+    public double score(QueryInfo queryInfo, SearchResultSet searchResultSet) {
+        int ret = -1;
         if (searchResultSet.size() == 0) {
-            return 1;
+            ret = 1;
+        } else {
+            ret = 0;
         }
-        return 0;
+        addScore(queryInfo, ret);
+        return ret;
     }
 
     @Override

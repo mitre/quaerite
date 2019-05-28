@@ -13,29 +13,42 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
-package org.mitre.quaerite.core.scoreaggregators;
+package org.mitre.quaerite.core.scorers;
 
-import java.util.Map;
 
-import org.mitre.quaerite.core.scorers.AbstractRankScorer;
-import org.mitre.quaerite.core.scorers.TotalDocsReturned;
+import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.SearchResultSet;
 
-public class TotalDocsReturnedAggregator extends SummingScoreAggregator {
+/**
+ * This ignores quaerite scores and answers the question: of
+ * the documents that had a quaerite score >= 0, what's
+ * the best rank?
+ */
+public class RecallAtN extends AbstractJudgmentScorer {
 
-    public TotalDocsReturnedAggregator(Map<String, String> params) {
-        this(new TotalDocsReturned());
+
+    public RecallAtN(int atN) {
+        super("recall", atN);
     }
 
-    TotalDocsReturnedAggregator(AbstractRankScorer scorer) {
-        super(scorer);
+    @Override
+    public double score(Judgments judgments, SearchResultSet searchResultSet) {
+        int hits = 0;
+        for (int i = 0; i < getAtN() && i < searchResultSet.size(); i++) {
+            if (judgments.containsJudgment(searchResultSet.get(i))) {
+                hits++;
+            }
+        }
+        double v = (double)hits/(double)getAtN();
+        addScore(judgments.getQueryInfo(), v);
+        return v;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TotalDocsReturnedAggregator)) return false;
+        if (!(o instanceof RecallAtN)) return false;
         return super.equals(o);
     }
 }

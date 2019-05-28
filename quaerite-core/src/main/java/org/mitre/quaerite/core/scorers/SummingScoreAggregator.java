@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  */
-package org.mitre.quaerite.core.scoreaggregators;
+package org.mitre.quaerite.core.scorers;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,20 +25,17 @@ import java.util.Map;
 import java.util.Set;
 
 import org.mitre.quaerite.core.QueryInfo;
-import org.mitre.quaerite.core.scorers.AbstractRankScorer;
 
-public class SummingScoreAggregator extends AbstractScoreAggregator {
+public abstract class SummingScoreAggregator extends Scorer {
     public static String SUM = "sum";
 
     private static final List<String> STATISTICS =
             Collections.unmodifiableList(Arrays.asList(new String[]{SUM}));
 
+    public SummingScoreAggregator(String name, int atN) {
+        super(name, atN);
 
-    SummingScoreAggregator(AbstractRankScorer scorer) {
-        super(scorer);
     }
-
-
 
     @Override
     public Map<String, Double> getSummaryStatistics(String querySet) {

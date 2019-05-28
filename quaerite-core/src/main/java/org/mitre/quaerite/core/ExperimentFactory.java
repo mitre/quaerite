@@ -31,10 +31,12 @@ import org.mitre.quaerite.core.features.factories.FeatureFactory;
 import org.mitre.quaerite.core.features.factories.QueryFactory;
 import org.mitre.quaerite.core.features.factories.StringFeatureFactory;
 import org.mitre.quaerite.core.queries.Query;
-import org.mitre.quaerite.core.scoreaggregators.ScoreAggregator;
-import org.mitre.quaerite.core.scoreaggregators.ScoreAggregatorListSerializer;
+import org.mitre.quaerite.core.scorers.AbstractJudgmentScorer;
+import org.mitre.quaerite.core.scorers.JudgmentScorer;
+import org.mitre.quaerite.core.scorers.Scorer;
 import org.mitre.quaerite.core.serializers.FeatureFactorySerializer;
 import org.mitre.quaerite.core.serializers.QuerySerializer;
+import org.mitre.quaerite.core.serializers.ScorerListSerializer;
 import org.mitre.quaerite.core.util.MathUtil;
 
 public class ExperimentFactory {
@@ -44,22 +46,23 @@ public class ExperimentFactory {
     private GAConfig gaConfig = new GAConfig();
 
     List<Query> filterQueries = new ArrayList<>();
-    List<ScoreAggregator> scoreAggregators;
+    List<Scorer> scorers;
     FeatureFactories featureFactories;
 
     public static ExperimentFactory fromJson(Reader reader) {
         Gson gson = new GsonBuilder().setPrettyPrinting()
-                .registerTypeHierarchyAdapter(ScoreAggregator.class, new ScoreAggregatorListSerializer.ScoreAggregatorSerializer())
+                .registerTypeHierarchyAdapter(Scorer.class,
+                        new ScorerListSerializer.ScorerSerializer<>())
                 .registerTypeAdapter(FeatureFactories.class, new FeatureFactorySerializer())
                 .registerTypeAdapter(Query.class, new QuerySerializer())
                 .create();
         return gson.fromJson(reader, ExperimentFactory.class);
     }
-    private transient ScoreAggregator trainScoreAggregator;
-    private transient ScoreAggregator testScoreAggregator;
+    private transient Scorer trainScorer;
+    private transient Scorer testScorer;
 
-    public List<ScoreAggregator> getScoreAggregators() {
-        return scoreAggregators;
+    public List<Scorer> getScorers() {
+        return scorers;
     }
 
     @Override
@@ -67,10 +70,10 @@ public class ExperimentFactory {
         return "ExperimentFactory{" +
                 "gaConfig=" + gaConfig +
                 ", filterQueries=" + filterQueries +
-                ", scoreAggregators=" + scoreAggregators +
+                ", scorers=" + scorers +
                 ", featureFactories=" + featureFactories +
-                ", trainScoreAggregator=" + trainScoreAggregator +
-                ", testScoreAggregator=" + testScoreAggregator +
+                ", trainScorer=" + trainScorer +
+                ", testScorer=" + testScorer +
                 '}';
     }
 
@@ -78,44 +81,46 @@ public class ExperimentFactory {
         return featureFactories;
     }
 
-    public ScoreAggregator getTrainScoreAggregator() {
-        if (trainScoreAggregator == null) {
-            if (scoreAggregators.size() == 0) {
-                trainScoreAggregator = scoreAggregators.get(0);
+    public Scorer getTrainScorer() {
+        if (trainScorer == null) {
+            if (scorers.size() == 0) {
+                trainScorer = scorers.get(0);
             } else {
                 boolean found = false;
-                for (ScoreAggregator scoreAggregator : scoreAggregators) {
-                    if (scoreAggregator.getUseForTrain()) {
+                for (Scorer scorer : scorers) {
+                    if ((scorer instanceof AbstractJudgmentScorer) &&
+                            ((AbstractJudgmentScorer)scorer).getUseForTrain()) {
                         if (found) {
                             throw new IllegalArgumentException("Can't have more than one train score aggregator!");
                         }
-                        trainScoreAggregator = scoreAggregator;
+                        trainScorer = scorer;
                         found = true;
                     }
                 }
             }
         }
-        return trainScoreAggregator;
+        return trainScorer;
     }
 
-    public ScoreAggregator getTestScoreAggregator() {
-        if (testScoreAggregator == null) {
-            if (scoreAggregators.size() == 1) {
-                testScoreAggregator = scoreAggregators.get(0);
+    public Scorer getTestScorer() {
+        if (testScorer == null) {
+            if (scorers.size() == 1) {
+                testScorer = scorers.get(0);
             } else {
                 boolean found = false;
-                for (ScoreAggregator scoreAggregator : scoreAggregators) {
-                    if (scoreAggregator.getUseForTest()) {
+                for (Scorer scorer : scorers) {
+                    if (scorer instanceof AbstractJudgmentScorer &&
+                            ((AbstractJudgmentScorer)scorer).getUseForTest()) {
                         if (found) {
                             throw new IllegalArgumentException("Can't have more than one test score aggregator!");
                         }
-                        testScoreAggregator = scoreAggregator;
+                        testScorer = scorer;
                         found = true;
                     }
                 }
             }
         }
-        return testScoreAggregator;
+        return testScorer;
     }
 
     public GAConfig getGAConfig() {

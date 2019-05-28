@@ -1,34 +1,10 @@
 {
+  "experimentConfig" :
+  {
+    "numThreads": 20,
+    "idField": "customIdField"
+  },
   "scorers": [
-    {
-      "class": "AtLeastOneAtN",
-      "atN": 1
-    },
-    {
-      "class": "AtLeastOneAtN",
-      "atN": 3
-    },
-    {
-      "class": "AtLeastOneAtN",
-      "atN": 5
-    },
-    {
-      "class": "AtLeastOneAtN",
-      "atN": 10
-    },
-    {
-      "class": "AtLeastOneAtN",
-      "atN": 30
-    },
-    {
-      "class": "NDCG",
-      "atN": 10,
-      "params": {
-        "useForTrain": true,
-        "useForTest": false,
-        "exportPMatrix": true
-      }
-    },
     {
       "class": "TotalDocsReturned"
     },

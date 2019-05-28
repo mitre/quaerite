@@ -20,23 +20,21 @@ package org.mitre.quaerite.core.scorers;
 
 
 import org.mitre.quaerite.core.Judgments;
+import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
 
-public class TotalDocsReturned extends AbstractRankScorer {
+public class TotalDocsReturned extends SummingScoreAggregator
+    implements SearchResultSetScorer {
 
-    public TotalDocsReturned() {
-        super(-1);
+    public TotalDocsReturned(int atN) {
+        super("TotalDocsReturned", atN);
     }
 
     @Override
-    public String _getName() {
-        return "TotalDocsReturned";
-    }
-
-
-    @Override
-    public double score(Judgments judgments, SearchResultSet searchResultSet) {
-        return searchResultSet.getTotalHits();
+    public double score(QueryInfo queryInfo, SearchResultSet searchResultSet) {
+        double hits =  searchResultSet.getTotalHits();
+        addScore(queryInfo, hits);
+        return hits;
     }
 
     @Override

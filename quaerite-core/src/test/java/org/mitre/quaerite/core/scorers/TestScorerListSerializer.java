@@ -14,11 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.mitre.quaerite.core;
+package org.mitre.quaerite.core.scorers;
 
-public interface RankScorer {
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-    String getName();
-    double score(Judgments judgments, SearchResultSet searchResultSet);
+import org.junit.jupiter.api.Test;
+import org.mitre.quaerite.core.serializers.ScorerListSerializer;
+
+public class TestScorerListSerializer {
+
+    @Test
+    public void testBasic() {
+        Scorer scorer = new AtLeastOneAtN(2);
+        String json = ScorerListSerializer.toJson(scorer);
+        Scorer revivified = ScorerListSerializer.fromJson(json);
+        assertEquals(revivified.getClass().getCanonicalName(), revivified.getClass().getCanonicalName());
+        assertEquals(scorer.getAtN(),
+                ((Scorer)revivified).getAtN());
+    }
 
 }

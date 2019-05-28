@@ -1,12 +1,8 @@
 {
-  "scoreAggregators": [
+  "scorers": [
     {
-      "class": "NDCGAggregator",
-      "params": {
-        "atK": 10,
-        "useForTrain": true,
-        "exportPMatrix": true
-      }
+      "class": "NDCG",
+      "atN": 10
     }
   ],
   "experiments": {

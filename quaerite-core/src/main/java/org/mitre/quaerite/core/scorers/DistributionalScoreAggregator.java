@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  */
-package org.mitre.quaerite.core.scoreaggregators;
+package org.mitre.quaerite.core.scorers;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,9 +28,8 @@ import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.util.DoubleArray;
 import org.apache.commons.math3.util.ResizableDoubleArray;
 import org.mitre.quaerite.core.QueryInfo;
-import org.mitre.quaerite.core.scorers.AbstractRankScorer;
 
-public class DistributionalScoreAggregator extends AbstractScoreAggregator {
+public abstract class DistributionalScoreAggregator extends Scorer {
 
     public static String MEAN = "mean";
     public static String MEDIAN = "median";
@@ -39,11 +38,9 @@ public class DistributionalScoreAggregator extends AbstractScoreAggregator {
     private static final List<String> STATISTICS =
             Collections.unmodifiableList(Arrays.asList(new String[]{MEAN, MEDIAN, STDEV}));
 
-    public DistributionalScoreAggregator(AbstractRankScorer scorer) {
-        super(scorer);
+    public DistributionalScoreAggregator(String name, int atN) {
+        super(name, atN);
     }
-
-
     @Override
     public Map<String, Double> getSummaryStatistics(String querySet) {
         StatSummarizer statSummarizer = new StatSummarizer();
@@ -88,6 +85,7 @@ public class DistributionalScoreAggregator extends AbstractScoreAggregator {
             return summaryStatistics.getStandardDeviation();
         }
     }
+
     @Override
     public String getPrimaryStatisticName() {
         return getName()+"_"+MEAN;

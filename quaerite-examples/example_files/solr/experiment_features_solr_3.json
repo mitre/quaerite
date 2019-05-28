@@ -1,7 +1,7 @@
 {
   "gaConfig": {
     "numThreads": 6,
-    "population": 20,
+    "population": 15,
     "generations": 5,
     "crossoverProbability": 0.2,
     "mutationProbability": 0.7,
@@ -9,45 +9,41 @@
     "reproductionProbability": 0.1,
     "nFolds": 3
   },
-  "scoreAggregators": [
+  "scorers": [
     {
-      "class": "AtLeastOneHitAtKAggregator",
-      "params": {
-        "atK": "1"
-      }
+      "class": "AtLeastOneAtN",
+      "atN": 1
     },
     {
-      "class": "AtLeastOneHitAtKAggregator",
-      "params": {
-        "atK": "3"
-      }
+      "class": "AtLeastOneAtN",
+      "atN": 3
     },
     {
-      "class": "AtLeastOneHitAtKAggregator",
-      "params": {
-        "atK": "5"
-      }
+      "class": "AtLeastOneAtN",
+      "atN": 5
     },
     {
-      "class": "AtLeastOneHitAtKAggregator",
-      "params": {
-        "atK": "10"
-      }
+      "class": "AtLeastOneAtN",
+      "atN": 10
     },
     {
-      "class": "AtLeastOneHitAtKAggregator",
-      "params": {
-        "atK": "20"
-      }
+      "class": "AtLeastOneAtN",
+      "atN": 30
     },
     {
-      "class": "NDCGAggregator",
+      "class": "NDCG",
+      "atN": 10,
       "params": {
-        "atK": 10,
         "useForTrain": true,
         "useForTest": true,
         "exportPMatrix": true
       }
+    },
+    {
+      "class": "TotalDocsReturned"
+    },
+    {
+      "class": "TotalElapsedTime"
     }
   ],
   "featureFactories": {
