@@ -73,8 +73,8 @@ public class RunExperiments extends AbstractExperimentRunner {
                 Option.builder("j")
                         .longOpt("judgments")
                         .hasArg(true)
-                        .required(false)
-                        .desc("judgment .csv file (optional as long as judgements have been loaded earlier!)").build()
+                        .required(true)
+                        .desc("judgment .csv file (may contain queries only...no judgments").build()
         );
 
         OPTIONS.addOption(
@@ -137,37 +137,35 @@ public class RunExperiments extends AbstractExperimentRunner {
         boolean latest = getBoolean(commandLine, "latest");
         boolean isTest = getBoolean(commandLine, "test");
 
-        Path judgments = getPath(commandLine, "j", false);
+        Path judgments = getPath(commandLine, "j", true);
         Path experiments = getPath(commandLine, "e", false);
         Path reportDir = getPath(commandLine, "r", false);
         reportDir = (reportDir == null) ? Paths.get(DumpResults.DEFAULT_REPORT_DIR) : reportDir;
         RunExperiments runExperiments = new RunExperiments();
 
+        //TODO: this should be optimized to handle a single experiment
+        //we are currently loading all the experiments.
+        ExperimentSet experimentSet = null;
         try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
             if (judgments != null && experiments != null) {
                 QueryLoader.loadJudgments(experimentDB, judgments, true);
-                ExperimentSet experimentSet = addExperiments(experimentDB, experiments, false, true);
+                experimentSet = addExperiments(experimentDB, experiments, false, true);
                 runExperiments = new RunExperiments(experimentSet.getExperimentConfig());
                 freshStart = false;
-            } else if (judgments != null) {
-                QueryLoader.loadJudgments(experimentDB, judgments, true);
-            } else if (experiments != null) {
-                ExperimentSet experimentSet = addExperiments(experimentDB, experiments, true, freshStart);
-                runExperiments = new RunExperiments(experimentSet.getExperimentConfig());
+
             }
-            runExperiments.run(experimentDB, experimentName, freshStart, latest);
+            runExperiments.run(experimentSet, experimentDB, experimentName, freshStart, latest);
 
 
             LOG.info("starting to write reports to: "+reportDir);
-            dumpResults(experimentDB, experimentDB.getQuerySets(),
+            dumpResults(experimentSet, experimentDB, experimentDB.getQuerySets(),
                     experimentDB.getExperiments().getScorers(), reportDir, isTest);
         }
         LOG.info("completed running and reporting experiments");
     }
 
 
-    private void run(ExperimentDB experimentDB, String experimentName, boolean freshStart, boolean latest) throws SQLException, IOException, SearchClientException {
-        ExperimentSet experimentSet = experimentDB.getExperiments();
+    private void run(ExperimentSet experimentSet, ExperimentDB experimentDB, String experimentName, boolean freshStart, boolean latest) throws SQLException, IOException, SearchClientException {
         if (freshStart) {
             experimentDB.clearScores();
         }
@@ -180,9 +178,12 @@ public class RunExperiments extends AbstractExperimentRunner {
         if (StringUtils.isBlank(experimentName)) {
             batchStart = System.currentTimeMillis();
             int finished = 0;
-            for (String eName : experimentSet.getExperiments().keySet()) {
-                LOG.info("running experiment: '" + eName + "'");
-                runExperiment(eName, experimentDB, experimentDB.getJudgments(),
+
+            for (Experiment ex : experimentSet.getExperiments().values()) {
+                LOG.info("running experiment: '" + ex.getName() + "'");
+                runExperiment(ex, experimentSet.getScorers(), experimentSet.getMaxRows(),
+                        experimentDB,
+                        experimentDB.getJudgments(),
                         "train", true);
                 long elapsed = System.currentTimeMillis() - batchStart;
                 finished++;
@@ -196,13 +197,14 @@ public class RunExperiments extends AbstractExperimentRunner {
                 }
             }
         } else {
-            Experiment experiment = experimentDB.getExperiments().getExperiment(experimentName);
+            Experiment experiment = experimentSet.getExperiment(experimentName);
             if (experiment == null) {
                 LOG.warn("I'm sorry, but I couldn't find this experiment:" + experimentName);
                 return;
             }
             experimentDB.clearScores(experimentName);
-            runExperiment(experimentName, experimentDB, experimentDB.getJudgments(),
+
+            runExperiment(experiment, experimentSet.getScorers(), experimentSet.getMaxRows(), experimentDB, experimentDB.getJudgments(),
                     "train", true);
         }
     }

@@ -64,6 +64,9 @@ public class ExperimentDB implements Closeable {
     static Logger LOG = Logger.getLogger(ExperimentDB.class);
     final Connection connection;
     private final PreparedStatement selectExperiments;
+    private final PreparedStatement selectOneExperiment;
+    private final PreparedStatement selectExperimentNames;
+
     private final PreparedStatement insertExperiments;
     private final PreparedStatement mergeExperiments;
 
@@ -111,7 +114,9 @@ public class ExperimentDB implements Closeable {
         }
         initTables();
         selectExperiments = connection.prepareStatement("select name, last_edited, json from experiments");
-
+        selectOneExperiment = connection.prepareStatement(
+                "select name, last_edited, json from experiments where name=?");
+        selectExperimentNames = connection.prepareStatement("select name from experiments group by name");
 
         insertExperiments = connection.prepareStatement(
                 "insert into experiments (name, last_edited, json) values (?,?,?)"
@@ -238,6 +243,34 @@ public class ExperimentDB implements Closeable {
             insertExperiments.setString(3, experiment.toJson());
             insertExperiments.execute();
         }
+    }
+
+    public Collection<String> getExperimentNames() throws SQLException {
+        selectExperimentNames.clearParameters();
+        Set<String> names = new HashSet<>();
+        Experiment ex = null;
+        try (ResultSet resultSet = selectExperimentNames.executeQuery()) {
+            while (resultSet.next()) {
+                String exName = resultSet.getString(1);
+                names.add(exName);
+            }
+        }
+        return names;
+    }
+    public Experiment getExperiment(String name) throws SQLException {
+        selectOneExperiment.clearParameters();
+        selectOneExperiment.setString(1, name);
+        Experiment ex = null;
+        try (ResultSet resultSet = selectOneExperiment.executeQuery()) {
+            while (resultSet.next()) {
+                String exName = resultSet.getString(1);
+                Timestamp timestamp = resultSet.getTimestamp(2);
+                String json = resultSet.getString(3);
+                ex = Experiment.fromJson(json);
+                ex.setName(name);//do we need this?
+            }
+        }
+        return ex;
     }
 
     public ExperimentSet getExperiments() throws SQLException {

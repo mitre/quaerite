@@ -19,6 +19,7 @@ package org.mitre.quaerite.cli;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ public class TestSolrExamples {
             System.out.println("running: "+featuresPath);
             RunGA.main(
                     new String[]{
-                            "-db", "C:/data/quaerite/test_db5",
+                            "-db", "C:/data/quaerite/examples/solr_dbs/"+ UUID.randomUUID().toString(),
                             "-f", featuresPath.toAbsolutePath().toString(),
                             "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
                             "-o", "C:/data/quaerite/examples/ga_output_solr_"+i
@@ -55,7 +56,7 @@ public class TestSolrExamples {
                     new String[]{
                             "-f", featuresPath.toAbsolutePath().toString(),
                             "-e", "C:/data/quaerite/examples/rand_solr_experiments_"+i+".json",
-                            "-r", "10"
+                            "-r", "20"
                     }
             );
         }
@@ -65,7 +66,7 @@ public class TestSolrExamples {
             System.out.println("running experiments: "+exPath);
             RunExperiments.main(
                     new String[]{
-                            "-db", "C:/data/quaerite/test_db"+(i+10),
+                            "-db", "C:/data/quaerite/examples/solr_dbs/"+ UUID.randomUUID().toString(),
                             "-e", "C:/data/quaerite/examples/rand_solr_experiments_"+i+".json",
                             "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
                             "-r", "C:/data/quaerite/examples/experiments_output_solr_"+i
@@ -83,7 +84,7 @@ public class TestSolrExamples {
 
             RunExperiments.main(
                     new String[]{
-                            "-db", "C:/data/quaerite/test_db"+(i+5),
+                            "-db", "C:/data/quaerite/examples/solr_dbs/"+ UUID.randomUUID().toString(),
                             "-e", experimentsPath.toAbsolutePath().toString(),
                             "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
                             "-r", "C:/data/quaerite/examples/experiments_output_solr_"+i
@@ -91,6 +92,4 @@ public class TestSolrExamples {
             );
         }
     }
-
-
 }

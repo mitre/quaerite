@@ -62,7 +62,14 @@ public class ExperimentFactory {
     private transient Scorer testScorer;
 
     public List<Scorer> getScorers() {
+        for (Scorer scorer : scorers) {
+            scorer.reset();
+        }
         return scorers;
+    }
+
+    public int getMaxRows() {
+        return Math.max(getTrainScorer().getAtN(), getTestScorer().getAtN());
     }
 
     @Override

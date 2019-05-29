@@ -39,7 +39,7 @@ public abstract class SummingScoreAggregator extends Scorer {
 
     @Override
     public Map<String, Double> getSummaryStatistics(String querySet) {
-        Set<QueryInfo> queryInfos = querySets.get(querySet);
+        Set<QueryInfo> queryInfos = getQueryInfos(querySet);
         Map<String, Double> stats = new HashMap<>();
         for (QueryInfo q : queryInfos) {
             Double val = scores.get(q);

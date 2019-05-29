@@ -37,7 +37,7 @@ public abstract class Scorer {
     private final int atN;
 
     public Scorer(String name, int atN) {
-        this.name = (atN > -1) ? name+"_AT_"+atN : name;
+        this.name = (atN > -1) ? name+"_"+atN : name;
         this.atN = atN;
     }
 
@@ -49,11 +49,10 @@ public abstract class Scorer {
     }
 
     private final Object[] lock = new Object[0];
+
     ConcurrentHashMap<QueryInfo, Double> scores = new ConcurrentHashMap<>();
-
-    //key is the queryset, the set contains the queryInfos that are in that querySet
-    ConcurrentHashMap<String, Set<QueryInfo>> querySets = new ConcurrentHashMap<>();
-
+    //really just a concurrent hash set, the integer is a dummy value
+    ConcurrentHashMap<String, Integer> querySets = new ConcurrentHashMap<>();
     /**
      * This needs to be thread safe
      * @param queryInfo
@@ -69,24 +68,9 @@ public abstract class Scorer {
                     DEFAULT_QUERY_SET, queryInfo.getQueryStrings(),
                     queryInfo.getQueryCount());
             scores.put(defaultQueryInfo, score);
+            querySets.put(DEFAULT_QUERY_SET, 1);
         }
-        synchronized (lock) {
-            Set<QueryInfo> queryInfos = querySets.get(queryInfo.getQuerySet());
-            if (queryInfos == null) {
-                queryInfos = new HashSet<QueryInfo>();
-            }
-            queryInfos.add(queryInfo);
-            querySets.put(queryInfo.getQuerySet(), queryInfos);
-
-            if (defaultQueryInfo != null) {
-                Set<QueryInfo> defaultQueryInfos = querySets.get(defaultQueryInfo.getQuerySet());
-                if (defaultQueryInfos == null) {
-                    defaultQueryInfos = new HashSet<>();
-                }
-                defaultQueryInfos.add(defaultQueryInfo);
-                querySets.put(defaultQueryInfo.getQuerySet(), defaultQueryInfos);
-            }
-        }
+        querySets.put(queryInfo.getQuerySet(), 1);
     }
 
     /**
@@ -114,6 +98,16 @@ public abstract class Scorer {
         return Collections.unmodifiableMap(ret);
     }
 
+    public Set<QueryInfo> getQueryInfos(String querySet) {
+        Set<QueryInfo> ret = new HashSet<>();
+        for (QueryInfo q : scores.keySet()) {
+            if (q.getQuerySet().equals(querySet)) {
+                ret.add(q);
+            }
+        }
+        return ret;
+    }
+
 
     public int getSize() {
         return scores.size();
@@ -124,14 +118,17 @@ public abstract class Scorer {
         return querySets.keySet();
     }
 
+    public void reset() {
+        scores.clear();
+        querySets.clear();
+    }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Scorer)) return false;
         Scorer that = (Scorer) o;
-        return Objects.equals(scores, that.scores) &&
-                Objects.equals(querySets, that.querySets);
+        return Objects.equals(scores, that.scores);
     }
 
     @Override

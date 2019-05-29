@@ -280,8 +280,9 @@ public class RunGA extends AbstractExperimentRunner {
         TrainTestJudmentListPair trainTestJudmentListPair = gaDb.getTrainTestJudgmentsByFold(fold);
         JudgmentList trainJudgmentList = trainTestJudmentListPair.getTrain();
         LOG.info("scoring training seed for fold: "+fold);
+
         scoreSeed(fold, gaDb, trainJudgmentList,
-                experimentFactory.getTrainScorer().getPrimaryStatisticName(), gaPaths);
+                experimentFactory, gaPaths);
         LOG.info("starting training for fold "+fold +"; train set size ("+trainJudgmentList.getJudgmentsList().size()+
                 "), test set size ("+trainTestJudmentListPair.getTest().getJudgmentsList().size()+
                 ")");
@@ -315,7 +316,8 @@ public class RunGA extends AbstractExperimentRunner {
 
         bestTrainingExperiment.setName(testName);
         gaDb.addExperiment(bestTrainingExperiment);
-        runExperiment(testName,
+
+        runExperiment(bestTrainingExperiment, experimentFactory.getScorers(), experimentFactory.getMaxRows(),
                 gaDb, testingJudgments, "test_"+fold, false);
         scores = gaDb.getNBestExperimentNames(
                 TEST_PREFIX+FOLD_PREFIX+fold+"_*", 10,
@@ -329,13 +331,14 @@ public class RunGA extends AbstractExperimentRunner {
     }
 
     private void scoreSeed(int fold, GADB gaDb, JudgmentList trainJudgmentList,
-                           String trainScoreAggregatorName, GAPaths gaPaths) throws SQLException, IOException, SearchClientException {
+                           ExperimentFactory experimentFactory, GAPaths gaPaths) throws SQLException, IOException, SearchClientException {
         ExperimentSet experimentSet = gaDb.getExperiments(gaConfig);
 
         String trainFoldSeedPrefix = TRAIN_PREFIX+FOLD_PREFIX+fold+"_"+SEED_PREFIX;
-        for (String experimentName : experimentSet.getExperiments().keySet()) {
+        for (String experimentName : gaDb.getExperimentNames()) {
             if (experimentName.startsWith(trainFoldSeedPrefix)) {
-                runExperiment(experimentName, gaDb, trainJudgmentList,
+                Experiment ex = gaDb.getExperiment(experimentName);
+                runExperiment(ex, experimentFactory.getScorers(), experimentFactory.getMaxRows(), gaDb, trainJudgmentList,
                         "seed_test_fold_" + fold, false);
             }
         }
@@ -343,7 +346,7 @@ public class RunGA extends AbstractExperimentRunner {
         System.out.println("FOLD "+fold + " TRAINING (SEED)");
         List<ExperimentNameScorePair> scores = gaDb.getNBestExperimentNames(
                 trainFoldSeedPrefix, 10,
-                trainScoreAggregatorName);
+                experimentFactory.getTrainScorer().getPrimaryStatisticName());
 
         for (ExperimentNameScorePair esp : scores) {
             System.out.println("experiment '"+esp.getExperimentName()+"': "
@@ -366,7 +369,8 @@ public class RunGA extends AbstractExperimentRunner {
                 experimentDB, experimentFactory);
         LOG.info("starting generation "+generation + " for fold "+fold);
         for (String experimentName : experimentNames) {
-            runExperiment(experimentName, experimentDB, judgmentList, "foldId_"+fold,
+            Experiment ex = experimentDB.getExperiment(experimentName);
+            runExperiment(ex, experimentFactory.getScorers(), experimentFactory.getMaxRows(), experimentDB, judgmentList, "foldId_"+fold,
                     false);
         }
         if (LOG.isDebugEnabled()) {

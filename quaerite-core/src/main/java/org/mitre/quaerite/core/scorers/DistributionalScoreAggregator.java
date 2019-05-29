@@ -41,6 +41,7 @@ public abstract class DistributionalScoreAggregator extends Scorer {
     public DistributionalScoreAggregator(String name, int atN) {
         super(name, atN);
     }
+
     @Override
     public Map<String, Double> getSummaryStatistics(String querySet) {
         StatSummarizer statSummarizer = new StatSummarizer();

@@ -89,18 +89,15 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     }
 
 
-    void runExperiment(String experimentName, ExperimentDB experimentDB, JudgmentList judgmentList,
+    void runExperiment(Experiment experiment, List<Scorer> scorers, int maxRows, ExperimentDB experimentDB, JudgmentList judgmentList,
                        String judgmentListId, boolean logResults) throws SQLException, IOException, SearchClientException {
-        if (experimentDB.hasScores(experimentName)) {
-            LOG.info("Already has scores for " + experimentName + "; skipping.  " +
+        if (experimentDB.hasScores(experiment.getName())) {
+            LOG.info("Already has scores for " + experiment.getName() + "; skipping.  " +
                     "Use the -freshStart commandline option to clear all scores");
             return;
         }
-        ExperimentSet experimentSet = experimentDB.getExperiments();
-        Experiment ex = experimentSet.getExperiment(experimentName);
-        List<Scorer> scorers = experimentSet.getScorers();
         experimentDB.initScoreTable(scorers);
-        SearchClient searchClient = SearchClientFactory.getClient(ex.getSearchServerUrl());
+        SearchClient searchClient = SearchClientFactory.getClient(experiment.getSearchServerUrl());
 
         if (StringUtils.isBlank(experimentConfig.getIdField())) {
             LOG.info("default document 'idField' not set in experiment config. " +
@@ -109,10 +106,12 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             experimentConfig.setIdField(searchClient.getDefaultIdField());
         }
 
-        JudgmentList validated = searchServerValidatedMap.get(ex.getSearchServerUrl()+"_"+judgmentListId);
+        JudgmentList validated = searchServerValidatedMap.get(
+                experiment.getSearchServerUrl()+
+                        "_"+judgmentListId);
         if (validated == null) {
             validated = validate(searchClient, judgmentList);
-            searchServerValidatedMap.put(ex.getSearchServerUrl()+"_"+judgmentListId, validated);
+            searchServerValidatedMap.put(experiment.getSearchServerUrl()+"_"+judgmentListId, validated);
         }
         ExecutorService executorService = Executors.newFixedThreadPool(experimentConfig.getNumThreads());
         ExecutorCompletionService<Integer> executorCompletionService = new ExecutorCompletionService<>(executorService);
@@ -126,8 +125,8 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
         for (int i = 0; i < experimentConfig.getNumThreads(); i++) {
             executorCompletionService.submit(
-                    new QueryRunner(experimentConfig.getIdField(), experimentDB.getExperiments().getMaxRows(),
-                            queue, ex, experimentDB, scorers));
+                    new QueryRunner(experimentConfig.getIdField(), maxRows,
+                            queue, experiment, experimentDB, scorers));
         }
 
         int completed = 0;
@@ -144,9 +143,9 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         executorService.shutdown();
         executorService.shutdownNow();
         //insertScores(experimentDB, experimentName, scoreAggregators);
-        experimentDB.insertScoresAggregated(experimentName, scorers);
+        experimentDB.insertScoresAggregated(experiment.getName(), scorers);
         if (logResults) {
-            logResults(experimentName, scorers);
+            logResults(experiment.getName(), scorers);
         }
     }
 
@@ -335,6 +334,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         private final List<Scorer> scorers;
         private final SearchClient searchClient;
         private final QueryRunnerDBClient dbClient;
+        private int batched = 0;
 
         public QueryRunner(String idField, int maxRows, ArrayBlockingQueue<Judgments> judgments,
                            Experiment experiment, ExperimentDB experimentDB,
@@ -360,14 +360,13 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
                         return 1;
                     }
                     scoreEach(judgments, scorers);
+                    if (batched++ > 100) {
+                        batched = 0;
+                        dbClient.executeBatch();
+                    }
                 }
             } finally {
                 Exception ex = null;
-                try {
-                    dbClient.executeBatch();
-                } catch (SQLException e) {
-                    ex = e;
-                }
                 try {
                     dbClient.close();
                 } catch (Exception e) {
@@ -417,7 +416,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
 
     ////////////DUMP RESULTS
-    static void dumpResults(ExperimentDB experimentDB,
+    static void dumpResults(ExperimentSet experimentSet, ExperimentDB experimentDB,
                             List<String> querySets,
                             List<Scorer> targetScorers, Path outputDir, boolean isTest) throws Exception {
         if (! Files.isDirectory(outputDir)) {
@@ -439,7 +438,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
         String orderByPriority1 = null;
         String orderByPriority2 = null;
-        for (Scorer scorer : experimentDB.getExperiments().getScorers()) {
+        for (Scorer scorer : experimentSet.getScorers()) {
             if (isTest && scorer instanceof AbstractJudgmentScorer &&
                     ((AbstractJudgmentScorer)scorer).getUseForTest()) {
                 orderByPriority1 = scorer.getPrimaryStatisticName();

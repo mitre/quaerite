@@ -18,6 +18,7 @@ package org.mitre.quaerite.cli;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ public class TestESExamples {
         });
         RunExperiments.main(
                 new String[]{
-                        "-db", "C:/data/quaerite/test_db3",
+                        "-db", "C:/data/quaerite/examples/es_dbs/"+ UUID.randomUUID().toString(),
                         "-e", "C:/data/quaerite/examples/experiments_es_1.json",
                         "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
                         "-r", "C:/data/quaerite/examples/reports"
@@ -55,7 +56,7 @@ public class TestESExamples {
         });
         RunExperiments.main(
                 new String[]{
-                        "-db", "C:/data/quaerite/test_db3",
+                        "-db", "C:/data/quaerite/examples/es_dbs/"+ UUID.randomUUID().toString(),
                         "-e", "C:/data/quaerite/examples/experiments_es_1.json",
                         "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
                         "-r", "C:/data/quaerite/examples/reports"
@@ -67,7 +68,7 @@ public class TestESExamples {
     public void runGAES1() throws Exception {
         RunGA.main(
                 new String[] {
-                        "-db", "C:/data/quaerite/test_db4",
+                        "-db", "C:/data/quaerite/examples/es_dbs/"+ UUID.randomUUID().toString(),
                         "-f", CWD.resolve("es/experiment_features_es_1.json").toAbsolutePath().toString(),
                         "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
                         "-o", "C:/data/quaerite/examples/ga_output_es"
@@ -80,9 +81,10 @@ public class TestESExamples {
         for (int i = 1; i <= 4; i++) {
             Path experimentsPath = CWD.resolve("es/experiments_es_"+i+".json");
             System.out.println("running: " + experimentsPath);
+
             RunExperiments.main(
                     new String[]{
-                            "-db", "C:/data/quaerite/test_db5",
+                            "-db", "C:/data/quaerite/examples/es_dbs/"+ UUID.randomUUID().toString(),
                             "-e", experimentsPath.toAbsolutePath().toString(),
                             "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
                             "-r", "C:/data/quaerite/examples/experiments_output_es_"+i

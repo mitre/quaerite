@@ -99,6 +99,7 @@ public class QueryRunnerDBClient implements Closeable {
     @Override
     public void close() throws IOException {
         try {
+            executeBatch();
             insertScores.close();
             insertResults.close();
         } catch (SQLException e) {

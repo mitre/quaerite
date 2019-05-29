@@ -44,8 +44,8 @@ public class ExperimentSet {
 
     private List<Scorer> scorers = new ArrayList<>();
     private Map<String, Experiment> experiments = new LinkedHashMap<>();
-    private transient Scorer trainScoreAggregator;
-    private transient Scorer testScoreAggregator;
+    private transient Scorer trainScorer;
+    private transient Scorer testScorer;
     private ExperimentConfig experimentConfig;
 
     public ExperimentSet() {
@@ -69,11 +69,11 @@ public class ExperimentSet {
         scorers.add(scorer);
         if (scorer instanceof AbstractJudgmentScorer &&
                 ((AbstractJudgmentScorer)scorer).getUseForTrain()) {
-            trainScoreAggregator = scorer;
+            trainScorer = scorer;
         }
         if (scorer instanceof AbstractJudgmentScorer &&
                 ((AbstractJudgmentScorer)scorer).getUseForTest()) {
-            testScoreAggregator = scorer;
+            testScorer = scorer;
         }
         if (scorer instanceof SearchResultSetScorer) {
             searchResultSetScorers.add((SearchResultSetScorer)scorer);
@@ -123,6 +123,9 @@ public class ExperimentSet {
     }
 
     public List<Scorer> getScorers() {
+        for (Scorer scorer : scorers) {
+            scorer.reset();
+        }
         return scorers;
     }
 
@@ -159,13 +162,13 @@ public class ExperimentSet {
         return maxRows == that.maxRows &&
                 scorers.equals(that.scorers) &&
                 experiments.equals(that.experiments) &&
-                Objects.equals(trainScoreAggregator, that.trainScoreAggregator) &&
-                Objects.equals(testScoreAggregator, that.testScoreAggregator) &&
+                Objects.equals(trainScorer, that.trainScorer) &&
+                Objects.equals(testScorer, that.testScorer) &&
                 experimentConfig.equals(that.experimentConfig);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(maxRows, scorers, experiments, trainScoreAggregator, testScoreAggregator, experimentConfig);
+        return Objects.hash(maxRows, scorers, experiments, trainScorer, testScorer, experimentConfig);
     }
 }
