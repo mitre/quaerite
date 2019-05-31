@@ -27,7 +27,7 @@ public class ZeroResults extends SummingScoreAggregator implements SearchResultS
 
 
     public ZeroResults() {
-        super("ZeroResults", 1);
+        super("ZeroResults", 0);
     }
 
     @Override

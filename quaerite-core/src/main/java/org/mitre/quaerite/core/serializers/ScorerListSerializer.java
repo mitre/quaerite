@@ -125,8 +125,17 @@ public class ScorerListSerializer {
                 if (!(Scorer.class.isAssignableFrom(cl))) {
                     throw new IllegalArgumentException(clazzName + " must be assignable from Scorer");
                 }
-                Constructor con = cl.getConstructor(int.class);
-                Scorer scorer = (Scorer) con.newInstance(atN);
+
+                Constructor con = null;
+                Scorer scorer = null;
+                try {
+                    con = cl.getConstructor(int.class);
+                    scorer = (Scorer) con.newInstance(atN);
+                } catch (NoSuchMethodException e) {
+                    //try zero argument constructor
+                    con = cl.getConstructor();
+                    scorer = (Scorer) con.newInstance();
+                }
                 if (params != null) {
                     if (params.containsKey("useForTest")) {
                         String val = params.get("useForTest");
@@ -149,6 +158,7 @@ public class ScorerListSerializer {
                 }
                 return (T) scorer;
             } catch (Exception e) {
+                e.printStackTrace();
                 throw new JsonParseException(e.getMessage());
             }
         }
