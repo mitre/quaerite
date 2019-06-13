@@ -87,6 +87,14 @@ public abstract class Scorer {
     public abstract List<String> getStatistics();
 
     /**
+     * format this stat name's values for the report
+     *
+     * @param statName
+     * @param scoreValues
+     * @return
+     */
+    public abstract String format(String statName, Map<String, Double> scoreValues);
+    /**
      *
      * @return the name of the primary statistic for this scorer
      */

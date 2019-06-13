@@ -418,7 +418,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     ////////////DUMP RESULTS
     static void dumpResults(ExperimentSet experimentSet, ExperimentDB experimentDB,
                             List<String> querySets,
-                            List<Scorer> targetScorers, Path outputDir, boolean isTest) throws Exception {
+                            List<Scorer> scorers, Path outputDir, boolean isTest) throws Exception {
         if (! Files.isDirectory(outputDir)) {
             Files.createDirectories(outputDir);
         }
@@ -468,11 +468,11 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
         if (querySets.size() > 0) {
             for (String querySet : querySets) {
-                dumpSignificanceMatrices(querySet, targetScorers, experimentDB, outputDir);
+                dumpSignificanceMatrices(querySet, scorers, experimentDB, outputDir);
             }
         }
         //now dump across all query sets
-        dumpSignificanceMatrices("", targetScorers, experimentDB, outputDir);
+        dumpSignificanceMatrices("", scorers, experimentDB, outputDir);
 
 
     }

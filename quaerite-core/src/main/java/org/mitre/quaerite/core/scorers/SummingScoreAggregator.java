@@ -17,10 +17,12 @@
  */
 package org.mitre.quaerite.core.scorers;
 
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,6 +30,8 @@ import org.mitre.quaerite.core.QueryInfo;
 
 public abstract class SummingScoreAggregator extends Scorer {
     public static String SUM = "sum";
+
+    private NumberFormat numberFormat = NumberFormat.getIntegerInstance(Locale.US);
 
     private static final List<String> STATISTICS =
             Collections.unmodifiableList(Arrays.asList(new String[]{SUM}));
@@ -54,6 +58,15 @@ public abstract class SummingScoreAggregator extends Scorer {
         return Collections.unmodifiableMap(stats);
     }
 
+    @Override
+    public String format(String statName, Map<String, Double> values) {
+        if (! values.containsKey(statName)) {
+            throw new IllegalArgumentException("can't find stat name: "+statName
+                + "in "+values);
+        }
+
+        return numberFormat.format(values.get(statName));
+    }
 
 
     @Override

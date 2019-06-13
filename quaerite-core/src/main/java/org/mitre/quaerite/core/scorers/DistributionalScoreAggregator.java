@@ -17,10 +17,13 @@
  */
 package org.mitre.quaerite.core.scorers;
 
+import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
@@ -38,8 +41,14 @@ public abstract class DistributionalScoreAggregator extends Scorer {
     private static final List<String> STATISTICS =
             Collections.unmodifiableList(Arrays.asList(new String[]{MEAN, MEDIAN, STDEV}));
 
+    private NumberFormat numberFormat = NumberFormat.getNumberInstance();
+
+
     public DistributionalScoreAggregator(String name, int atN) {
         super(name, atN);
+        numberFormat.setMinimumFractionDigits(2);
+        numberFormat.setMaximumFractionDigits(2);
+        numberFormat.setRoundingMode(RoundingMode.HALF_DOWN);
     }
 
     @Override
@@ -90,6 +99,16 @@ public abstract class DistributionalScoreAggregator extends Scorer {
     @Override
     public String getPrimaryStatisticName() {
         return getName()+"_"+MEAN;
+    }
+
+    @Override
+    public String format(String statName, Map<String, Double> values) {
+        if (! values.containsKey(statName)) {
+            throw new IllegalArgumentException("can't find stat name: "+statName
+                    + "in "+values);
+        }
+
+        return numberFormat.format(values.get(statName));
     }
 
     @Override
