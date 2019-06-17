@@ -16,6 +16,7 @@
  */
 package org.mitre.quaerite.analysis;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +45,9 @@ public class EquivalenceSet implements Comparable<EquivalenceSet> {
         return counts;
     }
 
+    public int size() {
+        return counts.size();
+    }
     public long getTotalCount() {
         return total;
     }
@@ -54,6 +58,17 @@ public class EquivalenceSet implements Comparable<EquivalenceSet> {
             return Long.compare(this.total, o.total);
         }
         return Integer.compare(this.counts.size(), o.counts.size());
+    }
+
+    public static class DescendingTotalComparator implements Comparator<EquivalenceSet> {
+
+        @Override
+        public int compare(EquivalenceSet o1, EquivalenceSet o2) {
+            if (o1.total == o2.total) {
+                return Long.compare(o1.size(), o2.size());
+            }
+            return Long.compare(o1.total, o2.total);
+        }
     }
 
     @Override

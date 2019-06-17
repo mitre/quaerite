@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *
  */
 package org.mitre.quaerite.solrtools;
 
@@ -59,6 +58,7 @@ import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.queries.TermQuery;
+import org.mitre.quaerite.core.util.MapUtil;
 
 public class ElevateQueryComparer {
     static Logger LOG = Logger.getLogger(ElevateQueryComparer.class);
@@ -152,20 +152,69 @@ public class ElevateQueryComparer {
 
         List<Query> sorted = new ArrayList<>(queries.queries.values());
         Collections.sort(sorted);
+
+        if (! Files.isDirectory(reportsRoot)) {
+            Files.createDirectories(reportsRoot);
+        }
+
         dumpAllElevated(elevateMap, queries, totalQueries, df, reportsRoot);
         dumpElevatedQueries(sorted, totalQueries, elevateMap, df, reportsRoot);
         dumpElevatedButNoQueries(elevateMap.keySet(), queries.queries.keySet(), reportsRoot);
+        dumpElevatedCountDistributions(elevateMap, reportsRoot);
 
+        Set<String> ids = new HashSet<>();
+        int elevated = 0;
+        for (Elevate e : elevateMap.values()) {
+            List<String> docs = e.getIds();
+            elevated += docs.size();
+            ids.addAll(docs);
+        }
+        LOG.info(String.format(Locale.US,
+                "There are %s elevate entries", elevateMap.keySet().size()));
+        LOG.info(String.format(Locale.US,
+                "There are %s unique elevated document ids " +
+                        "and %s total elevated document ids",
+                ids.size(), elevated));
         if (commandLine.hasOption("s")) {
             dumpElevateVsIndex(commandLine.getOptionValue("s"), sorted, elevateMap, df, totalQueries, reportsRoot);
         }
+    }
 
+    private static void dumpElevatedCountDistributions(Map<String, Elevate> elevateMap, Path reportsRoot) throws IOException {
+        //histogram of document ids per query
+
+        //<number of ids, number of entries
+        Map<Integer, Integer> m = new HashMap<>();
+        for (Elevate e : elevateMap.values()) {
+            int numOfDocs = e.getIds().size();
+            Integer cnt = m.get(numOfDocs);
+            if (cnt == null) {
+                cnt = 1;
+            } else {
+                cnt++;
+            }
+            m.put(numOfDocs, cnt);
+        }
+        try (BufferedWriter writer = Files.newBufferedWriter(
+                reportsRoot.resolve("elevated_num_docs_histogram.csv"), StandardCharsets.UTF_8
+        )) {
+            writer.write(StringUtils.joinWith(",",
+                    "Number of Documents in an Elevate Entry,Number of Entries\n"));
+            for (Map.Entry<Integer, Integer> e : MapUtil.sortByDescendingValue(m).entrySet()) {
+                writer.write(
+                        String.format(Locale.US,
+                                "%s,%s\n", e.getKey(), e.getValue()));
+            }
+
+        }
     }
 
     private static void dumpAllElevated(Map<String, Elevate> elevateMap,
                                         QuerySet queries, int totalCount,
                                         NumberFormat df,
                                         Path reportsRoot) throws Exception {
+
+
         try (BufferedWriter writer = Files.newBufferedWriter(
                 reportsRoot.resolve("elevated.csv"), StandardCharsets.UTF_8
         )) {
@@ -208,6 +257,7 @@ public class ElevateQueryComparer {
             writer.write(StringUtils.joinWith(",", "Query", "Id",
                     "IndexContainsId",
                     "QueryCount", "QueryPercentage", "\n"));
+
             for (Query q : sorted) {
                 if (elevateMap.containsKey(q.q)) {
                     Elevate e = elevateMap.get(q.q);
@@ -234,12 +284,71 @@ public class ElevateQueryComparer {
                                         df.format(((double) q.getCount() / (double) totalCount))
                                 ) + "\n"
                         );
-
                     }
                 }
             }
         }
 
+        //now go get all the elevated irrespective of queries
+        for (Elevate e : elevateMap.values()) {
+            for (String id : e.getIds()) {
+                if (!indexContains.contains(id) && !indexMissing.contains(id)) {
+                    boolean contains = indexContains(id, searchClient);
+                    if (contains) {
+                        indexContains.add(id);
+                    } else {
+                        indexContains.add(id);
+                    }
+                }
+            }
+        }
+        int zeroValidDocs = 0;
+        int totalValidDocs = 0;
+        int totalInvalidDocs = 0;
+        Map<String, Integer> valid = new HashMap<>();
+        Map<String, Integer> invalid = new HashMap<>();
+        for (Elevate e : elevateMap.values()) {
+            int v = 0;
+            for (String id : e.getIds()) {
+                if (indexContains.contains(id)) {
+                    v++;
+                    increment(valid, id);
+                    totalValidDocs++;
+                } else {
+                    increment(invalid, id);
+                    totalInvalidDocs++;
+                }
+            }
+            if (v == 0) {
+                zeroValidDocs++;
+            }
+        }
+        LOG.info(
+                String.format(Locale.US,
+                        "There are %s unique valid docs and %s " +
+                                "total docs in the elevate file.",
+                        valid.size(), totalValidDocs)
+        );
+        LOG.info(
+                String.format(Locale.US,
+                        "There are %s unique missing docs and %s " +
+                                "missing docs in the elevate file.",
+                        invalid.size(), totalInvalidDocs)
+        );
+        LOG.info(
+                String.format(Locale.US,
+                        "There are %s entries with zero valid docs.",
+                        zeroValidDocs)
+        );;
+    }
+
+    private static void increment(Map<String, Integer> m, String k) {
+        Integer val = m.get(k);
+        if (val == null) {
+            m.put(k, 1);
+        } else {
+            m.put(k, ++val);
+        }
     }
 
     private static void dumpElevatedButNoQueries(Set<String> elevated, Set<String> queries, Path reportsRoot) throws IOException {
