@@ -203,11 +203,12 @@ public class ElevateAnalysisEvaluator {
             Map<String, MutableLong> sorted = e.getValue().getSortedMap();
 
                 System.out.println(
-                        String.format("%s (%,d): ",
+                        String.format(Locale.US, "%s (%,d): ",
                                 e.getKey(), e.getValue().getTotalCount()));
                 for (Map.Entry<String, MutableLong> setEntry : sorted.entrySet()) {
                     System.out.println(
-                            String.format("\t%s (%,d)",
+                            String.format(Locale.US,
+                                    "\t%s (%,d)",
                                     setEntry.getKey(), setEntry.getValue().longValue()));
                 }
                 i++;

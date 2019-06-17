@@ -41,7 +41,7 @@ public abstract class DistributionalScoreAggregator extends Scorer {
     private static final List<String> STATISTICS =
             Collections.unmodifiableList(Arrays.asList(new String[]{MEAN, MEDIAN, STDEV}));
 
-    private NumberFormat numberFormat = NumberFormat.getNumberInstance();
+    private NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
 
 
     public DistributionalScoreAggregator(String name, int atN) {
