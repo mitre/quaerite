@@ -46,7 +46,7 @@ public class TestGenerateSolrExperiments {
         JSON = Files.createTempFile("quaerite-features", ".json");
         EXPERIMENTS = Files.createTempFile("quaerite-experiments", ".json");
         Files.copy(
-                TestGenerateSolrExperiments.class.getClass().getResourceAsStream("/test-documents/experiment_features_solr_1.json"),
+                TestGenerateSolrExperiments.class.getResourceAsStream("/test-documents/experiment_features_solr_1.json"),
                 JSON, StandardCopyOption.REPLACE_EXISTING);
     }
 

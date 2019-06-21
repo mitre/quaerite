@@ -452,7 +452,7 @@ public class TestQueryFactory {
     private Reader newReader(String path) {
         return new BufferedReader(
                 new InputStreamReader(
-                        this.getClass().getResourceAsStream(path),
+                        TestQueryFactory.class.getResourceAsStream(path),
                         StandardCharsets.UTF_8
                 )
         );

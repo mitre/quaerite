@@ -59,7 +59,7 @@ public class TestExperimentSet {
         ExperimentSet experimentSet = null;
         try (Reader reader =
                      new BufferedReader(new InputStreamReader(
-                             getClass().getResourceAsStream("/test-documents/experiments_solr_1.json"),
+                             TestExperimentSet.class.getResourceAsStream("/test-documents/experiments_solr_1.json"),
                              StandardCharsets.UTF_8))) {
             experimentSet = ExperimentSet.fromJson(reader);
 
@@ -97,7 +97,7 @@ public class TestExperimentSet {
         ExperimentSet experimentSet = null;
         try (Reader reader =
                      new BufferedReader(new InputStreamReader(
-                             getClass().getResourceAsStream("/test-documents/experiments_solr_2.json"),
+                             TestExperimentSet.class.getResourceAsStream("/test-documents/experiments_solr_2.json"),
                              StandardCharsets.UTF_8))) {
             experimentSet = ExperimentSet.fromJson(reader);
         }
@@ -127,7 +127,7 @@ public class TestExperimentSet {
         ExperimentSet experimentSet = null;
         try (Reader reader =
                      new BufferedReader(new InputStreamReader(
-                             getClass().getResourceAsStream("/test-documents/experiments_es_1.json"),
+                             TestExperimentSet.class.getResourceAsStream("/test-documents/experiments_es_1.json"),
                              StandardCharsets.UTF_8))) {
             experimentSet = ExperimentSet.fromJson(reader);
         }
@@ -194,7 +194,7 @@ public class TestExperimentSet {
         ExperimentSet experimentSet = null;
         try (Reader reader =
                      new BufferedReader(new InputStreamReader(
-                             getClass().getResourceAsStream(
+                             TestExperimentSet.class.getResourceAsStream(
                                      "/test-documents/experiments_solr_queryOp.json"),
                              StandardCharsets.UTF_8))) {
             experimentSet = ExperimentSet.fromJson(reader);
@@ -265,7 +265,7 @@ public class TestExperimentSet {
                 () -> {
                     try (Reader reader =
                                  new BufferedReader(new InputStreamReader(
-                                         getClass().getResourceAsStream(
+                                         TestExperimentSet.class.getResourceAsStream(
                                                  "/test-documents/experiments_solr_no_atN.json"),
                                          StandardCharsets.UTF_8))) {
                         ExperimentSet.fromJson(reader);

@@ -49,7 +49,7 @@ public class TestGenerateESExperiments {
         JSON = Files.createTempFile("quaerite-features", ".json");
         EXPERIMENTS = Files.createTempFile("quaerite-experiments", ".json");
         Files.copy(
-                TestGenerateESExperiments.class.getClass().getResourceAsStream("/test-documents/experiment_features_es_1.json"),
+                TestGenerateESExperiments.class.getResourceAsStream("/test-documents/experiment_features_es_1.json"),
                 JSON, StandardCopyOption.REPLACE_EXISTING);
     }
 
