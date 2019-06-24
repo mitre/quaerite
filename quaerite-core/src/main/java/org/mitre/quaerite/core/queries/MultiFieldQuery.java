@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.core.queries;
 
-
 import java.util.Objects;
 
 import org.mitre.quaerite.core.features.QF;

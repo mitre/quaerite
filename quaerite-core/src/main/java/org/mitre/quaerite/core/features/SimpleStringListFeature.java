@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.core.features;
 
-
 import java.util.List;
 
 public class SimpleStringListFeature extends StringListFeature<SimpleStringListFeature> {

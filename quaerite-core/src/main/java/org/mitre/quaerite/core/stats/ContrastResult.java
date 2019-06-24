@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.core.stats;
 
-
 import java.util.Locale;
 
 public class ContrastResult implements Comparable<ContrastResult> {

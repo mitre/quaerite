@@ -29,7 +29,7 @@
 
   <property name="fileExtensions" value="java, properties, xml"/>
 
-  <module name="SuppressionCommentFilter"/>
+<!--  <module name="SuppressionCommentFilter"/> -->
 
   <module name="RegexpHeader">
     <property name="header"
@@ -52,7 +52,7 @@
   </module>
 
   <module name="TreeWalker">
-    <module name="FileContentsHolder"/>
+    <!--<module name="FileContentsHolder"/>-->
     <module name="OuterTypeFilename"/>
     <module name="IllegalTokenText">
       <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL"/>

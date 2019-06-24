@@ -17,7 +17,6 @@
  */
 package org.mitre.quaerite.solrtools;
 
-
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;

@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.cli;
 
-
 import java.util.ArrayList;
 import java.util.List;
 

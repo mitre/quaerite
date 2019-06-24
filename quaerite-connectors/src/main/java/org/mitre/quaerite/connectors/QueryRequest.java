@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-
 import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.queries.Query;
 

@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.cli;
 
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.Reader;
@@ -37,7 +36,6 @@ import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.scorers.NDCG;
 import org.mitre.quaerite.core.scorers.Scorer;
-
 
 public class TestGenerateESExperiments {
     static Path JSON;

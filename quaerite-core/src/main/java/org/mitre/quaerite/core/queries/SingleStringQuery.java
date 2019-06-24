@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.core.queries;
 
-
 import java.util.HashSet;
 import java.util.Set;
 

@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.db;
 
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;

@@ -16,8 +16,6 @@
  */
 package org.mitre.quaerite.core.features;
 
-
-
 import java.util.Objects;
 
 public abstract class StringFeature<T extends StringFeature>

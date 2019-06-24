@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.core.scorers;
 
-
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
 

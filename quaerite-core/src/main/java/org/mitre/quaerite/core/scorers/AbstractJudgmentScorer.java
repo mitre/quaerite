@@ -17,7 +17,6 @@
  */
 package org.mitre.quaerite.core.scorers;
 
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.mitre.quaerite.core.Judgments;

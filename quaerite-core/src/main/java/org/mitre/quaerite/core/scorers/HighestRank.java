@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.core.scorers;
 
-
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.SearchResultSet;
 

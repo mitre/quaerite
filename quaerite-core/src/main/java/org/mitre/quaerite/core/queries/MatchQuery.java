@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.core.queries;
 
-
 public class MatchQuery extends SingleStringQuery {
 
     public MatchQuery() {
@@ -24,7 +23,7 @@ public class MatchQuery extends SingleStringQuery {
     }
 
     public MatchQuery(String queryString) {
-       super(queryString);
+        super(queryString);
     }
 
     @Override

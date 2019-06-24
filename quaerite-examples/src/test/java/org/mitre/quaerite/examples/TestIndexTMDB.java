@@ -16,10 +16,8 @@
  */
 package org.mitre.quaerite.examples;
 
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-
 
 @Disabled("need to have Solr/ES tmdb instance running" +
         "and need to set JSON_PATH to the location of the tmdb.json file")
