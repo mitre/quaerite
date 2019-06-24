@@ -61,7 +61,8 @@ public class TestGenerateESExperiments {
     public void testSimple() throws Exception {
         GenerateExperiments.main(new String[]{
                 "-f", JSON.toAbsolutePath().toString(),
-                "-e", EXPERIMENTS.toAbsolutePath().toString()});
+                "-e", EXPERIMENTS.toAbsolutePath().toString(),
+                "-m", "20000"});
 
         ExperimentSet set = null;
         try (Reader reader = Files.newBufferedReader(EXPERIMENTS, StandardCharsets.UTF_8)) {
@@ -69,7 +70,7 @@ public class TestGenerateESExperiments {
         }
 
 
-        assertEquals(8640, set.getExperiments().size());
+        assertEquals(11520, set.getExperiments().size());
         assertEquals(1, set.getScorers().size());
 
         Scorer scoreAggregator = set.getScorers().get(0);

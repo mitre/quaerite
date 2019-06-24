@@ -69,9 +69,10 @@
           "maxSetSize": 4
         },
         "fuzziness": [
-          0,
-          1,
-          2
+          "0",
+          "1",
+          "2",
+          "AUTO"
         ],
         "boost": [
           0.1,

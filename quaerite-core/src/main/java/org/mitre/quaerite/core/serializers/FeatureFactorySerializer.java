@@ -174,8 +174,9 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             factory.add(boostFactory);
         }
         if (childRoot.has("fuzziness")) {
-            FloatFeatureFactory<Fuzziness> fuzzFactory =
-                    new FloatFeatureFactory<>(Fuzziness.class, toFloatList(childRoot.get("fuzziness")));
+            StringFeatureFactory<Fuzziness> fuzzFactory =
+                    new StringFeatureFactory<>("fuzziness",
+                            Fuzziness.class, toStringList(childRoot.get("fuzziness")));
             factory.add(fuzzFactory);
         }
         return factory;

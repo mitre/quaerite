@@ -232,7 +232,7 @@ public class QuerySerializer extends AbstractFeatureSerializer
         if (obj.has("fuzziness") && !type.equals("phrase")
                 && !type.equals("cross_fields")) {
             q.setFuzziness(new Fuzziness(obj
-                    .getAsJsonPrimitive("fuzziness").getAsFloat()));
+                    .getAsJsonPrimitive("fuzziness").getAsString()));
         }
         q.setMultiMatchType(new MultiMatchType(obj.get("type").getAsString()));
         return q;
@@ -566,9 +566,8 @@ public class QuerySerializer extends AbstractFeatureSerializer
         if (!MathUtil.equals(query.getBoost().getValue(), 1.0f, 0.01f)) {
             obj.add("boost", new JsonPrimitive(query.getBoost().getValue()));
         }
-        if (!MathUtil.equals(query.getFuzziness().getValue(), 0.0f, 0.1f)) {
-            obj.add("fuzziness", new JsonPrimitive(query.getFuzziness().getValue()));
-        }
+        obj.add("fuzziness", new JsonPrimitive(query.getFuzziness().getFeature()));
+
         serializeMultiFieldComponents(query, obj);
         return obj;
     }

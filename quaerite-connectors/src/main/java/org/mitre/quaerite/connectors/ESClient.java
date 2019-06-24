@@ -250,9 +250,7 @@ public class ESClient extends SearchClient {
             queryMap.put("boost", query.getBoost().getValue());
         }
         if (!"phrase".equals(type) && !"cross_fields".equals(type)) {
-            if (query.getFuzziness().getValue() > 0.0f) {
-                queryMap.put("fuzziness", query.getFuzziness().getValue());
-            }
+            queryMap.put("fuzziness", query.getFuzziness().getFeature());
         }
         QueryOperator qop = query.getQueryOperator();
         if (qop.getOperator().equals(QueryOperator.OPERATOR.AND)) {

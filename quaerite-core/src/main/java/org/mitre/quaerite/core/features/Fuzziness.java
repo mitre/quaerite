@@ -16,17 +16,36 @@
  */
 package org.mitre.quaerite.core.features;
 
-public class Fuzziness extends FloatFeature {
+import java.util.HashSet;
+import java.util.Set;
 
-    private static final float DEFAULT_FUZZINESS = 0.0f;
+public class Fuzziness extends StringFeature {
+
+    public static final String DEFAULT_FUZZINESS = "AUTO";
     private static final String NAME = "fuzziness";
+    private static final Set<String> VALID = new HashSet<>();
 
+    static {
+        VALID.add("0");
+        VALID.add("1");
+        VALID.add("2");
+        VALID.add("AUTO");
+    }
     public Fuzziness() {
         super(NAME, DEFAULT_FUZZINESS);
     }
-    public Fuzziness(float value) {
-        super(NAME, value);
+    public Fuzziness(String value) {
+        super(NAME, checkValid(value));
     }
+
+    private static String checkValid(String value) {
+        if (VALID.contains(value)) {
+            return value;
+        }
+        throw new IllegalArgumentException("Fuzziness must be in " +
+                VALID);
+    }
+
 
     @Override
     public boolean equals(Object o) {
@@ -38,5 +57,10 @@ public class Fuzziness extends FloatFeature {
     @Override
     public int hashCode() {
         return super.hashCode();
+    }
+
+    @Override
+    public Fuzziness deepCopy() {
+        return new Fuzziness(getFeature());
     }
 }
