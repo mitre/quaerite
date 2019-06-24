@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *
  */
 package org.mitre.quaerite.solrtools;
 
@@ -95,7 +94,7 @@ public class ElevateScraper extends DefaultHandler {
         if ("query".equals(name)) {
             Elevate elevate = elevates.get(currentQuery);
             if (elevate != null) {
-                LOG.warn("duplicate entry in elevate file(?!): >"+currentQuery+"<");
+                LOG.warn("duplicate entry in elevate file after white space is trimmed(?!): >"+currentQuery+"<");
                 appendMissing(elevate, ids);
             } else {
                 elevates.put(currentQuery, new Elevate(currentQuery, new ArrayList<>(ids)));

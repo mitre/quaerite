@@ -23,6 +23,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -48,9 +49,10 @@ import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientException;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.core.util.MapUtil;
+import org.mitre.quaerite.core.util.StringUtil;
 
 public class ElevateAnalysisEvaluator {
-    static Logger LOG = Logger.getLogger(ElevateQueryComparer.class);
+    static Logger LOG = Logger.getLogger(ElevateAnalysisEvaluator.class);
 
     static Options OPTIONS = new Options();
 
@@ -162,7 +164,7 @@ public class ElevateAnalysisEvaluator {
         for (Map.Entry<String, Integer> q : queries.entrySet()) {
             List<String> tokens = client.analyze(field, q.getKey());
             add(tokens, queryTokenCounts);
-            String analyzed = StringUtils.joinWith(" ", tokens);
+            String analyzed = StringUtil.joinWith(" ", tokens);
             EquivalenceSet equivalenceSet = equivalatedQueries.get(analyzed);
             if (equivalenceSet == null) {
                 equivalenceSet = new EquivalenceSet();
@@ -281,7 +283,7 @@ public class ElevateAnalysisEvaluator {
         for (String q : elevate.keySet()) {
             List<String> tokens = client.analyze(field, q);
             add(tokens, tokenCounts);
-            String analyzed = StringUtils.joinWith(" ", tokens);
+            String analyzed = StringUtil.joinWith("", tokens);
             EquivalenceSet equivalenceSet = equivalenceMap.get(analyzed);
             if (equivalenceSet == null) {
                 equivalenceSet = new EquivalenceSet();

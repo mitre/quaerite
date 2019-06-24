@@ -22,14 +22,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.commons.lang3.StringUtils;
+import org.mitre.quaerite.core.util.StringUtil;
 
 public class TermsQuery extends SingleStringQuery {
 
     private final String field;
     private volatile List<String> terms;
     public TermsQuery(String field, List<String> terms) {
-        super(StringUtils.joinWith(",", terms));
+        super(StringUtil.joinWith(",", terms));
         this.field = field;
         //defensive copy
         this.terms = new ArrayList<>(terms);

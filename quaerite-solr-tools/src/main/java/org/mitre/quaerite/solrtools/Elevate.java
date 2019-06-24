@@ -19,9 +19,12 @@
 package org.mitre.quaerite.solrtools;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class Elevate {
+    public static final Comparator<? super Elevate> SORT_BY_SIZE_DECREASING =
+            new SortBySizeDecreasing();
     final String query;
     final List<String> ids;
 
@@ -45,5 +48,12 @@ public class Elevate {
                 "query='" + query + '\'' +
                 ", ids=" + ids +
                 '}';
+    }
+
+    private static class SortBySizeDecreasing implements Comparator<Elevate> {
+        @Override
+        public int compare(Elevate o1, Elevate o2) {
+            return Integer.compare(o2.getIds().size(), o1.getIds().size());
+        }
     }
 }
