@@ -149,10 +149,13 @@ public class CopyIndex extends AbstractCLI {
         copyIndex.setNumThreads(getInt(commandLine, "numThreads", NUM_THREADS));
         copyIndex.setBatchSize(getInt(commandLine, "b", BATCH_SIZE));
 
-        copyIndex.execute(srcClient, destClient, filterQueries, whiteListFields, blackListFields);
+        copyIndex.execute(srcClient, destClient, filterQueries, whiteListFields,
+                blackListFields);
     }
 
-    private static Set<String> updateBlackList(SearchClient srcClient, Set<String> blackListFields) throws IOException, SearchClientException {
+    private static Set<String> updateBlackList(SearchClient srcClient,
+                                               Set<String> blackListFields)
+            throws IOException, SearchClientException {
         Set<String> tmp = new HashSet<>();
         tmp.addAll(blackListFields);
         tmp.addAll(srcClient.getCopyFields());
@@ -179,11 +182,15 @@ public class CopyIndex extends AbstractCLI {
         return ret;
     }
 
-    private void execute(SearchClient srcClient, SearchClient destClient, Set<Query> filterQueries, Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
+    private void execute(SearchClient srcClient, SearchClient destClient,
+                         Set<Query> filterQueries,
+                         Set<String> whiteListFields, Set<String> blackListFields)
+            throws IOException, SearchClientException {
         ArrayBlockingQueue<Set<String>> idQueue = new ArrayBlockingQueue<>(100);
 
-        ExecutorService executorService = Executors.newFixedThreadPool(numThreads+1);
-        ExecutorCompletionService<Integer> executorCompletionService = new ExecutorCompletionService<>(executorService);
+        ExecutorService executorService = Executors.newFixedThreadPool(numThreads + 1);
+        ExecutorCompletionService<Integer> executorCompletionService =
+                new ExecutorCompletionService<>(executorService);
         String srcIdField = srcClient.getDefaultIdField();
         String destIdField = destClient.getDefaultIdField();
 
@@ -196,8 +203,9 @@ public class CopyIndex extends AbstractCLI {
         }
         int finished = 0;
         try {
-            while (finished < numThreads+1) {
-                Future<Integer> future = executorCompletionService.poll(1, TimeUnit.SECONDS);
+            while (finished < numThreads + 1) {
+                Future<Integer> future = executorCompletionService.poll(1,
+                        TimeUnit.SECONDS);
                 if (future != null) {
                     Integer done = future.get();
                     if (done < 0) {
@@ -226,7 +234,8 @@ public class CopyIndex extends AbstractCLI {
 
         private Copier(ArrayBlockingQueue<Set<String>> ids,
                        SearchClient src, SearchClient dest,
-                       Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
+                       Set<String> whiteListFields, Set<String> blackListFields)
+                throws IOException, SearchClientException {
             this.srcIdField = src.getDefaultIdField();
             this.destIdField = dest.getDefaultIdField();
             this.ids = ids;
@@ -245,7 +254,8 @@ public class CopyIndex extends AbstractCLI {
                 if (myIds.size() == 0) {
                     return totalDocs;
                 }
-                List<StoredDocument> docs = src.getDocs(srcIdField, myIds, whiteListFields, blackListFields);
+                List<StoredDocument> docs = src.getDocs(srcIdField, myIds,
+                        whiteListFields, blackListFields);
                 if (!srcIdField.equals(destIdField)) {
                     for (StoredDocument d : docs) {
                         d.rename(srcIdField, destIdField);

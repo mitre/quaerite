@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.features.CustomHandler;
-import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.util.MathUtil;
 
 /**

@@ -106,7 +106,8 @@ public class ESClient extends SearchClient {
         return scrapeIds(root, start);
     }
 
-    private SearchResultSet scrapeIds(JsonElement root, long start) throws IOException, SearchClientException {
+    private SearchResultSet scrapeIds(JsonElement root, long start)
+            throws IOException, SearchClientException {
         long queryTime = JsonUtil.getPrimitive(root, "took", -1l);
         JsonObject hits = (JsonObject) ((JsonObject) root).get("hits");
         long totalHits = getTotalHits(hits);
@@ -129,7 +130,7 @@ public class ESClient extends SearchClient {
         long val = total.get("value").getAsJsonPrimitive().getAsLong();
         String rel = total.get("relation").getAsString();
         if (!rel.equals("eq")) {
-            LOG.warn("totalhits may not be accurate: "+total.toString());
+            LOG.warn("totalhits may not be accurate: " + total.toString());
         }
         return val;
     }
@@ -145,10 +146,10 @@ public class ESClient extends SearchClient {
         Query q = queryRequest.getQuery();
         if (queryRequest.getFilterQueries().size() > 0) {
             fullQuery = new BooleanQuery();
-            ((BooleanQuery)fullQuery).addClause(
+            ((BooleanQuery) fullQuery).addClause(
                     new BooleanClause(BooleanClause.OCCUR.SHOULD, q));
             for (Query filterQuery : queryRequest.getFilterQueries()) {
-                ((BooleanQuery)fullQuery).addClause(
+                ((BooleanQuery) fullQuery).addClause(
                         new BooleanClause(BooleanClause.OCCUR.FILTER, filterQuery));
             }
         }
@@ -168,15 +169,15 @@ public class ESClient extends SearchClient {
     private Map<String, Object> buildQuery(Query query) {
         Map<String, Object> queryMap = new HashMap<>();
         if (query instanceof MultiMatchQuery) {
-            queryMap = getMultiMatchMap((MultiMatchQuery)query);
+            queryMap = getMultiMatchMap((MultiMatchQuery) query);
         } else if (query instanceof TermsQuery) {
             Map<String, List<String>> tQ = new HashMap<>();
-            TermsQuery termsQuery = (TermsQuery)query;
+            TermsQuery termsQuery = (TermsQuery) query;
             tQ.put(termsQuery.getField(), termsQuery.getTerms());
             queryMap = wrapAMap("terms", tQ);
         } else if (query instanceof TermQuery) {
             Map<String, String> tQ = new HashMap<>();
-            TermQuery termQuery = (TermQuery)query;
+            TermQuery termQuery = (TermQuery) query;
             tQ.put(termQuery.getField(), termQuery.getTerm());
             queryMap = wrapAMap("term", tQ);
         } else if (query instanceof MatchAllDocsQuery) {
@@ -191,11 +192,13 @@ public class ESClient extends SearchClient {
             lQ.put("default_operator", luceneQuery.getQueryOperator().toString());
             queryMap = wrapAMap("query_string", lQ);
         } else if (query instanceof BooleanQuery) {
-            return getBooleanMap((BooleanQuery)query);
+            return getBooleanMap((BooleanQuery) query);
         } else if (query instanceof BoostingQuery) {
-            return getBoostingMap((BoostingQuery)query);
+            return getBoostingMap((BoostingQuery) query);
         } else {
-            throw new IllegalArgumentException("I regret I don't yet know how to handle queries of type: "+ query.getClass());
+            throw new IllegalArgumentException(
+                    "I regret I don't yet know how to handle queries of type: "
+                            + query.getClass());
         }
         return queryMap;
     }
@@ -203,7 +206,7 @@ public class ESClient extends SearchClient {
     private Map<String, Object> getBoostingMap(BoostingQuery query) {
         //short circuit if there is no negative boost query
         if ((query.getNegativeQuery() instanceof SingleStringQuery)) {
-            String qS = ((SingleStringQuery)query.getNegativeQuery()).getQueryString();
+            String qS = ((SingleStringQuery) query.getNegativeQuery()).getQueryString();
             if (StringUtils.isBlank(qS)) {
                 return buildQuery(query.getPositiveQuery());
             }
@@ -260,10 +263,10 @@ public class ESClient extends SearchClient {
             } else if (qop.getMM() == QueryOperator.MM.INTEGER) {
                 queryMap.put("minimum_should_match", Integer.toString(qop.getInt()));
             } else if (qop.getMM() == QueryOperator.MM.FLOAT) {
-               queryMap.put("minimum_should_match",
-                       String.format(Locale.US,
-                               "%.0f%s",
-                               qop.getMmFloat()*100f, "%"));
+                queryMap.put("minimum_should_match",
+                        String.format(Locale.US,
+                                "%.0f%s",
+                                qop.getMmFloat() * 100f, "%"));
             }
         }
 
@@ -306,7 +309,7 @@ public class ESClient extends SearchClient {
                 );
         aggsMap.put("size", "0");
 
-        if (query.getQuery() != null && ! (query.getQuery() instanceof MatchAllDocsQuery)) {
+        if (query.getQuery() != null && !(query.getQuery() instanceof MatchAllDocsQuery)) {
             Map<String, Object> queryMap = getQueryMap(query, Collections.EMPTY_LIST);
             aggsMap.put("query", queryMap.get("query"));
         }
@@ -340,7 +343,10 @@ public class ESClient extends SearchClient {
     }
 
     @Override
-    public List<StoredDocument> getDocs(String idField, Set<String> ids, Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
+    public List<StoredDocument> getDocs(String idField, Set<String> ids,
+                                        Set<String> whiteListFields,
+                                        Set<String> blackListFields)
+            throws IOException, SearchClientException {
         Map<String, Object> map = wrapAMap("ids", ids);
         String storedFields = "";
 
@@ -426,7 +432,6 @@ public class ESClient extends SearchClient {
     }
 
 
-
     @Override
     public void deleteAll() throws SearchClientException, IOException {
         Map<String, Object> q = wrapAMap("query",
@@ -439,8 +444,12 @@ public class ESClient extends SearchClient {
 
     @Override
     public IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids,
-                                  int batchSize, int copierThreads, Collection<Query> filterQueries) throws IOException, SearchClientException {
-        return new ESIdGrabber(getDefaultIdField(), ids, batchSize, copierThreads, filterQueries);
+                                  int batchSize,
+                                  int copierThreads,
+                                  Collection<Query> filterQueries)
+            throws IOException, SearchClientException {
+        return new ESIdGrabber(getDefaultIdField(), ids, batchSize,
+                copierThreads, filterQueries);
     }
 
     @Override
@@ -455,7 +464,8 @@ public class ESClient extends SearchClient {
     }
 
     @Override
-    public List<TokenDF> getTerms(String field, String lower, int limit, int minCount) throws IOException, SearchClientException {
+    public List<TokenDF> getTerms(String field, String lower,
+                                  int limit, int minCount) throws IOException, SearchClientException {
         //todo stub
         return Collections.EMPTY_LIST;
     }
@@ -486,7 +496,8 @@ public class ESClient extends SearchClient {
 
     private class ESIdGrabber extends IdGrabber {
 
-        public ESIdGrabber(String idField, ArrayBlockingQueue<Set<String>> ids, int batchSize,
+        public ESIdGrabber(String idField, ArrayBlockingQueue<Set<String>> ids,
+                           int batchSize,
                            int copierThreads, Collection<Query> filterQueries) {
             super(idField, ids, batchSize, copierThreads, filterQueries);
         }
@@ -511,7 +522,7 @@ public class ESClient extends SearchClient {
                 while (searchResultSet.size() > 0) {
                     Set<String> set = new HashSet<>();
                     set.addAll(searchResultSet.getIds());
-                    LOG.debug("adding "+set.size());
+                    LOG.debug("adding " + set.size());
                     addSet(ids, set);
                     String u = esBase + "_search/scroll";
                     response = postJson(u, GSON.toJson(nextScroll));

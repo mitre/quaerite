@@ -46,7 +46,9 @@ public class Solr4Client extends SolrClient {
 
     @Override
     public List<StoredDocument> getDocs(String idField, Set<String> ids,
-                                        Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
+                                        Set<String> whiteListFields,
+                                        Set<String> blackListFields)
+            throws IOException, SearchClientException {
         //have to use old school url to make requests
         //because json request option isn't backwards compatible to 4.x
         //If we have different Solr clients supporting diff versions,
@@ -90,8 +92,9 @@ public class Solr4Client extends SolrClient {
         JsonResponse fullResponse = null;
         try {
             fullResponse = getJson(requestUrl);
-        } catch (IOException|SearchClientException e) {
-            LOG.warn("problem with " + url + " and " + requestUrl + " :: "+fullResponse.getMsg());
+        } catch (IOException | SearchClientException e) {
+            LOG.warn("problem with " + url + " and " + requestUrl +
+                    " :: " + fullResponse.getMsg());
             return Collections.EMPTY_LIST;
         }
         JsonElement root = fullResponse.getJson();
@@ -107,14 +110,16 @@ public class Solr4Client extends SolrClient {
                         JsonElement value = docObj.get(key);
                         if (value.isJsonArray()) {
                             for (int j = 0; j < ((JsonArray) value).size(); j++) {
-                                document.addNonBlankField(key, ((JsonArray) value).get(j).getAsString());
+                                document.addNonBlankField(key,
+                                        ((JsonArray) value).get(j).getAsString());
                             }
                         } else {
                             document.addNonBlankField(key, value.getAsString());
                         }
                     }
                 }
-                LOG.trace("getting doc from solr: "+document.getFields().get("id"));
+                LOG.trace("getting doc from solr: " +
+                        document.getFields().get("id"));
                 documents.add(document);
             }
         }
@@ -126,7 +131,9 @@ public class Solr4Client extends SolrClient {
         //json is not back compat to 4.5.x
         //String json = "{ \"delete\": {\"query\":\"*:*\"} }";
         String xml = "<delete><query>*:*</query></delete>";
-        JsonResponse jsonResponse = postJson(url + "/update?&commit=true&stream.body="+encode(xml)+JSON_RESPONSE, xml);
+        JsonResponse jsonResponse = postJson(url +
+                "/update?&commit=true&stream.body=" +
+                encode(xml) + JSON_RESPONSE, xml);
         if (jsonResponse.getStatus() != 200) {
             throw new SearchClientException(jsonResponse.getMsg());
         }
@@ -140,7 +147,8 @@ public class Solr4Client extends SolrClient {
      * @param sb
      */
     protected void appendTermsQuery(TermsQuery tq, StringBuilder sb) {
-        StringBuilder tmp = new StringBuilder();// StringBuilder("{!lucene f=").append(tq.getField()).append("}");
+        StringBuilder tmp = new StringBuilder();
+        // StringBuilder("{!lucene f=").append(tq.getField()).append("}");
         tmp.append("(");
         int i = 0;
         for (String t : tq.getTerms()) {

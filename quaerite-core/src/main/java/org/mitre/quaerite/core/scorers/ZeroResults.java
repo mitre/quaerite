@@ -48,4 +48,9 @@ public class ZeroResults extends SummingScoreAggregator implements SearchResultS
         if (!(o instanceof ZeroResults)) return false;
         return super.equals(o);
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

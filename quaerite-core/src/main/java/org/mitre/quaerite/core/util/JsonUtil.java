@@ -66,13 +66,16 @@ public class JsonUtil {
     public static String getSingleChildName(JsonObject object) {
         if (object.keySet().size() != 1) {
             throw new IllegalArgumentException(
-                    "Expected only a single child, but found: "+object.keySet().size()+
-                    " -> "+object);
+                    "Expected only a single child, but found: "
+                            + object.keySet().size() +
+                    " -> " + object);
         }
         for (String s : object.keySet()) {
             return s;
         }
-        throw new IllegalArgumentException("Expected only a single child, but found: "+object.keySet().size());
+        throw new IllegalArgumentException(
+                "Expected only a single child, but found: "
+                        + object.keySet().size());
     }
 
     public static String getSingleChildNameNot(JsonObject object, String ... names) {

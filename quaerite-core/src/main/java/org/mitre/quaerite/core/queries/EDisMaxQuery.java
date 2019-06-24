@@ -18,15 +18,10 @@ package org.mitre.quaerite.core.queries;
 
 import java.util.Objects;
 
-import org.mitre.quaerite.core.features.BF;
-import org.mitre.quaerite.core.features.BQ;
-import org.mitre.quaerite.core.features.PF;
 import org.mitre.quaerite.core.features.PF2;
 import org.mitre.quaerite.core.features.PF3;
-import org.mitre.quaerite.core.features.PS;
 import org.mitre.quaerite.core.features.PS2;
 import org.mitre.quaerite.core.features.PS3;
-import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.TIE;
 
 public class EDisMaxQuery extends DisMaxQuery {

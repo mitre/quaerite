@@ -34,4 +34,9 @@ public class Fuzziness extends FloatFeature {
         if (!(o instanceof Fuzziness)) return false;
         return super.equals(o);
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

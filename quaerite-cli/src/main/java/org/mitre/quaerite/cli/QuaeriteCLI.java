@@ -26,8 +26,8 @@ public class QuaeriteCLI {
 
     public static void main(String[] args) throws Exception {
         String tool = args[0];
-        String[] newArgs = new String[args.length-1];
-        System.arraycopy(args,1, newArgs, 0, newArgs.length);
+        String[] newArgs = new String[args.length - 1];
+        System.arraycopy(args, 1, newArgs, 0, newArgs.length);
 
         if (tool.equals("DumpExperiments")) {
             DumpExperiments.main(newArgs);
@@ -44,7 +44,7 @@ public class QuaeriteCLI {
         } else if (tool.equals("RunGA")) {
             RunGA.main(newArgs);
         } else {
-            System.err.println("I'm sorry, but I don't recognize \""+tool + "\" as a tool");
+            System.err.println("I'm sorry, but I don't recognize \"" + tool + "\" as a tool");
         }
     }
 
@@ -52,10 +52,10 @@ public class QuaeriteCLI {
         List<String> argList = new ArrayList<>();
         argList.add("-web");
         Console.main(argList.toArray(new String[argList.size()]));
-        while(true) {
+        while (true) {
             try {
                 Thread.sleep(1000);
-            } catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 break;
             }
         }

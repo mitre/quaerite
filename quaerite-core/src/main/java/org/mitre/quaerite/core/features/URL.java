@@ -36,4 +36,9 @@ public class URL extends StringFeature {
         if (!(o instanceof URL)) return false;
         return super.equals(o);
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

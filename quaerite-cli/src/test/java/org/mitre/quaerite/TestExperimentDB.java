@@ -70,7 +70,7 @@ public class TestExperimentDB {
         Experiment experiment = new Experiment("test1", "http://solr", q);
 
         List<Query> filterQueries = new ArrayList<>();
-        for (String fq : new String[]{ "fq1", "fq2"}) {
+        for (String fq : new String[]{"fq1", "fq2"}) {
             filterQueries.add(new LuceneQuery("defaultField", fq));
         }
         experiment.addFilterQueries(filterQueries);
@@ -96,7 +96,7 @@ public class TestExperimentDB {
         List<Query> filterQueries2 = revivified.getFilterQueries();
         assertEquals(2, filterQueries2.size());
         assertIterableEquals(filterQueries, filterQueries2);
-        EDisMaxQuery q2 = (EDisMaxQuery)revivified.getQuery();
+        EDisMaxQuery q2 = (EDisMaxQuery) revivified.getQuery();
 
         //the query string is transient and not serialized
         EDisMaxQuery expected = q.deepCopy();

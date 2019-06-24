@@ -34,14 +34,14 @@ public class TestSolrExamples {
     @Test
     public void runGASolr() throws Exception {
         for (int i = 1; i <= 5; i++) {
-            Path featuresPath = CWD.resolve("solr/experiment_features_solr_"+i+".json");
-            System.out.println("running: "+featuresPath);
+            Path featuresPath = CWD.resolve("solr/experiment_features_solr_" + i + ".json");
+            System.out.println("running: " + featuresPath);
             RunGA.main(
                     new String[]{
-                            "-db", "C:/data/quaerite/examples/solr_dbs/"+ UUID.randomUUID().toString(),
+                            "-db", "C:/data/quaerite/examples/solr_dbs/" + UUID.randomUUID().toString(),
                             "-f", featuresPath.toAbsolutePath().toString(),
                             "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
-                            "-o", "C:/data/quaerite/examples/ga_output_solr_"+i
+                            "-o", "C:/data/quaerite/examples/ga_output_solr_" + i
                     }
             );
         }
@@ -50,26 +50,26 @@ public class TestSolrExamples {
     @Test
     public void runGenerateRandom() throws Exception {
         for (int i = 1; i <= 5; i++) {
-            Path featuresPath = CWD.resolve("solr/experiment_features_solr_"+i+".json");
-            System.out.println("running: "+featuresPath);
+            Path featuresPath = CWD.resolve("solr/experiment_features_solr_" + i + ".json");
+            System.out.println("running: " + featuresPath);
             GenerateExperiments.main(
                     new String[]{
                             "-f", featuresPath.toAbsolutePath().toString(),
-                            "-e", "C:/data/quaerite/examples/rand_solr_experiments_"+i+".json",
+                            "-e", "C:/data/quaerite/examples/rand_solr_experiments_" + i + ".json",
                             "-r", "20"
                     }
             );
         }
 
         for (int i = 1; i <= 5; i++) {
-            Path exPath = Paths.get("C:/data/quaerite/examples/solr/rand_solr_experiments_"+i+".json");
-            System.out.println("running experiments: "+exPath);
+            Path exPath = Paths.get("C:/data/quaerite/examples/solr/rand_solr_experiments_" + i + ".json");
+            System.out.println("running experiments: " + exPath);
             RunExperiments.main(
                     new String[]{
-                            "-db", "C:/data/quaerite/examples/solr_dbs/"+ UUID.randomUUID().toString(),
-                            "-e", "C:/data/quaerite/examples/rand_solr_experiments_"+i+".json",
+                            "-db", "C:/data/quaerite/examples/solr_dbs/" + UUID.randomUUID().toString(),
+                            "-e", "C:/data/quaerite/examples/rand_solr_experiments_" + i + ".json",
                             "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
-                            "-r", "C:/data/quaerite/examples/experiments_output_solr_"+i
+                            "-r", "C:/data/quaerite/examples/experiments_output_solr_" + i
                     }
             );
         }
@@ -79,15 +79,15 @@ public class TestSolrExamples {
     @Test
     public void runExperimentsSolr() throws Exception {
         for (int i = 1; i <= 2; i++) {
-            Path experimentsPath = CWD.resolve("solr/experiments_solr_"+i+".json");
+            Path experimentsPath = CWD.resolve("solr/experiments_solr_" + i + ".json");
             System.out.println("running: " + experimentsPath);
 
             RunExperiments.main(
                     new String[]{
-                            "-db", "C:/data/quaerite/examples/solr_dbs/"+ UUID.randomUUID().toString(),
+                            "-db", "C:/data/quaerite/examples/solr_dbs/" + UUID.randomUUID().toString(),
                             "-e", experimentsPath.toAbsolutePath().toString(),
                             "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
-                            "-r", "C:/data/quaerite/examples/experiments_output_solr_"+i
+                            "-r", "C:/data/quaerite/examples/experiments_output_solr_" + i
                     }
             );
         }

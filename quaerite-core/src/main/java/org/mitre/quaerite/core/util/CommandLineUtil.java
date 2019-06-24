@@ -43,7 +43,7 @@ public class CommandLineUtil {
         }
         Path p = Paths.get(commandLine.getOptionValue(opt));
         if (mustExist && !Files.exists(p)) {
-            throw new IllegalArgumentException("File "+p+" must exist");
+            throw new IllegalArgumentException("File " + p + " must exist");
         }
         return p;
     }

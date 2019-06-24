@@ -48,6 +48,7 @@ public class EquivalenceSet implements Comparable<EquivalenceSet> {
     public int size() {
         return counts.size();
     }
+
     public long getTotalCount() {
         return total;
     }
@@ -60,6 +61,14 @@ public class EquivalenceSet implements Comparable<EquivalenceSet> {
         return Integer.compare(this.counts.size(), o.counts.size());
     }
 
+    @Override
+    public String toString() {
+        return "EquivalenceSet{" +
+                "total=" + total +
+                ", counts=" + counts +
+                '}';
+    }
+
     public static class DescendingTotalComparator implements Comparator<EquivalenceSet> {
 
         @Override
@@ -69,13 +78,5 @@ public class EquivalenceSet implements Comparable<EquivalenceSet> {
             }
             return Long.compare(o1.total, o2.total);
         }
-    }
-
-    @Override
-    public String toString() {
-        return "EquivalenceSet{" +
-                "total=" + total +
-                ", counts=" + counts +
-                '}';
     }
 }

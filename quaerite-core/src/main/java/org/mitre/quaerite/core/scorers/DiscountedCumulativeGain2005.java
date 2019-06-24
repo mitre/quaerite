@@ -44,7 +44,8 @@ public class DiscountedCumulativeGain2005 extends DiscountedCumulativeGain2002 {
             String id = searchResultSet.get(i);
             if (judgments.containsJudgment(id)) {
                 double rel = judgments.getJudgment(id);
-                sum += (FastMath.pow(2,rel)-1)/ FastMath.log(2,rank+1);
+                sum += (FastMath.pow(2,rel) - 1) /
+                        FastMath.log(2,rank + 1);
             }
             rank++;
         }
@@ -56,5 +57,10 @@ public class DiscountedCumulativeGain2005 extends DiscountedCumulativeGain2002 {
         if (this == o) return true;
         if (!(o instanceof DiscountedCumulativeGain2005)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

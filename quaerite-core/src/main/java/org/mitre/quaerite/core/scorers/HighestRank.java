@@ -46,7 +46,7 @@ public class HighestRank extends AbstractJudgmentScorer {
     protected int _score(Judgments judgments, SearchResultSet searchResultSet) {
         for (int i = 0; i < getAtN() && i < searchResultSet.size(); i++) {
             if (judgments.containsJudgment(searchResultSet.get(i))) {
-                return i+1;
+                return i + 1;
             }
         }
         return NOT_FOUND;
@@ -57,5 +57,10 @@ public class HighestRank extends AbstractJudgmentScorer {
         if (this == o) return true;
         if (!(o instanceof HighestRank)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

@@ -19,12 +19,11 @@
 package org.mitre.quaerite.core.scorers;
 
 
-import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
 
 public class TotalQueryTime extends SummingScoreAggregator
-    implements SearchResultSetScorer {
+        implements SearchResultSetScorer {
 
     public TotalQueryTime(int atN) {
         super("TotalQueryTime", atN);
@@ -43,5 +42,10 @@ public class TotalQueryTime extends SummingScoreAggregator
         double qTime = searchResultSet.getQueryTime();
         addScore(queryInfo, qTime);
         return qTime;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

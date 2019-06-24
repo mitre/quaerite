@@ -22,7 +22,7 @@ import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
 
 public class TotalElapsedTime extends SummingScoreAggregator
-    implements SearchResultSetScorer {
+        implements SearchResultSetScorer {
 
     public TotalElapsedTime(int atN) {
         super("TotalElapsedTime", atN);
@@ -40,5 +40,10 @@ public class TotalElapsedTime extends SummingScoreAggregator
         if (this == o) return true;
         if (!(o instanceof TotalElapsedTime)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

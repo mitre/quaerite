@@ -81,11 +81,13 @@ public class GenerateExperiments extends AbstractCLI {
                         .longOpt("max")
                         .hasArg(true)
                         .desc("maximum number of experiments to generate (default is "
-                                +DEFAULT_MAX+")")
+                                + DEFAULT_MAX + ")")
                         .required(false).build()
         );
     }
+
     private int experimentCount = 0;
+
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
 
@@ -119,7 +121,7 @@ public class GenerateExperiments extends AbstractCLI {
         ExperimentFactory experimentFactory = null;
 
         try (Reader reader = Files.newBufferedReader(input, StandardCharsets.UTF_8)) {
-             experimentFactory = ExperimentFactory.fromJson(reader);
+            experimentFactory = ExperimentFactory.fromJson(reader);
         }
         ExperimentSet experimentSet = new ExperimentSet(experimentFactory.getGAConfig());
         for (Scorer scorer : experimentFactory.getScorers()) {
@@ -131,7 +133,7 @@ public class GenerateExperiments extends AbstractCLI {
             }
         } else {
             for (int i = 0; i < generateConfig.max; i++) {
-                Experiment experiment = experimentFactory.generateRandomExperiment("rand_"+i);
+                Experiment experiment = experimentFactory.generateRandomExperiment("rand_" + i);
                 experimentSet.addExperiment(experiment);
             }
         }
@@ -142,32 +144,32 @@ public class GenerateExperiments extends AbstractCLI {
         }
     }
 
-/**
-    private void recurse(int i, List<String> featureKeys,
-                         ExperimentFactory experimentFactory,
-                         Map<String, Feature> instanceFeatures,
-                         ExperimentSet experimentSet, int max) {
-        if (i >= featureKeys.size()) {
-            addExperiments(instanceFeatures, experimentFactory.getFixedParameters(), experimentSet);
-            return;
-        }
-        if (experimentSet.getExperiments().size() >= max) {
-            return;
-        }
-        String featureName = featureKeys.get(i);
-        FeatureFactory featureFactory = experimentFactory.getFeatureFactories().get(featureName);
-        boolean hadContents = false;
-        List<Feature> permutations = featureFactory.permute(1000);
-        for (Feature feature : permutations) {
-            instanceFeatures.put(featureName, feature);
-            recurse(i+1, featureKeys, experimentFactory, instanceFeatures, experimentSet, max);
-            hadContents = true;
-        }
-        if (! hadContents) {
-            recurse(i+1, featureKeys, experimentFactory, instanceFeatures, experimentSet, max);
-        }
-    }
-*/
+    /**
+     * private void recurse(int i, List<String> featureKeys,
+     * ExperimentFactory experimentFactory,
+     * Map<String, Feature> instanceFeatures,
+     * ExperimentSet experimentSet, int max) {
+     * if (i >= featureKeys.size()) {
+     * addExperiments(instanceFeatures, experimentFactory.getFixedParameters(), experimentSet);
+     * return;
+     * }
+     * if (experimentSet.getExperiments().size() >= max) {
+     * return;
+     * }
+     * String featureName = featureKeys.get(i);
+     * FeatureFactory featureFactory = experimentFactory.getFeatureFactories().get(featureName);
+     * boolean hadContents = false;
+     * List<Feature> permutations = featureFactory.permute(1000);
+     * for (Feature feature : permutations) {
+     * instanceFeatures.put(featureName, feature);
+     * recurse(i+1, featureKeys, experimentFactory, instanceFeatures, experimentSet, max);
+     * hadContents = true;
+     * }
+     * if (! hadContents) {
+     * recurse(i+1, featureKeys, experimentFactory, instanceFeatures, experimentSet, max);
+     * }
+     * }
+     */
 
 
     private static class GenerateConfig {

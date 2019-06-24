@@ -50,8 +50,8 @@ import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.scorers.AbstractJudgmentScorer;
-import org.mitre.quaerite.core.scorers.Scorer;
 import org.mitre.quaerite.core.scorers.DistributionalScoreAggregator;
+import org.mitre.quaerite.core.scorers.Scorer;
 import org.mitre.quaerite.core.scorers.SummingScoreAggregator;
 import org.mitre.quaerite.core.serializers.ScorerListSerializer;
 import org.mitre.quaerite.core.stats.ExperimentNameScorePair;
@@ -99,12 +99,12 @@ public class ExperimentDB implements Closeable {
 
     public static ExperimentDB open(Path dbDir) throws SQLException, IOException {
         try {
-            Class.forName ("org.h2.Driver");
+            Class.forName("org.h2.Driver");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
         return new ExperimentDB(DriverManager.getConnection(
-                    "jdbc:h2:"+dbDir.resolve("h2_database").toAbsolutePath()), false);
+                "jdbc:h2:" + dbDir.resolve("h2_database").toAbsolutePath()), false);
     }
 
     ExperimentDB(Connection connection, boolean dropAll) throws SQLException {
@@ -113,10 +113,12 @@ public class ExperimentDB implements Closeable {
             dropTables();
         }
         initTables();
-        selectExperiments = connection.prepareStatement("select name, last_edited, json from experiments");
+        selectExperiments = connection.prepareStatement(
+                "select name, last_edited, json from experiments");
         selectOneExperiment = connection.prepareStatement(
                 "select name, last_edited, json from experiments where name=?");
-        selectExperimentNames = connection.prepareStatement("select name from experiments group by name");
+        selectExperimentNames = connection.prepareStatement(
+                "select name from experiments group by name");
 
         insertExperiments = connection.prepareStatement(
                 "insert into experiments (name, last_edited, json) values (?,?,?)"
@@ -139,7 +141,7 @@ public class ExperimentDB implements Closeable {
         );
 
         selectScorers = connection.prepareStatement(
-            "select name, json from SCORERS"
+                "select name, json from SCORERS"
         );
         insertScorers = connection.prepareStatement(
                 "merge into scorers KEY(name) values ((select max(id) from " +
@@ -173,7 +175,7 @@ public class ExperimentDB implements Closeable {
         String sql = "CREATE TABLE IF NOT EXISTS " +
                 "EXPERIMENTS(" +
                 "NAME VARCHAR(255) PRIMARY KEY, " +
-                "LAST_EDITED TIMESTAMP, "+
+                "LAST_EDITED TIMESTAMP, " +
                 "JSON VARCHAR(100000));";
         executeSQL(connection, sql);
     }
@@ -181,7 +183,7 @@ public class ExperimentDB implements Closeable {
     private void initScorers() throws SQLException {
         String sql = "CREATE TABLE IF NOT EXISTS " +
                 "SCORERS( " +
-                "id bigint auto_increment,"+
+                "id bigint auto_increment," +
                 "NAME VARCHAR(255) UNIQUE, " +
                 "JSON VARCHAR(10000));";
         executeSQL(connection, sql);
@@ -189,10 +191,10 @@ public class ExperimentDB implements Closeable {
     }
 
     private void initJudgments() throws SQLException {
-        String sql = "CREATE TABLE IF NOT EXISTS JUDGMENTS ("+
-                "QUERY_ID VARCHAR(256) PRIMARY KEY,"+
-                "QUERY_SET VARCHAR(256),"+
-                "QUERY_COUNT INTEGER,"+
+        String sql = "CREATE TABLE IF NOT EXISTS JUDGMENTS (" +
+                "QUERY_ID VARCHAR(256) PRIMARY KEY," +
+                "QUERY_SET VARCHAR(256)," +
+                "QUERY_COUNT INTEGER," +
                 "JSON VARCHAR(10000));";
         executeSQL(connection, sql);
     }
@@ -203,7 +205,7 @@ public class ExperimentDB implements Closeable {
         String sql = "CREATE TABLE IF NOT EXISTS " +
                 "SEARCH_RESULTS( " +
                 "QUERY_ID VARCHAR(256), " +
-                "EXPERIMENT_NAME VARCHAR(256),"+
+                "EXPERIMENT_NAME VARCHAR(256)," +
                 "JSON VARCHAR(100000));";
         executeSQL(connection, sql);
 
@@ -219,7 +221,7 @@ public class ExperimentDB implements Closeable {
 
     }
 
-    static boolean executeSQL(Connection connection, String sql) throws SQLException{
+    static boolean executeSQL(Connection connection, String sql) throws SQLException {
         try (Statement st = connection.createStatement()) {
             return st.execute(sql);
         }
@@ -233,13 +235,15 @@ public class ExperimentDB implements Closeable {
         if (merge) {
             mergeExperiments.clearParameters();
             mergeExperiments.setString(1, experiment.getName());
-            mergeExperiments.setTimestamp(2, new Timestamp(Instant.now().getEpochSecond()));
+            mergeExperiments.setTimestamp(2,
+                    new Timestamp(Instant.now().getEpochSecond()));
             mergeExperiments.setString(3, experiment.toJson());
             mergeExperiments.execute();
         } else {
             insertExperiments.clearParameters();
             insertExperiments.setString(1, experiment.getName());
-            insertExperiments.setTimestamp(2, new Timestamp(Instant.now().getEpochSecond()));
+            insertExperiments.setTimestamp(2,
+                    new Timestamp(Instant.now().getEpochSecond()));
             insertExperiments.setString(3, experiment.toJson());
             insertExperiments.execute();
         }
@@ -257,6 +261,7 @@ public class ExperimentDB implements Closeable {
         }
         return names;
     }
+
     public Experiment getExperiment(String name) throws SQLException {
         selectOneExperiment.clearParameters();
         selectOneExperiment.setString(1, name);
@@ -315,7 +320,7 @@ public class ExperimentDB implements Closeable {
         Set<String> querySets = new HashSet<>();
         for (Scorer scorer : scorers) {
             if (scorer instanceof AbstractJudgmentScorer) {
-                querySets.addAll(((AbstractJudgmentScorer)scorer).getQuerySets());
+                querySets.addAll(((AbstractJudgmentScorer) scorer).getQuerySets());
             }
         }
         return querySets;
@@ -351,7 +356,7 @@ public class ExperimentDB implements Closeable {
                 return Judgments.fromJson(json);
             }
         }
-        throw new IllegalArgumentException("I couldn't find a judgment for query_id="+queryId);
+        throw new IllegalArgumentException("I couldn't find a judgment for query_id=" + queryId);
     }
 
 
@@ -400,16 +405,17 @@ public class ExperimentDB implements Closeable {
     public void initScoreTable(List<Scorer> scorers) throws SQLException {
         boolean mismatch = false;
         boolean tableProbDoesntExist = false;
-        try(Statement st = connection.createStatement()) {
+        try (Statement st = connection.createStatement()) {
             try (ResultSet rs = st.executeQuery("select * from scores limit 1")) {
                 ResultSetMetaData metaData = rs.getMetaData();
                 //4 = queryset query querycount experiment
-                if (metaData.getColumnCount() != scorers.size()+4) {
+                if (metaData.getColumnCount() != scorers.size() + 4) {
                     mismatch = true;
                 }
-                if (! mismatch) {
+                if (!mismatch) {
                     for (int i = 0; i < scorers.size(); i++) {
-                        if (!metaData.getColumnName(i + 5).equalsIgnoreCase(scorers.get(i).getName())) {
+                        if (!metaData.getColumnName(i + 5).
+                                equalsIgnoreCase(scorers.get(i).getName())) {
                             mismatch = true;
                             break;
                         }
@@ -437,7 +443,7 @@ public class ExperimentDB implements Closeable {
         sql.append("CREATE TABLE SCORES (" +
                 "QUERY_ID VARCHAR(1024) NOT NULL, " +
                 "QUERY_SET VARCHAR(1024) NOT NULL, " +
-                "QUERY_COUNT INT, "+
+                "QUERY_COUNT INT, " +
                 "EXPERIMENT VARCHAR(1024) NOT NULL, ");
         int i = 0;
         for (Scorer scorer : scorers) {
@@ -467,11 +473,11 @@ public class ExperimentDB implements Closeable {
                 sql.append(",");
             }
             int j = 0;
-            for (String statistic : ((Scorer)scorer).getStatistics()) {
+            for (String statistic : ((Scorer) scorer).getStatistics()) {
                 if (j++ > 0) {
                     sql.append(",");
                 }
-                sql.append(scorer.getName()+"_"+statistic).append(" DOUBLE");
+                sql.append(scorer.getName() + "_" + statistic).append(" DOUBLE");
             }
         }
         sql.append(")");
@@ -483,6 +489,7 @@ public class ExperimentDB implements Closeable {
 
     /**
      * NOT THREAD SAFE
+     *
      * @param queryId
      * @param experimentName
      * @return {@link SearchResultSet} or null if not found
@@ -557,11 +564,13 @@ public class ExperimentDB implements Closeable {
 
     public void clearScores(String experimentName) throws SQLException {
         if (tableExists("SCORES")) {
-            executeSQL(connection, "delete from SCORES where experiment='" + experimentName + "'");
+            executeSQL(connection, "delete from SCORES where experiment='" + experimentName
+                    + "'");
 
         }
         if (tableExists("SCORES_AGGREGATED")) {
-            executeSQL(connection, "delete from SCORES_AGGREGATED where experiment='"+experimentName+"'");
+            executeSQL(connection, "delete from SCORES_AGGREGATED where experiment='"
+                    + experimentName + "'");
         }
     }
 
@@ -569,18 +578,19 @@ public class ExperimentDB implements Closeable {
         return connection;
     }
 
-    public Map<String, Double> getScores(String querySet, String experimentName, String scorerName) throws SQLException {
+    public Map<String, Double> getScores(String querySet, String experimentName,
+                                         String scorerName) throws SQLException {
         PreparedStatement selectScores = selectScoreStatements.get(scorerName);
         if (selectScores == null) {
             selectScores = connection.prepareStatement("select query_id, "
-                    +scorerName+" from scores where query_set=? and experiment=?");
+                    + scorerName + " from scores where query_set=? and experiment=?");
             selectScoreStatements.put(scorerName, selectScores);
         }
         selectScores.clearParameters();
         selectScores.setString(1, querySet);
         selectScores.setString(2, experimentName);
         Map<String, Double> values = new HashMap<>();
-        try(ResultSet rs = selectScores.executeQuery()) {
+        try (ResultSet rs = selectScores.executeQuery()) {
             while (rs.next()) {
                 String queryId = rs.getString(1);
                 double d = rs.getDouble(2);
@@ -591,7 +601,7 @@ public class ExperimentDB implements Closeable {
     }
 
     public boolean hasScores(String experimentName) throws SQLException {
-        String sql = "select experiment from SCORES where experiment='"+experimentName+"'";
+        String sql = "select experiment from SCORES where experiment='" + experimentName + "'";
         int cnt = 0;
         try (Statement st = connection.createStatement()) {
             try (ResultSet rs = st.executeQuery(sql)) {
@@ -621,7 +631,8 @@ public class ExperimentDB implements Closeable {
     }
 
     public boolean tableExists(String tableName) throws SQLException {
-        try (ResultSet rset = connection.getMetaData().getTables(null, null, tableName, null)) {
+        try (ResultSet rset = connection.getMetaData().getTables(null,
+                null, tableName, null)) {
             if (rset.next()) {
                 return true;
             }
@@ -633,13 +644,15 @@ public class ExperimentDB implements Closeable {
         Map<String, Double> map = new HashMap<>();
         String columnName;
         if (scorer instanceof SummingScoreAggregator) {
-            columnName = ((SummingScoreAggregator)scorer).getName()+"_"+SummingScoreAggregator.SUM;
+            columnName = ((SummingScoreAggregator) scorer).getName() + "_" +
+                    SummingScoreAggregator.SUM;
         } else if (scorer instanceof DistributionalScoreAggregator) {
-            columnName = ((DistributionalScoreAggregator)scorer).getName()+"_"+DistributionalScoreAggregator.MEAN;
+            columnName = ((DistributionalScoreAggregator) scorer).getName() + "_"
+                    + DistributionalScoreAggregator.MEAN;
         } else {
-            throw new IllegalArgumentException("I don't yet support: "+ scorer.getClass());
+            throw new IllegalArgumentException("I don't yet support: " + scorer.getClass());
         }
-        String sql = "select experiment, "+columnName+" from scores_aggregated";
+        String sql = "select experiment, " + columnName + " from scores_aggregated";
         try (Statement st = connection.createStatement()) {
             try (ResultSet rs = st.executeQuery(sql)) {
                 while (rs.next()) {
@@ -666,7 +679,7 @@ public class ExperimentDB implements Closeable {
     public boolean hasNamedQuerySets() throws SQLException {
         try (ResultSet rs = getQuerySets.executeQuery()) {
             while (rs.next()) {
-                if (! rs.getString(1).equals(QueryInfo.DEFAULT_QUERY_SET)) {
+                if (!rs.getString(1).equals(QueryInfo.DEFAULT_QUERY_SET)) {
                     return true;
                 }
             }
@@ -674,7 +687,8 @@ public class ExperimentDB implements Closeable {
         return false;
     }
 
-    public void createQueryComparisons(String scorer, List<String> experiments) throws SQLException {
+    public void createQueryComparisons(String scorer, List<String> experiments)
+            throws SQLException {
         executeSQL(connection, "drop table if exists query_comparisons");
         StringBuilder sql = new StringBuilder()
                 .append("create table query_comparisons (")
@@ -684,7 +698,7 @@ public class ExperimentDB implements Closeable {
         for (String experiment : experiments) {
             sql.append(",").append(experiment).append(" double ");
             if (i++ > 0) {
-                sql.append(",").append(experiment+"_diff double");
+                sql.append(",").append(experiment + "_diff double");
             }
         }
         sql.append(")");
@@ -697,22 +711,22 @@ public class ExperimentDB implements Closeable {
         executeSQL(connection, sql.toString());
         sql.setLength(0);
         for (String experiment : experiments) {
-            String s = "update query_comparisons c set c."+experiment+" =" +
-                    " select s."+scorer+" from scores s where (" +
+            String s = "update query_comparisons c set c." + experiment + " =" +
+                    " select s." + scorer + " from scores s where (" +
                     " s.query_id=c.query_id and" +
-                    " s.experiment='"+experiment+"');";
+                    " s.experiment='" + experiment + "');";
             executeSQL(connection, s);
         }
 
         String baselineExperiment = experiments.get(0);
         for (int j = 1; j < experiments.size(); j++) {
-            String s = "update query_comparisons c set c."+experiments.get(j)+"_diff="+
-                    "(c."+experiments.get(j)+"-c."+baselineExperiment+")";
+            String s = "update query_comparisons c set c." + experiments.get(j) + "_diff=" +
+                    "(c." + experiments.get(j) + "-c." + baselineExperiment + ")";
             executeSQL(connection, s);
         }
         selectQueryComparisons = connection.prepareStatement(
-                "select * from query_comparisons order by "+
-                        experiments.get(1)+"_diff asc");
+                "select * from query_comparisons order by " +
+                        experiments.get(1) + "_diff asc");
     }
 
     public ResultSet getQueryComparisons() throws SQLException {
@@ -730,29 +744,34 @@ public class ExperimentDB implements Closeable {
         }
     }
 
-    public List<ExperimentScorePair> getExperimentScores(String experimentNamePrefix, String scorerName) throws SQLException {
+    public List<ExperimentScorePair> getExperimentScores(String experimentNamePrefix,
+                                                         String scorerName) throws SQLException {
+
         return getNBestExperiments(experimentNamePrefix, -1, scorerName);
     }
 
-    public List<ExperimentScorePair> getNBestExperiments(int num, String scorerName) throws SQLException {
+    public List<ExperimentScorePair> getNBestExperiments(int num,
+                                                         String scorerName) throws SQLException {
         return getNBestExperiments(StringUtils.EMPTY, num, scorerName);
     }
 
-    public List<ExperimentScorePair> getNBestExperiments(String experimentNamePrefix, int num, String scorerName) throws SQLException {
+    public List<ExperimentScorePair> getNBestExperiments(String experimentNamePrefix,
+                                                         int num, String scorerName)
+            throws SQLException {
         String prefix = experimentNamePrefix;
         if (prefix.endsWith("*")) {
             prefix = prefix.substring(0, prefix.length() - 1);
         }
         prefix = prefix + "%";
         String prefixIlike = StringUtils.isBlank(prefix) ? StringUtils.EMPTY :
-            "where sa.experiment ilike '"+prefix+"' ";
+                "where sa.experiment ilike '" + prefix + "' ";
 
-        String limit = (num > -1) ? "limit "+num : StringUtils.EMPTY;
-        String sql = "select sa.experiment, e.json, sa."+scorerName +" "+
+        String limit = (num > -1) ? "limit " + num : StringUtils.EMPTY;
+        String sql = "select sa.experiment, e.json, sa." + scorerName + " " +
                 "from scores_aggregated sa " +
                 "join experiments e on sa.experiment=e.name " +
-                prefixIlike+
-                "order by "+scorerName+" desc "+
+                prefixIlike +
+                "order by " + scorerName + " desc " +
                 limit;
 
         List<ExperimentScorePair> experiments = new ArrayList<>();
@@ -770,7 +789,9 @@ public class ExperimentDB implements Closeable {
         return experiments;
     }
 
-    public List<ExperimentNameScorePair> getNBestExperimentNames(String experimentNamePrefix, int num, String scorerName) throws SQLException {
+    public List<ExperimentNameScorePair> getNBestExperimentNames(
+            String experimentNamePrefix, int num, String scorerName)
+            throws SQLException {
         String prefix = experimentNamePrefix;
         if (prefix.endsWith("*")) {
             prefix = prefix.substring(0, prefix.length() - 1);
@@ -778,14 +799,14 @@ public class ExperimentDB implements Closeable {
         }
         prefix = prefix + "%";
         String prefixIlike = StringUtils.isBlank(prefix) ? StringUtils.EMPTY :
-                "where sa.experiment ilike '"+prefix+"' ";
+                "where sa.experiment ilike '" + prefix + "' ";
 
-        String limit = (num > -1) ? "limit "+num : StringUtils.EMPTY;
-        String sql = "select sa.experiment, sa."+scorerName +" "+
+        String limit = (num > -1) ? "limit " + num : StringUtils.EMPTY;
+        String sql = "select sa.experiment, sa." + scorerName + " " +
                 "from scores_aggregated sa " +
                 "join experiments e on sa.experiment=e.name " +
-                prefixIlike+
-                "order by "+scorerName+" desc "+
+                prefixIlike +
+                "order by " + scorerName + " desc " +
                 limit;
 
         List<ExperimentNameScorePair> experiments = new ArrayList<>();
@@ -802,7 +823,7 @@ public class ExperimentDB implements Closeable {
     }
 
     public QueryRunnerDBClient getQueryRunnerDBClient(
-            List<Scorer> scorers) throws SQLException{
+            List<Scorer> scorers) throws SQLException {
         return new QueryRunnerDBClient(connection, scorers);
     }
 }

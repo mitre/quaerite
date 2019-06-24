@@ -44,7 +44,7 @@ public class HttpUtils {
         try {
             String get = uri.getPath();
             if (!StringUtils.isBlank(uri.getQuery())) {
-                get += "?"+uri.getRawQuery();
+                get += "?" + uri.getRawQuery();
             }
             httpGet = new HttpGet(get);
         } catch (Exception e) {
@@ -54,8 +54,10 @@ public class HttpUtils {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             try (CloseableHttpResponse httpResponse = httpClient.execute(target, httpGet)) {
                 if (httpResponse.getStatusLine().getStatusCode() != 200) {
-                    String msg = new String(EntityUtils.toByteArray(httpResponse.getEntity()), StandardCharsets.UTF_8);
-                    throw new SearchClientException("Bad status code: " + httpResponse.getStatusLine().getStatusCode()
+                    String msg = new String(EntityUtils.toByteArray(
+                            httpResponse.getEntity()), StandardCharsets.UTF_8);
+                    throw new SearchClientException("Bad status code: " +
+                            httpResponse.getStatusLine().getStatusCode()
                             + "for url: " + url + "; msg: " + msg);
                 }
                 return EntityUtils.toByteArray(httpResponse.getEntity());

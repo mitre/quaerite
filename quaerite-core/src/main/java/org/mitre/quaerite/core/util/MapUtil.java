@@ -27,7 +27,8 @@ import java.util.Map;
 
 public class MapUtil {
 
-    public static <K extends Comparable<? super K>, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map ) {
+    public static <K extends Comparable<? super K>,
+            V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map ) {
         List<Map.Entry<K, V>> list =
                 new LinkedList<>( map.entrySet() );
         Collections.sort( list, new Comparator<Map.Entry<K, V>>() {
@@ -50,7 +51,8 @@ public class MapUtil {
         return result;
     }
 
-    public static <K extends Comparable<? super K>, V extends Comparable<? super V>> Map<K, V> sortByDescendingValue(Map<K, V> map ) {
+    public static <K extends Comparable<? super K>,
+            V extends Comparable<? super V>> Map<K, V> sortByDescendingValue(Map<K, V> map ) {
         List<Map.Entry<K, V>> list =
                 new LinkedList<>( map.entrySet() );
         Collections.sort( list, new Comparator<Map.Entry<K, V>>() {
@@ -73,7 +75,8 @@ public class MapUtil {
         return result;
     }
 
-    public static <K extends Comparable<? super K>, V> Map<K, V> sortByDescendingValue(Map<K, V> map, Comparator<V> vComparator) {
+    public static <K extends Comparable<? super K>, V> Map<K, V> sortByDescendingValue(
+            Map<K, V> map, Comparator<V> vComparator) {
         List<Map.Entry<K, V>> list =
                 new LinkedList<>( map.entrySet() );
         Collections.sort( list, new Comparator<Map.Entry<K, V>>() {

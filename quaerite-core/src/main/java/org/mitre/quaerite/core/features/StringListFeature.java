@@ -17,14 +17,8 @@
 package org.mitre.quaerite.core.features;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.mitre.quaerite.core.util.MathUtil;
 
 public abstract class StringListFeature<T extends StringListFeature> extends AbstractFeature<T> {
 

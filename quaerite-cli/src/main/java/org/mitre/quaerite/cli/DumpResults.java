@@ -61,7 +61,8 @@ public class DumpResults extends AbstractExperimentRunner {
                         .longOpt("querySets")
                         .hasArg()
                         .required(false)
-                        .desc("querySets to dump in rollups (comma-delimited) (optional; default: all)").build()
+                        .desc("querySets to dump in rollups " +
+                                "(comma-delimited) (optional; default: all)").build()
         );
         OPTIONS.addOption(
                 Option.builder("s")

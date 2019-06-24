@@ -39,7 +39,7 @@ public class NDCG extends DiscountedCumulativeGain2002 {
         if (idealDCG == 0) {
             return 0.0;
         }
-        double score = _score(judgments, searchResultSet)/idealDCG;
+        double score = _score(judgments, searchResultSet) / idealDCG;
         addScore(judgments.getQueryInfo(), score);
         return score;
     }
@@ -63,5 +63,10 @@ public class NDCG extends DiscountedCumulativeGain2002 {
         if (this == o) return true;
         if (!(o instanceof NDCG)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

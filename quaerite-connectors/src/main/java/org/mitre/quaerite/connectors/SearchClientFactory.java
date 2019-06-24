@@ -34,18 +34,22 @@ public class SearchClientFactory {
 
         Matcher m = Pattern.compile("(https?://[^/]+)").matcher(url);
         if (!m.find()) {
-            throw new SearchClientException("Couldn't find domain in this url:"+url);
+            throw new SearchClientException(
+                    "Couldn't find domain in this url:" + url);
         }
-        String solrSystem = m.group(1)+"/solr/admin/info/system?wt=json";
+        String solrSystem = m.group(1) + "/solr/admin/info/system?wt=json";
         try {
             byte[] bytes = HttpUtils.get(solrSystem);
-            try (Reader reader = new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8)) {
+            try (Reader reader = new InputStreamReader(
+                    new ByteArrayInputStream(bytes), StandardCharsets.UTF_8)) {
                 JsonElement root = new JsonParser().parse(reader);
                 JsonObject lucene = root.getAsJsonObject().getAsJsonObject("lucene");
-                String version = lucene.getAsJsonPrimitive("solr-spec-version").getAsString();
+                String version = lucene.getAsJsonPrimitive(
+                        "solr-spec-version").getAsString();
                 int firstPeriod = version.indexOf(".");
                 if (firstPeriod < 0) {
-                    throw new SearchClientException("couldn't find version major version: "+ version);
+                    throw new SearchClientException(
+                            "couldn't find version major version: " + version);
                 }
                 int major = Integer.parseInt(version.substring(0, firstPeriod));
                 if (major < 7) {
@@ -55,11 +59,12 @@ public class SearchClientFactory {
                 }
             }
         } catch (SearchClientException e) {
-
+            //swallow and try es
         }
         String es = m.group(1);
         byte[] bytes = HttpUtils.get(es);
-        try (Reader reader = new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8)) {
+        try (Reader reader = new InputStreamReader(
+                new ByteArrayInputStream(bytes), StandardCharsets.UTF_8)) {
             JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
             JsonObject version = root.getAsJsonObject("version");
             String number = version.get("number").getAsString();
@@ -69,10 +74,12 @@ public class SearchClientFactory {
             } else if (major.equals("7")) {
                 return new ESClient(url);
             } else {
-                throw new IllegalArgumentException("I regret that I don't yet support: "+number);
+                throw new IllegalArgumentException(
+                        "I regret that I don't yet support: " + number);
             }
         } catch (IOException e) {
-            throw new SearchClientException("Couldn't find right client for: "+url);
+            throw new SearchClientException(
+                    "Couldn't find right client for: " + url);
         }
     }
 }

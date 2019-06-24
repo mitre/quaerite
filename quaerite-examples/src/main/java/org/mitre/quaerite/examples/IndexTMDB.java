@@ -41,7 +41,8 @@ public class IndexTMDB {
 
     public static void main(String[] args) throws Exception {
         if (args.length != 2) {
-            System.err.println("java -jar o.m.q.examples.IndexTMDB tmdb.json http://localhost:8983/solr/tmdb");
+            System.err.println("java -jar o.m.q.examples.IndexTMDB tmdb.json " +
+                    "http://localhost:8983/solr/tmdb");
             System.exit(0);
         }
         Path p = Paths.get(args[0]);
@@ -60,15 +61,15 @@ public class IndexTMDB {
                 if (movies.size() >= 1000) {
                     searchClient.addDocuments(buildDocuments(idField, movies));
                     movies.clear();
-                    System.out.println("indexed "+cnt + " in "+
-                            (System.currentTimeMillis()-start) + " ms");
+                    System.out.println("indexed " + cnt + " in " +
+                            (System.currentTimeMillis() - start) + " ms");
                 }
             }
             jsonReader.endObject();
         }
         searchClient.addDocuments(buildDocuments(idField, movies));
-        System.out.println("finished indexing "+cnt + " in "+
-                (System.currentTimeMillis()-start) + " ms");
+        System.out.println("finished indexing " + cnt + " in " +
+                (System.currentTimeMillis() - start) + " ms");
     }
 
     private static List<StoredDocument> buildDocuments(String idField, List<Movie> movies) {
@@ -126,7 +127,7 @@ public class IndexTMDB {
             String name = getName(jsonReader, "");
             if ("adult".equals(name)) {
                 movie.adult = getBoolean(jsonReader, false);
-            } else if ("genres".equals(name)){
+            } else if ("genres".equals(name)) {
                 movie.setGenres(extractNamesFromArrayOfObjections(jsonReader));
             } else if ("original_language".equals(name)) {
                 movie.originalLanguage = getString(jsonReader, StringUtils.EMPTY);
@@ -209,7 +210,7 @@ public class IndexTMDB {
             String name = jsonReader.nextName();
             if ("name".equals(name)) {
                 String s = jsonReader.nextString();
-                if (! StringUtils.isBlank(s)) {
+                if (!StringUtils.isBlank(s)) {
                     names.add(s);
                 }
             } else {

@@ -21,17 +21,20 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 
-@Disabled("need to have Solr/ES tmdb instance running")
+@Disabled("need to have Solr/ES tmdb instance running" +
+        "and need to set JSON_PATH to the location of the tmdb.json file")
 public class TestIndexTMDB {
 
     private static final String JSON_PATH = "C:/data/tmdb.json";
     private static final String SOLR = "http://localhost:8983/solr/tmdb";
     private static final String ES = "http://localhost:9200/tmdb";
+
     @Test
     public void testLoadingSolr() throws Exception {
         IndexTMDB.main(
                 new String[]{JSON_PATH, SOLR});
     }
+
     @Test
     public void testLoadingES() throws Exception {
         IndexTMDB.main(

@@ -33,4 +33,9 @@ public class Boost extends FloatFeature {
         if (!(o instanceof Boost)) return false;
         return super.equals(o);
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

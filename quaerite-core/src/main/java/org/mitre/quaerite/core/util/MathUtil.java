@@ -38,23 +38,23 @@ public class MathUtil {
         if (amplitude < 0 || amplitude > 1.0) {
             throw new IllegalArgumentException("amplitude must be >= 0 and <= 1");
         }
-        if (Math.abs(max-min) < 0.0000001) {
+        if (Math.abs(max - min) < 0.0000001) {
             return min;
         }
         float curr;
         if (currentValue == null) {
-            curr = (max+min)/2f;
+            curr = (max + min) / 2f;
         } else {
             curr = currentValue;
         }
-        curr = (curr < min) ? min: curr;
+        curr = (curr < min) ? min : curr;
         curr = (curr > max) ? max : curr;
 
-        float distBelow = (float)amplitude*(curr-min);
-        float distAbove = (float)amplitude*(max-curr);
+        float distBelow = (float)amplitude * (curr - min);
+        float distAbove = (float)amplitude * (max - curr);
 
-        float adjustedMin = curr-distBelow;
-        float adjustedMax = curr+distAbove;
+        float adjustedMin = curr - distBelow;
+        float adjustedMax = curr + distAbove;
         adjustedMin = (adjustedMin < min) ? min : adjustedMin;
         adjustedMax = (adjustedMax > max) ? max : adjustedMax;
 
@@ -70,18 +70,18 @@ public class MathUtil {
         }
         int curr;
         if (currentValue == null) {
-            curr = (int)(((double)(max+min))/2.0);
+            curr = (int)(((double)(max + min)) / 2.0);
         } else {
             curr = currentValue;
         }
-        curr = (curr < min) ? min: curr;
+        curr = (curr < min) ? min : curr;
         curr = (curr > max) ? max : curr;
 
-        int distBelow = (int)(amplitude*(double)(curr-min));
-        int distAbove = (int)(amplitude*(double)(max-curr));
+        int distBelow = (int)(amplitude * (double)(curr - min));
+        int distAbove = (int)(amplitude * (double)(max - curr));
 
-        int adjustedMin = curr-distBelow;
-        int adjustedMax = curr+distAbove;
+        int adjustedMin = curr - distBelow;
+        int adjustedMax = curr + distAbove;
         adjustedMin = (adjustedMin < min) ? min : adjustedMin;
         adjustedMax = (adjustedMax > max) ? max : adjustedMax;
         if (adjustedMin == adjustedMax) {
@@ -113,11 +113,11 @@ public class MathUtil {
 
         double denom = 0.0;
         for (ExperimentScorePair p : scorePairs) {
-            denom += (p.getScore()-min + EPSILON);
+            denom += (p.getScore() - min + EPSILON);
         }
         List<ExperimentScorePair> fitnessProportions = new ArrayList<>();
         for (ExperimentScorePair p : scorePairs) {
-            double fp = (p.getScore()-min+EPSILON)/denom;
+            double fp = (p.getScore() - min + EPSILON) / denom;
             fitnessProportions.add(new ExperimentScorePair(p.getExperiment(), fp));
         }
         return fitnessProportions;
@@ -128,14 +128,14 @@ public class MathUtil {
     }
 
     public static boolean equals(float f1, float f2, float delta) {
-        if (FastMath.abs(f1-f2) < delta) {
+        if (FastMath.abs(f1 - f2) < delta) {
             return true;
         }
         return false;
     }
 
     public static boolean equals(double d1, double d2, float delta) {
-        if (FastMath.abs(d1-d2) < delta) {
+        if (FastMath.abs(d1 - d2) < delta) {
             return true;
         }
         return false;

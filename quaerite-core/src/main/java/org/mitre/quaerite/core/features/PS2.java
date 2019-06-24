@@ -35,4 +35,9 @@ public class PS2 extends IntFeature {
         if (!(o instanceof PS2)) return false;
         return super.equals(o);
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

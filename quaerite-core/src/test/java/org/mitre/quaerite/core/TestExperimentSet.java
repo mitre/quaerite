@@ -48,8 +48,8 @@ import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.scorers.AbstractJudgmentScorer;
-import org.mitre.quaerite.core.scorers.Scorer;
 import org.mitre.quaerite.core.scorers.NDCG;
+import org.mitre.quaerite.core.scorers.Scorer;
 
 public class TestExperimentSet {
 
@@ -59,7 +59,8 @@ public class TestExperimentSet {
         ExperimentSet experimentSet = null;
         try (Reader reader =
                      new BufferedReader(new InputStreamReader(
-                             TestExperimentSet.class.getResourceAsStream("/test-documents/experiments_solr_1.json"),
+                             TestExperimentSet.class.getResourceAsStream(
+                                     "/test-documents/experiments_solr_1.json"),
                              StandardCharsets.UTF_8))) {
             experimentSet = ExperimentSet.fromJson(reader);
 
@@ -97,7 +98,8 @@ public class TestExperimentSet {
         ExperimentSet experimentSet = null;
         try (Reader reader =
                      new BufferedReader(new InputStreamReader(
-                             TestExperimentSet.class.getResourceAsStream("/test-documents/experiments_solr_2.json"),
+                             TestExperimentSet.class.getResourceAsStream(
+                                     "/test-documents/experiments_solr_2.json"),
                              StandardCharsets.UTF_8))) {
             experimentSet = ExperimentSet.fromJson(reader);
         }
@@ -127,7 +129,8 @@ public class TestExperimentSet {
         ExperimentSet experimentSet = null;
         try (Reader reader =
                      new BufferedReader(new InputStreamReader(
-                             TestExperimentSet.class.getResourceAsStream("/test-documents/experiments_es_1.json"),
+                             TestExperimentSet.class.getResourceAsStream(
+                                     "/test-documents/experiments_es_1.json"),
                              StandardCharsets.UTF_8))) {
             experimentSet = ExperimentSet.fromJson(reader);
         }
@@ -186,7 +189,8 @@ public class TestExperimentSet {
         Query boosting = experimentSet.getExperiments().get("boostingExperiment").getQuery();
         assertEquals(BoostingQuery.class, boosting.getClass());
 
-        assertEquals((float) 0.001, ((BoostingQuery) boosting).getNegativeBoost().getValue(), 0.1);
+        assertEquals((float) 0.001, ((BoostingQuery) boosting)
+                .getNegativeBoost().getValue(), 0.1);
     }
 
     @Test
@@ -208,27 +212,33 @@ public class TestExperimentSet {
 
         Experiment ex = experimentSet.getExperiment("unspecified");
         Query q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.UNSPECIFIED, ((MultiFieldQuery) q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.OPERATOR.UNSPECIFIED,
+                ((MultiFieldQuery) q).getQueryOperator().getOperator());
 
 
         ex = experimentSet.getExperiment("query_and");
         q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.AND, ((MultiFieldQuery) q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.OPERATOR.AND,
+                ((MultiFieldQuery) q).getQueryOperator().getOperator());
 
         ex = experimentSet.getExperiment("query_or_none");
         q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery) q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.OPERATOR.OR,
+                ((MultiFieldQuery) q).getQueryOperator().getOperator());
+
         assertEquals(QueryOperator.MM.NONE, ((MultiFieldQuery) q).getQueryOperator().getMM());
 
         ex = experimentSet.getExperiment("query_or_int");
         q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery) q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.OPERATOR.OR,
+                ((MultiFieldQuery) q).getQueryOperator().getOperator());
         assertEquals(QueryOperator.MM.INTEGER, ((MultiFieldQuery) q).getQueryOperator().getMM());
         assertEquals(2, ((MultiFieldQuery) q).getQueryOperator().getInt());
 
         ex = experimentSet.getExperiment("query_or_int_no_op");
         q = ex.getQuery();
-        assertEquals(QueryOperator.OPERATOR.OR, ((MultiFieldQuery) q).getQueryOperator().getOperator());
+        assertEquals(QueryOperator.OPERATOR.OR,
+                ((MultiFieldQuery) q).getQueryOperator().getOperator());
         assertEquals(QueryOperator.MM.INTEGER, ((MultiFieldQuery) q).getQueryOperator().getMM());
         assertEquals(2, ((MultiFieldQuery) q).getQueryOperator().getInt());
 

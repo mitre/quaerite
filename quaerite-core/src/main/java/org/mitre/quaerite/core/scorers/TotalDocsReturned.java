@@ -19,12 +19,11 @@
 package org.mitre.quaerite.core.scorers;
 
 
-import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
 
 public class TotalDocsReturned extends SummingScoreAggregator
-    implements SearchResultSetScorer {
+        implements SearchResultSetScorer {
 
     public TotalDocsReturned(int atN) {
         super("TotalDocsReturned", atN);
@@ -42,5 +41,10 @@ public class TotalDocsReturned extends SummingScoreAggregator
         if (this == o) return true;
         if (!(o instanceof TotalDocsReturned)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

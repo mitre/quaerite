@@ -37,7 +37,7 @@ public abstract class Scorer {
     private final int atN;
 
     public Scorer(String name, int atN) {
-        this.name = (atN > -1) ? name+"_"+atN : name;
+        this.name = (atN > -1) ? name + "_" + atN : name;
         this.atN = atN;
     }
 

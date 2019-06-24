@@ -21,10 +21,6 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 import java.util.Objects;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.mitre.quaerite.core.util.MathUtil;
-
-
 public class FloatFeature extends AbstractFeature<FloatFeature> {
     private final transient DecimalFormat df = new DecimalFormat("#.###",
             DecimalFormatSymbols.getInstance(Locale.US));

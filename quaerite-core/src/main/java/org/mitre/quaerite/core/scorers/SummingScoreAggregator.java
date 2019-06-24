@@ -61,8 +61,8 @@ public abstract class SummingScoreAggregator extends Scorer {
     @Override
     public String format(String statName, Map<String, Double> values) {
         if (! values.containsKey(statName)) {
-            throw new IllegalArgumentException("can't find stat name: "+statName
-                + "in "+values);
+            throw new IllegalArgumentException("can't find stat name: "
+                    + statName + "in " + values);
         }
 
         return numberFormat.format(values.get(statName));
@@ -76,7 +76,7 @@ public abstract class SummingScoreAggregator extends Scorer {
 
     @Override
     public String getPrimaryStatisticName() {
-        return getName()+"_"+SUM;
+        return getName() + "_" + SUM;
     }
 
 

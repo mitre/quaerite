@@ -17,7 +17,6 @@
 package org.mitre.quaerite.cli;
 
 
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 

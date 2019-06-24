@@ -84,11 +84,11 @@ public class BoostingQuery extends Query {
     public Set<String> setQueryStrings(QueryStrings queryStrings) {
         //we might loosen these requirements later
         if (queryStrings.getStringByName(POSITIVE_QUERY_STRING_NAME) == null) {
-            throw new IllegalArgumentException("queryStrings must contain: "+
+            throw new IllegalArgumentException("queryStrings must contain: " +
                     POSITIVE_QUERY_STRING_NAME);
         }
         if (queryStrings.getStringByName(NEGATIVE_QUERY_STRING_NAME) == null) {
-            throw new IllegalArgumentException("queryStrings must contain: "+
+            throw new IllegalArgumentException("queryStrings must contain: " +
                     NEGATIVE_QUERY_STRING_NAME);
 
         }

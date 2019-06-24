@@ -22,7 +22,7 @@ import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
 
 public class AverageElapsedTime extends DistributionalScoreAggregator
-    implements SearchResultSetScorer {
+        implements SearchResultSetScorer {
 
     public AverageElapsedTime(int atN) {
         super("AverageElapsedTime", atN);
@@ -40,5 +40,10 @@ public class AverageElapsedTime extends DistributionalScoreAggregator
         if (this == o) return true;
         if (!(o instanceof AverageElapsedTime)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

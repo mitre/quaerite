@@ -114,7 +114,8 @@ public class ElevateQueryComparer {
                         .longOpt("regex")
                         .hasArg(true)
                         .required(false)
-                        .desc("regex to subset ids (in case of multiple logical indices stored in a single Solr index)").build()
+                        .desc("regex to subset ids (in case of multiple logical " +
+                                "indices stored in a single Solr index)").build()
         );
     }
 
@@ -139,10 +140,12 @@ public class ElevateQueryComparer {
             reportsRoot = Paths.get(commandLine.getOptionValue("d"));
         }
 
-        DecimalFormat df = new DecimalFormat("##.###%", DecimalFormatSymbols.getInstance(Locale.ROOT));
+        DecimalFormat df = new DecimalFormat("##.###%",
+                DecimalFormatSymbols.getInstance(Locale.ROOT));
         //TODO: lowercase queries or run them through an analyzer from a specific field?
         QuerySet queries = loadQueries(Paths.get(commandLine.getOptionValue("q")));
-        Map<String, Elevate> elevateMap = ElevateScraper.scrape(Paths.get(commandLine.getOptionValue("e")),
+        Map<String, Elevate> elevateMap = ElevateScraper.scrape(Paths.get(
+                commandLine.getOptionValue("e")),
                 idMatcher);
 
         int totalQueries = queries.total;
@@ -153,7 +156,7 @@ public class ElevateQueryComparer {
         List<Query> sorted = new ArrayList<>(queries.queries.values());
         Collections.sort(sorted);
 
-        if (! Files.isDirectory(reportsRoot)) {
+        if (!Files.isDirectory(reportsRoot)) {
             Files.createDirectories(reportsRoot);
         }
 
@@ -176,11 +179,13 @@ public class ElevateQueryComparer {
                         "and %s total elevated document ids",
                 ids.size(), elevated));
         if (commandLine.hasOption("s")) {
-            dumpElevateVsIndex(commandLine.getOptionValue("s"), sorted, elevateMap, df, totalQueries, reportsRoot);
+            dumpElevateVsIndex(commandLine.getOptionValue("s"), sorted, elevateMap, df,
+                    totalQueries, reportsRoot);
         }
     }
 
-    private static void dumpElevatedCountDistributions(Map<String, Elevate> elevateMap, Path reportsRoot) throws IOException {
+    private static void dumpElevatedCountDistributions(Map<String, Elevate> elevateMap,
+                                                       Path reportsRoot) throws IOException {
         //histogram of document ids per query
 
         //<number of ids, number of entries
@@ -222,11 +227,11 @@ public class ElevateQueryComparer {
                     "QueryCount", "QueryPercentage", "\n"));
             for (String elevated : elevateMap.keySet()) {
                 if (elevateMap.get(elevated).ids.size() == 0) {
-                    LOG.warn("no ids for this elevated item >"+elevated+"<");
+                    LOG.warn("no ids for this elevated item >" + elevated + "<");
                     continue;
                 }
                 int cnt = 0;
-                Query q  = queries.queries.get(elevated);
+                Query q = queries.queries.get(elevated);
                 if (q != null) {
                     cnt = q.getCount();
                 }
@@ -339,7 +344,8 @@ public class ElevateQueryComparer {
                 String.format(Locale.US,
                         "There are %s entries with zero valid docs.",
                         zeroValidDocs)
-        );;
+        );
+        ;
     }
 
     private static void increment(Map<String, Integer> m, String k) {
@@ -351,7 +357,8 @@ public class ElevateQueryComparer {
         }
     }
 
-    private static void dumpElevatedButNoQueries(Set<String> elevated, Set<String> queries, Path reportsRoot) throws IOException {
+    private static void dumpElevatedButNoQueries(Set<String> elevated, Set<String> queries,
+                                                 Path reportsRoot) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(
                 reportsRoot.resolve("elevated_zero_queries.csv"),
                 StandardCharsets.UTF_8)) {
@@ -396,7 +403,7 @@ public class ElevateQueryComparer {
     }
 
     private static boolean indexContains(String id, SearchClient searchClient) throws Exception {
-        QueryRequest qr = new QueryRequest(new TermQuery("id",id));
+        QueryRequest qr = new QueryRequest(new TermQuery("id", id));
         SearchResultSet rs = searchClient.search(qr);
         return rs.getIds().size() > 0;
     }
@@ -422,14 +429,14 @@ public class ElevateQueryComparer {
                     String q = record.get("query");
                     Integer c = Integer.parseInt(record.get("count"));
                     if (querySet.queries.containsKey(q)) {
-                        LOG.warn("duplicate queries?! >"+q+"<");
+                        LOG.warn("duplicate queries?! >" + q + "<");
                     }
 
                     querySet.set(q, c);
                 }
             }
         }
-        LOG.info("loaded "+querySet.queries.size()+" queries");
+        LOG.info("loaded " + querySet.queries.size() + " queries");
         return querySet;
     }
 

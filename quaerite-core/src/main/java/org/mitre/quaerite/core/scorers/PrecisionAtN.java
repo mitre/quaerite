@@ -41,7 +41,7 @@ public class PrecisionAtN extends AbstractJudgmentScorer {
                 hits++;
             }
         }
-        double val = (double)hits/(double) searchResultSet.size();
+        double val = (double)hits / (double) searchResultSet.size();
         addScore(judgments.getQueryInfo(), val);
         return val;
     }
@@ -51,5 +51,10 @@ public class PrecisionAtN extends AbstractJudgmentScorer {
         if (this == o) return true;
         if (!(o instanceof PrecisionAtN)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

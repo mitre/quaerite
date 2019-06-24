@@ -17,7 +17,6 @@
 package org.mitre.quaerite.core.features;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
 
 /**
@@ -70,5 +69,10 @@ public class CustomHandler implements Feature<CustomHandler> {
         if (this == o) return true;
         if (!(o instanceof CustomHandler)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

@@ -18,7 +18,6 @@ package org.mitre.quaerite.core.features.factories;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -46,19 +45,23 @@ public class TestQueryFactory {
 
     @Test
     public void testDeserialization() throws Exception {
-        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(newReader("/test-documents/experiment_features_solr_1.json"));
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features_solr_1.json"));
 
         CustomHandlerFactory customHandlerFactory =
-                (CustomHandlerFactory)experimentFactory.getFeatureFactories().get(CustomHandlerFactory.NAME);
+                (CustomHandlerFactory)experimentFactory.getFeatureFactories()
+                        .get(CustomHandlerFactory.NAME);
 
         List<CustomHandler> customHandlers = customHandlerFactory.getCustomHandlers();
         assertEquals("custom1", customHandlers.get(0).getHandler());
-        assertEquals(CustomHandlerFactory.DEFAULT_QUERY_KEY, customHandlers.get(0).getCustomQueryKey());
+        assertEquals(CustomHandlerFactory.DEFAULT_QUERY_KEY,
+                customHandlers.get(0).getCustomQueryKey());
 
         assertEquals("custom2", customHandlers.get(1).getHandler());
         assertEquals("qq", customHandlers.get(1).getCustomQueryKey());
 
-        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)
+                experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
         FloatFeatureFactory tie = null;
         for (FeatureFactory f : qf.factories) {
 
@@ -78,7 +81,8 @@ public class TestQueryFactory {
         );
 
         FeatureFactories featureFactories = experimentFactory.getFeatureFactories();
-        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
 
         for (FeatureFactory f : qf.factories) {
             if (((AbstractFeatureFactory)f).getName().equals("qf")) {
@@ -107,7 +111,8 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_solr_3.json")
         );
-        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
 
         List<EDisMaxQuery> queries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
@@ -121,7 +126,8 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_solr_3.json")
         );
-        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
         List<EDisMaxQuery> queries = new ArrayList<>();
         int numQueries = 1000;
         int equal = 0;
@@ -135,8 +141,8 @@ public class TestQueryFactory {
             assertTrue(q != mutated);
             queries.add(mutated);
         }
-        double percentEqual = (double)equal/(double)numQueries;
-        double percentMutated = 1.0-percentEqual;
+        double percentEqual = (double)equal / (double)numQueries;
+        double percentMutated = 1.0 - percentEqual;
         //this test will fail very, very, very rarely...
         assertEquals(probability, percentMutated, 0.1);
         assertWithinBounds(queries);
@@ -147,7 +153,8 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_solr_3.json")
         );
-        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
         List<EDisMaxQuery> queries = new ArrayList<>();
         for (int i = 0; i < 500; i++) {
             EDisMaxQuery p1 = qf.random();
@@ -169,7 +176,8 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_es_2.json")
         );
-        QueryFactory<BoostingQuery> qf = (QueryFactory<BoostingQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        QueryFactory<BoostingQuery> qf = (QueryFactory<BoostingQuery>)experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
         List<BoostingQuery> bqs = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             bqs.add(qf.random());
@@ -182,7 +190,8 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_es_2.json")
         );
-        BoostingQueryFactory qf = (BoostingQueryFactory) experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        BoostingQueryFactory qf = (BoostingQueryFactory) experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
 
         List<BoostingQuery> boostingQueries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
@@ -197,7 +206,8 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_es_2.json")
         );
-        BoostingQueryFactory qf = (BoostingQueryFactory)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        BoostingQueryFactory qf = (BoostingQueryFactory)experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
 
         List<BoostingQuery> boostingQueries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
@@ -215,7 +225,8 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_solr_queryOp.json")
         );
-        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>) experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>) experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
 
         assertEquals(1120, qf.permute(10000).size());
 
@@ -246,23 +257,24 @@ public class TestQueryFactory {
                 case INTEGER:
                     orInts++;
                     assertTrue(op.getInt() <= maxInt,
-                            "int: "+op.getInt());
-                    assertTrue(op.getInt() >= minInt, "int: " + op.getInt());
+                            "int: " + op.getInt());
+                    assertTrue(op.getInt() >= minInt,
+                            "int: " + op.getInt());
                     break;
                 case FLOAT:
                     assertTrue(op.getMmFloat() <= maxFloat,
-                            "float: "+op.getMmFloat());
+                            "float: " + op.getMmFloat());
                     assertTrue(op.getMmFloat() >= minFloat);
                     orFloats++;
                     break;
             }
         }
         //20% are 'and', 80% are 'not'
-        assertEquals(0.20, (double)ands/(double)iterations, 0.1);
+        assertEquals(0.20, (double)ands / (double)iterations, 0.1);
         //of the remaining 80% 'or', 20% are no mm, 40% are int, 40% are float
-        assertEquals((0.20*0.80), (double)orNoMM/(double)iterations, 0.1);
-        assertEquals((0.40*0.80), (double)orFloats/(double)iterations, 0.1);
-        assertEquals((0.40*0.80), (double)orInts/(double)iterations, 0.1);
+        assertEquals((0.20 * 0.80), (double)orNoMM / (double)iterations, 0.1);
+        assertEquals((0.40 * 0.80), (double)orFloats / (double)iterations, 0.1);
+        assertEquals((0.40 * 0.80), (double)orInts / (double)iterations, 0.1);
     }
 
 
@@ -271,7 +283,8 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_es_2.json")
         );
-        BoostingQueryFactory qf = (BoostingQueryFactory) experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        BoostingQueryFactory qf = (BoostingQueryFactory) experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
         List<BoostingQuery> bqs = qf.permute(100000);
         assertBoostingWithinBounds(bqs);
         assertEquals(100000, bqs.size());
@@ -281,7 +294,8 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_es_1.json")
         );
-        QueryFactory<MultiMatchQuery> qf = (QueryFactory<MultiMatchQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        QueryFactory<MultiMatchQuery> qf = (QueryFactory<MultiMatchQuery>)experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
 
         List<MultiMatchQuery> multiMatchQueries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
@@ -296,7 +310,8 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_es_1.json")
         );
-        QueryFactory<MultiMatchQuery> qf = (QueryFactory<MultiMatchQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        QueryFactory<MultiMatchQuery> qf = (QueryFactory<MultiMatchQuery>)experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
 
         List<MultiMatchQuery> multiMatchQueries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
@@ -312,7 +327,8 @@ public class TestQueryFactory {
         ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
                 newReader("/test-documents/experiment_features_es_1.json")
         );
-        QueryFactory<MultiMatchQuery> qf = (QueryFactory<MultiMatchQuery>)experimentFactory.getFeatureFactories().get(QueryFactory.NAME);
+        QueryFactory<MultiMatchQuery> qf = (QueryFactory<MultiMatchQuery>)experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
 
         List<MultiMatchQuery> multiMatchQueries = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {

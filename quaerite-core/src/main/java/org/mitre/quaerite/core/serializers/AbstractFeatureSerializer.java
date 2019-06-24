@@ -40,12 +40,12 @@ public class AbstractFeatureSerializer {
             if (clazzName.length() < 5) {
                 clazzName = clazzName.toUpperCase(Locale.US);
             } else {
-                clazzName = clazzName.substring(0,1).toUpperCase(Locale.US)+
+                clazzName = clazzName.substring(0,1).toUpperCase(Locale.US) +
                         clazzName.substring(1);
             }
             //this is to handle urls
             if (! clazzName.equals("PS") && clazzName.endsWith("S")) {
-                clazzName = clazzName.substring(0, clazzName.length()-1);
+                clazzName = clazzName.substring(0, clazzName.length() - 1);
             }
             return DEFAULT_CLASS_NAME_SPACE + clazzName;
         }
@@ -64,7 +64,8 @@ public class AbstractFeatureSerializer {
             }
             return ret;
         } else {
-            throw new IllegalArgumentException("Didn't expect json object here:"+weightableArr);
+            throw new IllegalArgumentException("Didn't expect json object here:"
+                    + weightableArr);
         }
 
     }
@@ -81,7 +82,7 @@ public class AbstractFeatureSerializer {
             }
             return ret;
         } else {
-            throw new IllegalArgumentException("Didn't expect json object here:"+stringArr);
+            throw new IllegalArgumentException("Didn't expect json object here:" + stringArr);
         }
     }
 /*    static List<StringFeature> toStringFeatureList(JsonElement stringArr) {
@@ -116,7 +117,7 @@ public class AbstractFeatureSerializer {
             }
             return ret;
         } else {
-            throw new IllegalArgumentException("Did not expect json object: "+floatArr);
+            throw new IllegalArgumentException("Did not expect json object: " + floatArr);
         }
     }
 
@@ -132,7 +133,7 @@ public class AbstractFeatureSerializer {
             }
             return ret;
         } else {
-            throw new IllegalArgumentException("Did not expect json object: "+intArr);
+            throw new IllegalArgumentException("Did not expect json object: " + intArr);
         }
     }
 
@@ -170,7 +171,7 @@ public class AbstractFeatureSerializer {
         try {
             return Class.forName(clazzName);
         } catch (Exception e) {
-            throw new JsonParseException(clazzName+" -> " + e.getMessage());
+            throw new JsonParseException(clazzName + " -> " + e.getMessage());
         }
     }
 

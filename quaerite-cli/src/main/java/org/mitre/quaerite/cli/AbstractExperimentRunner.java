@@ -60,9 +60,9 @@ import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.scorers.AbstractJudgmentScorer;
+import org.mitre.quaerite.core.scorers.DistributionalScoreAggregator;
 import org.mitre.quaerite.core.scorers.JudgmentScorer;
 import org.mitre.quaerite.core.scorers.Scorer;
-import org.mitre.quaerite.core.scorers.DistributionalScoreAggregator;
 import org.mitre.quaerite.core.scorers.SearchResultSetScorer;
 import org.mitre.quaerite.core.scorers.SummingScoreAggregator;
 import org.mitre.quaerite.core.util.MapUtil;
@@ -84,13 +84,16 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     private final ExperimentConfig experimentConfig;
     NumberFormat threePlaces = new DecimalFormat(".000",
             DecimalFormatSymbols.getInstance(Locale.US));
+
     public AbstractExperimentRunner(ExperimentConfig experimentConfig) {
         this.experimentConfig = experimentConfig;
     }
 
 
-    void runExperiment(Experiment experiment, List<Scorer> scorers, int maxRows, ExperimentDB experimentDB, JudgmentList judgmentList,
-                       String judgmentListId, boolean logResults) throws SQLException, IOException, SearchClientException {
+    void runExperiment(Experiment experiment, List<Scorer> scorers,
+                       int maxRows, ExperimentDB experimentDB, JudgmentList judgmentList,
+                       String judgmentListId, boolean logResults)
+            throws SQLException, IOException, SearchClientException {
         if (experimentDB.hasScores(experiment.getName())) {
             LOG.info("Already has scores for " + experiment.getName() + "; skipping.  " +
                     "Use the -freshStart commandline option to clear all scores");
@@ -102,21 +105,25 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         if (StringUtils.isBlank(experimentConfig.getIdField())) {
             LOG.info("default document 'idField' not set in experiment config. " +
                     "Will use default: '"
-                    + searchClient.getDefaultIdField()+"'");
+                    + searchClient.getDefaultIdField() + "'");
             experimentConfig.setIdField(searchClient.getDefaultIdField());
         }
 
         JudgmentList validated = searchServerValidatedMap.get(
-                experiment.getSearchServerUrl()+
-                        "_"+judgmentListId);
+                experiment.getSearchServerUrl() +
+                        "_" + judgmentListId);
         if (validated == null) {
             validated = validate(searchClient, judgmentList);
-            searchServerValidatedMap.put(experiment.getSearchServerUrl()+"_"+judgmentListId, validated);
+            searchServerValidatedMap.put(experiment.getSearchServerUrl()
+                    + "_" + judgmentListId, validated);
         }
-        ExecutorService executorService = Executors.newFixedThreadPool(experimentConfig.getNumThreads());
-        ExecutorCompletionService<Integer> executorCompletionService = new ExecutorCompletionService<>(executorService);
+        ExecutorService executorService = Executors.newFixedThreadPool(
+                experimentConfig.getNumThreads());
+        ExecutorCompletionService<Integer> executorCompletionService =
+                new ExecutorCompletionService<>(executorService);
         ArrayBlockingQueue<Judgments> queue = new ArrayBlockingQueue<>(
-                validated.getJudgmentsList().size() + experimentConfig.getNumThreads());
+                validated.getJudgmentsList().size() +
+                        experimentConfig.getNumThreads());
 
         queue.addAll(validated.getJudgmentsList());
         for (int i = 0; i < experimentConfig.getNumThreads(); i++) {
@@ -151,10 +158,11 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
     private void logResults(String experimentName, List<Scorer> scorers) {
         StringBuilder result = new StringBuilder();
-        LOG.info("Experiment: "+experimentName);
+        LOG.info("Experiment: " + experimentName);
         for (Scorer scorer : scorers) {
             for (String querySetName : scorer.getQuerySets()) {
-                Map<String, Double> summaryStats = scorer.getSummaryStatistics(querySetName);
+                Map<String, Double> summaryStats =
+                        scorer.getSummaryStatistics(querySetName);
                 if (!StringUtils.isBlank(querySetName)) {
                     result.append("Query Set: ").append(querySetName);
                 } else {
@@ -182,8 +190,8 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     protected String getValueString(Double value) {
 
         if (value != null) {
-            if((long) value.doubleValue() == value) {
-                return Long.toString( (long)value.doubleValue());
+            if ((long) value.doubleValue() == value) {
+                return Long.toString((long) value.doubleValue());
             } else {
                 return threePlaces.format(value);
             }
@@ -193,7 +201,8 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     }
 
     /*
-    private void insertScores(ExperimentDB experimentDB, String experimentName, List<ScoreAggregator> scoreAggregators)
+    private void insertScores(ExperimentDB experimentDB, String experimentName,
+     List<ScoreAggregator> scoreAggregators)
             throws SQLException {
         Set<QueryInfo> queries = scoreAggregators.get(0).getScores().keySet();
         //TODO -- need to add better handling for missing queries
@@ -204,7 +213,8 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
                 double val = scoreAggregator.getScores().get(queryInfo);
                 tmpScores.put(scoreAggregator.getName(), val);
             }
-            experimentDB.insertScores(queryInfo, experimentName, scoreAggregators, tmpScores);
+            experimentDB.insertScores(queryInfo, experimentName, scoreAggregators,
+            tmpScores);
         }
     }
 
@@ -222,7 +232,9 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
      * @param judgmentList
      * @return
      */
-    private JudgmentList validate(SearchClient searchClient, JudgmentList judgmentList) throws IOException, SearchClientException {
+    private JudgmentList validate(SearchClient searchClient,
+                                  JudgmentList judgmentList)
+            throws IOException, SearchClientException {
         String idField = searchClient.getIdField(experimentConfig);
         Set<String> judgmentIds = new HashSet<>();
         for (Judgments j : judgmentList.getJudgmentsList()) {
@@ -262,7 +274,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             }
         }
         if (invalidIds > 0) {
-            LOG.warn("There were "+validIds +" unique valid ids and " +
+            LOG.warn("There were " + validIds + " unique valid ids and " +
                     invalidIds + " unique invalid ids");
         }
         int validQueries = 0;
@@ -285,20 +297,24 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
                 validQueries++;
             } else {
                 LOG.warn(
-                        "After removing invalid jugments, there were 0 judgments for query: " +
+                        "After removing invalid jugments, there were 0 " +
+                                "judgments for query: " +
                                 j.getQueryInfo().getQueryId());
                 invalidQueries++;
             }
         }
         if (invalidQueries > 0) {
-            LOG.warn("I had to remove "+invalidQueries+" queries because there were no judgments for them. "+
+            LOG.warn("I had to remove " + invalidQueries +
+                    " queries because there were no judgments for them. " +
                     " There were " + validQueries + " valid queries.");
         }
         return retList;
 
     }
 
-    private static void addValid(TermsQuery termsQuery, String idField, SearchClient searchClient, int expected, Set<String> valid) {
+    private static void addValid(TermsQuery termsQuery, String idField,
+                                 SearchClient searchClient, int expected,
+                                 Set<String> valid) {
         if (expected == 0) {
             return;
         }
@@ -402,12 +418,13 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
             for (Scorer scorer : scorers) {
                 if (scorer instanceof JudgmentScorer) {
-                    ((JudgmentScorer)scorer).score(judgments, searchResultSet);
+                    ((JudgmentScorer) scorer).score(judgments, searchResultSet);
                 } else if (scorer instanceof SearchResultSetScorer) {
-                    ((SearchResultSetScorer)scorer).score(judgments.getQueryInfo(), searchResultSet);
+                    ((SearchResultSetScorer) scorer).score(judgments.getQueryInfo(),
+                            searchResultSet);
                 } else {
-                    throw new IllegalArgumentException("Scorer class not yet supported: "+
-                            scorer.getClass());
+                    throw new IllegalArgumentException("Scorer class not yet supported: "
+                            + scorer.getClass());
                 }
             }
             dbClient.insertScores(judgments.getQueryInfo(), experiment.getName(), scorers);
@@ -419,14 +436,16 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     static void dumpResults(ExperimentSet experimentSet, ExperimentDB experimentDB,
                             List<String> querySets,
                             List<Scorer> scorers, Path outputDir, boolean isTest) throws Exception {
-        if (! Files.isDirectory(outputDir)) {
+        if (!Files.isDirectory(outputDir)) {
             Files.createDirectories(outputDir);
         }
 
-        try (BufferedWriter writer = Files.newBufferedWriter(outputDir.resolve("per_query_scores.csv"), StandardCharsets.UTF_8)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(
+                outputDir.resolve("per_query_scores.csv"), StandardCharsets.UTF_8)) {
             try (Statement st = experimentDB.getConnection().createStatement()) {
                 String select = experimentDB.hasNamedQuerySets() ?
-                        "select * from SCORES where QUERY_SET <> ''" : "select * from SCORES";
+                        "select * from SCORES where QUERY_SET <> ''" :
+                        "select * from SCORES";
                 try (java.sql.ResultSet resultSet = st.executeQuery(select)) {
                     writeHeaders(resultSet.getMetaData(), writer);
                     while (resultSet.next()) {
@@ -440,24 +459,27 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         String orderByPriority2 = null;
         for (Scorer scorer : experimentSet.getScorers()) {
             if (isTest && scorer instanceof AbstractJudgmentScorer &&
-                    ((AbstractJudgmentScorer)scorer).getUseForTest()) {
+                    ((AbstractJudgmentScorer) scorer).getUseForTest()) {
                 orderByPriority1 = scorer.getPrimaryStatisticName();
                 break;
             }
             if (scorer instanceof AbstractJudgmentScorer &&
-                    ((AbstractJudgmentScorer)scorer).getUseForTrain()) {
+                    ((AbstractJudgmentScorer) scorer).getUseForTrain()) {
                 orderByPriority2 = scorer.getPrimaryStatisticName();
             }
         }
         String orderBy = "";
         if (orderByPriority1 != null) {
-            orderBy = " order by "+orderByPriority1+" desc";
+            orderBy = " order by " + orderByPriority1 + " desc";
         } else if (orderByPriority1 == null && orderByPriority2 != null) {
-            orderBy = " order by "+orderByPriority2+" desc";
+            orderBy = " order by " + orderByPriority2 + " desc";
         }
-        try (BufferedWriter writer = Files.newBufferedWriter(outputDir.resolve("scores_aggregated.csv"), StandardCharsets.UTF_8)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(
+                outputDir.resolve("scores_aggregated.csv"), StandardCharsets.UTF_8)) {
             try (Statement st = experimentDB.getConnection().createStatement()) {
-                try (java.sql.ResultSet resultSet = st.executeQuery("select * from SCORES_AGGREGATED "+orderBy)) {
+                try (java.sql.ResultSet resultSet =
+                             st.executeQuery("select * from SCORES_AGGREGATED "
+                                     + orderBy)) {
                     writeHeaders(resultSet.getMetaData(), writer);
                     while (resultSet.next()) {
                         writeRow(resultSet, writer);
@@ -478,23 +500,30 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
     }
 
     private static void dumpSignificanceMatrices(String querySet,
-                                                 List<Scorer> targetScorers, ExperimentDB experimentDB, Path outputDir) throws Exception {
+                                                 List<Scorer> targetScorers,
+                                                 ExperimentDB experimentDB,
+                                                 Path outputDir) throws Exception {
         TTest tTest = new TTest();
         for (Scorer scorer : targetScorers) {
             if (scorer instanceof AbstractJudgmentScorer &&
-                    ((AbstractJudgmentScorer)scorer).getExportPMatrix()) {
-                Map<String, Double> aggregatedScores = experimentDB.getKeyExperimentScore(scorer);
+                    ((AbstractJudgmentScorer) scorer).getExportPMatrix()) {
+                Map<String, Double> aggregatedScores =
+                        experimentDB.getKeyExperimentScore(scorer);
 
                 Map<String, Double> sorted = MapUtil.sortByDescendingValue(aggregatedScores);
                 List<String> experiments = new ArrayList();
                 experiments.addAll(sorted.keySet());
-                writeMatrix(tTest, (AbstractJudgmentScorer)scorer, querySet, experiments, experimentDB, outputDir);
+                writeMatrix(tTest, (AbstractJudgmentScorer) scorer,
+                        querySet, experiments, experimentDB, outputDir);
             }
         }
     }
 
-    private static void writeMatrix(TTest tTest, AbstractJudgmentScorer scorer, String querySet,
-                                    List<String> experiments, ExperimentDB experimentDB, Path outputDir) throws Exception {
+    private static void writeMatrix(TTest tTest, AbstractJudgmentScorer scorer,
+                                    String querySet,
+                                    List<String> experiments,
+                                    ExperimentDB experimentDB,
+                                    Path outputDir) throws Exception {
 
         String fileName = "sig_diffs_" + scorer.getName() + (
                 (StringUtils.isBlank(querySet)) ? ".csv" : "_" + querySet + ".csv");
@@ -519,10 +548,13 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
                 }
                 writer.write(String.format(Locale.US, "%.3G", 1.0d) + ",");//p-value of itself
                 //map of query -> score for experiment A given this particular scorer
-                Map<String, Double> scoresA = experimentDB.getScores(querySet, experimentA, scorer.getName());
+                Map<String, Double> scoresA = experimentDB.getScores(querySet,
+                        experimentA, scorer.getName());
                 for (int j = i + 1; j < matrixExperiments.size(); j++) {
                     String experimentB = matrixExperiments.get(j);
-                    double significance = calcSignificance(tTest, querySet, scoresA, experimentA, experimentB,
+                    double significance =
+                            calcSignificance(tTest, querySet, scoresA,
+                                    experimentA, experimentB,
                             scorer.getName(), experimentDB);
                     writer.write(String.format(Locale.US, "%.3G", significance));
                     writer.write(",");
@@ -532,14 +564,16 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         }
     }
 
-    private static double calcSignificance(TTest tTest, String querySet, Map<String, Double> scoresA, String experimentA,
+    private static double calcSignificance(TTest tTest, String querySet,
+                                           Map<String, Double> scoresA, String experimentA,
                                            String experimentB, String scorer,
                                            ExperimentDB experimentDB) throws SQLException {
 
         Map<String, Double> scoresB = experimentDB.getScores(querySet, experimentB, scorer);
         if (scoresA.size() != scoresB.size()) {
             //log
-            System.err.println("Different number of scores for " + experimentA + "(" + scoresA.size() +
+            System.err.println("Different number of scores for " +
+                    experimentA + "(" + scoresA.size() +
                     ") vs. " + experimentB + "(" + scoresB.size() + ")");
         }
         double[] arrA = new double[scoresA.size()];
@@ -569,7 +603,8 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
 
     }
 
-    private static void writeHeaders(ResultSetMetaData metaData, BufferedWriter writer) throws Exception {
+    private static void writeHeaders(ResultSetMetaData metaData, BufferedWriter writer)
+            throws Exception {
         for (int i = 1; i <= metaData.getColumnCount(); i++) {
             writer.write(clean(metaData.getColumnName(i)));
             writer.write(",");
@@ -577,7 +612,8 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         writer.write("\n");
     }
 
-    private static void writeRow(java.sql.ResultSet resultSet, BufferedWriter writer) throws Exception {
+    private static void writeRow(java.sql.ResultSet resultSet, BufferedWriter writer)
+            throws Exception {
         for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
             writer.write(clean(resultSet.getString(i)));
             writer.write(",");

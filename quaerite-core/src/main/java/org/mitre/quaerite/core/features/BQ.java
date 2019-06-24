@@ -38,4 +38,9 @@ public class BQ extends StringListFeature<BQ> {
         if (!(o instanceof BQ)) return false;
         return super.equals(o);
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

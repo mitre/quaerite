@@ -17,10 +17,6 @@
 package org.mitre.quaerite.core.features;
 
 
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.mitre.quaerite.core.util.MathUtil;
-
 public class SimpleStringFeature extends StringFeature<SimpleStringFeature> {
 
     public SimpleStringFeature(String name, String feature) {
@@ -37,5 +33,10 @@ public class SimpleStringFeature extends StringFeature<SimpleStringFeature> {
         if (this == o) return true;
         if (!(o instanceof SimpleStringFeature)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

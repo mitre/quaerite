@@ -28,6 +28,7 @@ public class TestESExamples {
     //TODO -- make all the working files tmp files/put in tmp directory
     //turn these into actual tests that check the output
     static Path CWD = Paths.get("../quaerite-examples/example_files");
+
     @Test
     public void testGenerateRunESRand() throws Exception {
 
@@ -38,13 +39,14 @@ public class TestESExamples {
         });
         RunExperiments.main(
                 new String[]{
-                        "-db", "C:/data/quaerite/examples/es_dbs/"+ UUID.randomUUID().toString(),
+                        "-db", "C:/data/quaerite/examples/es_dbs/" + UUID.randomUUID().toString(),
                         "-e", "C:/data/quaerite/examples/experiments_es_1.json",
                         "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
                         "-r", "C:/data/quaerite/examples/reports"
                 }
         );
     }
+
     @Test
     public void testGenerateRunESPermute() throws Exception {
 
@@ -56,7 +58,7 @@ public class TestESExamples {
         });
         RunExperiments.main(
                 new String[]{
-                        "-db", "C:/data/quaerite/examples/es_dbs/"+ UUID.randomUUID().toString(),
+                        "-db", "C:/data/quaerite/examples/es_dbs/" + UUID.randomUUID().toString(),
                         "-e", "C:/data/quaerite/examples/experiments_es_1.json",
                         "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
                         "-r", "C:/data/quaerite/examples/reports"
@@ -67,9 +69,10 @@ public class TestESExamples {
     @Test
     public void runGAES1() throws Exception {
         RunGA.main(
-                new String[] {
-                        "-db", "C:/data/quaerite/examples/es_dbs/"+ UUID.randomUUID().toString(),
-                        "-f", CWD.resolve("es/experiment_features_es_1.json").toAbsolutePath().toString(),
+                new String[]{
+                        "-db", "C:/data/quaerite/examples/es_dbs/" + UUID.randomUUID().toString(),
+                        "-f", CWD.resolve("es/experiment_features_es_1.json").
+                        toAbsolutePath().toString(),
                         "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
                         "-o", "C:/data/quaerite/examples/ga_output_es"
                 }
@@ -79,15 +82,15 @@ public class TestESExamples {
     @Test
     public void runExperimentsES() throws Exception {
         for (int i = 1; i <= 4; i++) {
-            Path experimentsPath = CWD.resolve("es/experiments_es_"+i+".json");
+            Path experimentsPath = CWD.resolve("es/experiments_es_" + i + ".json");
             System.out.println("running: " + experimentsPath);
 
             RunExperiments.main(
                     new String[]{
-                            "-db", "C:/data/quaerite/examples/es_dbs/"+ UUID.randomUUID().toString(),
+                            "-db", "C:/data/quaerite/examples/es_dbs/" + UUID.randomUUID().toString(),
                             "-e", experimentsPath.toAbsolutePath().toString(),
                             "-j", CWD.resolve("movie_judgments.csv").toAbsolutePath().toString(),
-                            "-r", "C:/data/quaerite/examples/experiments_output_es_"+i
+                            "-r", "C:/data/quaerite/examples/experiments_output_es_" + i
                     }
             );
         }

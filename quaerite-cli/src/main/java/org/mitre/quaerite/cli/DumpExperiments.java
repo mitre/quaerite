@@ -18,7 +18,6 @@ package org.mitre.quaerite.cli;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,19 +36,21 @@ import org.mitre.quaerite.db.ExperimentDB;
 public class DumpExperiments {
 
     static Options OPTIONS = new Options();
+
     static {
         OPTIONS.addOption(
                 Option.builder("db")
-                .required()
-                .hasArg()
-                .desc("database folder").build());
+                        .required()
+                        .hasArg()
+                        .desc("database folder").build());
         OPTIONS.addOption(
                 Option.builder("f")
                         .longOpt("file")
-                .hasArg()
-                .required()
-                .desc("json file with experiment(s)").build());
+                        .hasArg()
+                        .required()
+                        .desc("json file with experiment(s)").build());
     }
+
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
 
@@ -70,7 +71,7 @@ public class DumpExperiments {
     private static void dump(Path file, Path dbDir) throws SQLException, IOException {
         try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
             ExperimentSet experimentSet = experimentDB.getExperiments();
-            try(BufferedWriter writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
+            try (BufferedWriter writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
                 writer.write(experimentSet.toJson());
                 writer.flush();
             }

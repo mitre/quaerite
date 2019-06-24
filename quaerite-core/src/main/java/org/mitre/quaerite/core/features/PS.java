@@ -35,4 +35,9 @@ public class PS extends IntFeature {
         if (!(o instanceof PS)) return false;
         return super.equals(o);
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

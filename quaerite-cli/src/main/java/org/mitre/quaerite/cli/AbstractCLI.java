@@ -17,27 +17,13 @@
 package org.mitre.quaerite.cli;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.io.input.BOMInputStream;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.Experiment;
 import org.mitre.quaerite.core.ExperimentSet;
@@ -48,7 +34,9 @@ public abstract class AbstractCLI {
 
     static Logger LOG = Logger.getLogger(AbstractCLI.class);
 
-    static ExperimentSet addExperiments(ExperimentDB experimentDB, Path experimentsJson, boolean merge, boolean freshStart) throws SQLException, IOException {
+    static ExperimentSet addExperiments(ExperimentDB experimentDB,
+                                        Path experimentsJson, boolean merge,
+                                        boolean freshStart) throws SQLException, IOException {
         if (freshStart) {
             experimentDB.clearExperiments();
             experimentDB.clearScorers();

@@ -26,7 +26,7 @@ public class TestCompareAnalyzers {
     @Test
     public void IntegrationTMDBTest() throws Exception {
         CompareAnalyzers.main(new String[]{
-            "-s", TMDB_URL,
+                "-s", TMDB_URL,
                 "-bf", "production_companies_facet_lc",
                 "-ff", "production_companies_facet",
                 "-minSetSize", "1"

@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.math3.analysis.function.Sin;
 import org.mitre.quaerite.core.QueryStrings;
 
 /**
@@ -47,8 +46,8 @@ public abstract class SingleStringQuery extends Query {
             queryString = queryStrings.getStringByName(queryStringName);
         }
         if (queryString == null) {
-            throw new IllegalArgumentException("Couldn't find queryString in "+
-                    queryStrings +"; I was looking for: "+
+            throw new IllegalArgumentException("Couldn't find queryString in " +
+                    queryStrings + "; I was looking for: " +
                     (StringUtils.isBlank(queryStringName) ?
                     QueryStrings.DEFAULT_QUERY_NAME : queryStringName));
         }

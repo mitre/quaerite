@@ -20,81 +20,87 @@ package org.mitre.quaerite.core.stats;
 import java.util.Locale;
 
 public class ContrastResult implements Comparable<ContrastResult> {
-	String term = "";
-	long targCount = 0;
-	long targTotal = 0;
-	long otherCount = 0;
-	long otherTotal = 0;
-	double contrastValue = 0;
-	
-	public ContrastResult(String term, long targCount, long targTotal,
+    String term = "";
+    long targCount = 0;
+    long targTotal = 0;
+    long otherCount = 0;
+    long otherTotal = 0;
+    double contrastValue = 0;
+
+    public ContrastResult(String term, long targCount, long targTotal,
                           long otherCount, long otherTotal, double contrastValue) {
-		
-		this.term = term;
-		this.targCount = targCount;
-		this.targTotal = targTotal;
-		this.otherCount = otherCount;
-		this.otherTotal = otherTotal;
-		this.contrastValue = contrastValue;
-	}
 
-	public String getKey(){
-		return getTerm();
-	}
-	public String getTerm() {
-		return term;
-	}
-	public long getTargCount() {
-		return targCount;
-	}
-	public long getTargTotal() {
-		return targTotal;
-	}
-	public long getOtherCount() {
-		return otherCount;
-	}
-	public long getOtherTotal() {
-		return otherTotal;
-	}
-	public double getContrastValue() {
-		return contrastValue;
-	}
+        this.term = term;
+        this.targCount = targCount;
+        this.targTotal = targTotal;
+        this.otherCount = otherCount;
+        this.otherTotal = otherTotal;
+        this.contrastValue = contrastValue;
+    }
 
-	@Override
-	public String toString() {
-		String targPercent = (targTotal == 0L) ? "" :
+    public String getKey() {
+        return getTerm();
+    }
 
-				String.format(Locale.US, "%.4f%%", ((double)targCount/(double)targTotal));
-		String otherPercent = (otherTotal == 0L) ? "" :
-				String.format(Locale.US, "%.4f%%", ((double)otherCount/(double)otherTotal), Locale.US);
+    public String getTerm() {
+        return term;
+    }
+
+    public long getTargCount() {
+        return targCount;
+    }
+
+    public long getTargTotal() {
+        return targTotal;
+    }
+
+    public long getOtherCount() {
+        return otherCount;
+    }
+
+    public long getOtherTotal() {
+        return otherTotal;
+    }
+
+    public double getContrastValue() {
+        return contrastValue;
+    }
+
+    @Override
+    public String toString() {
+        String targPercent = (targTotal == 0L) ? "" :
+
+                String.format(Locale.US, "%.4f%%", ((double) targCount / (double) targTotal));
+        String otherPercent = (otherTotal == 0L) ? "" :
+                String.format(Locale.US, "%.4f%%", ((double) otherCount / (double) otherTotal), Locale.US);
 
 
-		return "ContrastResult{" +
-				"term='" + term + '\'' +
-				", targCount=" + targCount +
-				", targTotal=" + targTotal +
-				", targPercent=" + targPercent+
-				", otherCount=" + otherCount +
-				", otherTotal=" + otherTotal +
-				", otherPercent="+otherPercent+
-				", contrastValue=" + contrastValue +
-				'}';
-	}
+        return "ContrastResult{" +
+                "term='" + term + '\'' +
+                ", targCount=" + targCount +
+                ", targTotal=" + targTotal +
+                ", targPercent=" + targPercent +
+                ", otherCount=" + otherCount +
+                ", otherTotal=" + otherTotal +
+                ", otherPercent=" + otherPercent +
+                ", contrastValue=" + contrastValue +
+                '}';
+    }
 
-	@Override
-	public int compareTo(ContrastResult o) {
-		int c = Double.compare(o.contrastValue, this.contrastValue);
-		if (c != 0) {
-			return c;
-		}
-		c = Long.compare(o.targCount, this.targCount);
-		if (c != 0) {
-			return c;
-		}
-		c = Long.compare(o.otherCount, this.otherCount);
-		if (c != 0) {
-			return c;
-		}
-		return term.compareTo(o.term);
-	}
+    @Override
+    public int compareTo(ContrastResult o) {
+        int c = Double.compare(o.contrastValue, this.contrastValue);
+        if (c != 0) {
+            return c;
+        }
+        c = Long.compare(o.targCount, this.targCount);
+        if (c != 0) {
+            return c;
+        }
+        c = Long.compare(o.otherCount, this.otherCount);
+        if (c != 0) {
+            return c;
+        }
+        return term.compareTo(o.term);
+    }
 }

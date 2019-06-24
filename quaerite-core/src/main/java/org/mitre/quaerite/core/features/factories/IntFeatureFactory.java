@@ -92,7 +92,7 @@ public class IntFeatureFactory<T extends IntFeature>
     @Override
     public Pair<T, T> crossover(T parentA, T parentB) {
         if (parentA == null) {
-            System.out.println(parentA + " : "+ parentB);
+            System.out.println(parentA + " : " + parentB);
         }
         if (MathUtil.RANDOM.nextFloat() > 0.5) {
             return Pair.of(parentB, parentA);

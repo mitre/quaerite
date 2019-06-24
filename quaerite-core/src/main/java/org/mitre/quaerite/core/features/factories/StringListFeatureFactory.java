@@ -17,20 +17,15 @@
 package org.mitre.quaerite.core.features.factories;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.util.FastMath;
 import org.mitre.quaerite.core.features.StringListFeature;
-import org.mitre.quaerite.core.features.WeightableField;
-import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.util.MathUtil;
 
 
@@ -58,17 +53,17 @@ public class StringListFeatureFactory<T extends StringListFeature>
                                     int minSetSize, int maxSetSize) throws Exception {
         super(name);
         if (minSetSize > -1 && maxSetSize > -1 && minSetSize > maxSetSize) {
-            throw new IllegalArgumentException("minSetSize ("+minSetSize
-                    +") must be > maxSetSize ("+maxSetSize+")");
+            throw new IllegalArgumentException("minSetSize (" + minSetSize
+                    + ") must be > maxSetSize (" + maxSetSize + ")");
         }
         if (minSetSize > features.size()) {
-            throw new IllegalArgumentException("minSetSize ("+minSetSize+
-                    ") must be <= factories size ("+features.size()+")" );
+            throw new IllegalArgumentException("minSetSize (" + minSetSize +
+                    ") must be <= factories size (" + features.size() + ")" );
         }
 
         if (maxSetSize > features.size()) {
-            throw new IllegalArgumentException("maxSetSize ("+maxSetSize+
-                    ") must be <= factories size ("+features.size()+")" );
+            throw new IllegalArgumentException("maxSetSize (" + maxSetSize +
+                    ") must be <= factories size (" + features.size() + ")" );
         }
 
         this.features = features;
@@ -128,7 +123,7 @@ public class StringListFeatureFactory<T extends StringListFeature>
         if (base.size() >= minSetSize) {
             collector.add(newInstance(base));
         }
-        recurse(i + 1, depth+1, maxSize, base, collector);
+        recurse(i + 1, depth + 1, maxSize, base, collector);
     }
 
     @Override

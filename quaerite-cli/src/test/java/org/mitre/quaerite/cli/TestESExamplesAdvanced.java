@@ -37,14 +37,14 @@ public class TestESExamplesAdvanced {
         //ndcg of 1.0 for both negative:;positive:rambo and negative:kang;positive:rambo
         //"kang" is in the original rambo, and we downboost that movie in the boostingExperiment
         for (int i = 1; i <= 1; i++) {
-            Path experimentsPath = CWD.resolve("es/experiments_es_"+i+".json");
+            Path experimentsPath = CWD.resolve("es/experiments_es_" + i + ".json");
             System.out.println("running: " + experimentsPath);
             RunExperiments.main(
                     new String[]{
-                            "-db", "C:/data/quaerite/examples/es_adv_dbs/"+ UUID.randomUUID().toString(),
+                            "-db", "C:/data/quaerite/examples/es_adv_dbs/" + UUID.randomUUID().toString(),
                             "-e", experimentsPath.toAbsolutePath().toString(),
                             "-j", CWD.resolve("movie_judgments_boosting.csv").toAbsolutePath().toString(),
-                            "-r", "C:/data/quaerite/examples/experiments_advanced_output_es_"+i
+                            "-r", "C:/data/quaerite/examples/experiments_advanced_output_es_" + i
                     }
             );
         }
@@ -60,7 +60,7 @@ public class TestESExamplesAdvanced {
         });
         RunExperiments.main(
                 new String[]{
-                        "-db", "C:/data/quaerite/examples/es_adv_dbs/"+ UUID.randomUUID().toString(),
+                        "-db", "C:/data/quaerite/examples/es_adv_dbs/" + UUID.randomUUID().toString(),
                         "-e", "C:/data/quaerite/examples/experiments_es_1.json",
                         "-j", CWD.resolve("movie_judgments_boosting.csv").toAbsolutePath().toString(),
                         "-r", "C:/data/quaerite/examples/reports"
@@ -79,7 +79,7 @@ public class TestESExamplesAdvanced {
         });
         RunExperiments.main(
                 new String[]{
-                        "-db", "C:/data/quaerite/examples/es_adv_dbs/"+ UUID.randomUUID().toString(),
+                        "-db", "C:/data/quaerite/examples/es_adv_dbs/" + UUID.randomUUID().toString(),
                         "-e", "C:/data/quaerite/examples/experiments_es_advanced_1.json",
                         "-j", CWD.resolve("movie_judgments_boosting.csv").toAbsolutePath().toString(),
                         "-r", "C:/data/quaerite/examples/reports"
@@ -90,8 +90,8 @@ public class TestESExamplesAdvanced {
     @Test
     public void runGAES1() throws Exception {
         RunGA.main(
-                new String[] {
-                        "-db", "C:/data/quaerite/examples/es_adv_dbs/"+ UUID.randomUUID().toString(),
+                new String[]{
+                        "-db", "C:/data/quaerite/examples/es_adv_dbs/" + UUID.randomUUID().toString(),
                         "-f", CWD.resolve("es/experiment_features_es_1.json").toAbsolutePath().toString(),
                         "-j", CWD.resolve("movie_judgments_boosting.csv").toAbsolutePath().toString(),
                         "-o", "C:/data/quaerite/examples/ga_output_es"

@@ -60,7 +60,8 @@ class QueryLoader {
             );
 
 
-    public static void loadJudgments(ExperimentDB experimentDB, Path file, boolean freshStart) throws IOException, SQLException {
+    public static void loadJudgments(ExperimentDB experimentDB, Path file,
+                                     boolean freshStart) throws IOException, SQLException {
         if (freshStart) {
             experimentDB.clearJudgments();
         }
@@ -70,15 +71,22 @@ class QueryLoader {
             try (Reader reader = new InputStreamReader(new BOMInputStream(is), "UTF-8")) {
                 Iterable<CSVRecord> records = CSVFormat.EXCEL
                         .withFirstRecordAsHeader().parse(reader);
-                boolean hasJudgments = (((CSVParser) records)).getHeaderMap().containsKey(DOCUMENT_ID) ? true : false;
-                boolean hasQuerySet = (((CSVParser) records).getHeaderMap().containsKey(QUERY_SET)) ? true : false;
-                boolean hasCount = (((CSVParser) records).getHeaderMap().containsKey(COUNT)) ? true : false;
-                boolean hasQueryId = (((CSVParser) records).getHeaderMap().containsKey(QUERY_ID)) ? true : false;
-                Set<String> queryStringNames = getQueryStringNames(((CSVParser) records).getHeaderMap().keySet());
+                boolean hasJudgments = (((CSVParser) records)).getHeaderMap().containsKey(
+                        DOCUMENT_ID) ? true : false;
+                boolean hasQuerySet = (((CSVParser) records).getHeaderMap().containsKey(
+                        QUERY_SET)) ? true : false;
+                boolean hasCount = (((CSVParser) records).getHeaderMap().containsKey(
+                        COUNT)) ? true : false;
+                boolean hasQueryId = (((CSVParser) records).getHeaderMap().containsKey(
+                        QUERY_ID)) ? true : false;
+                Set<String> queryStringNames = getQueryStringNames(((CSVParser) records)
+                        .getHeaderMap().keySet());
                 if (hasQueryId) {
-                    judgmentsMap = loadJudgmentsWithId(hasJudgments, hasQuerySet, hasCount, queryStringNames, records);
+                    judgmentsMap = loadJudgmentsWithId(hasJudgments, hasQuerySet, hasCount,
+                            queryStringNames, records);
                 } else {
-                    judgmentsMap = loadJudmentsWithoutId(hasJudgments, hasQuerySet, hasCount, queryStringNames, records);
+                    judgmentsMap = loadJudmentsWithoutId(hasJudgments, hasQuerySet,
+                            hasCount, queryStringNames, records);
                 }
             }
         }
@@ -87,8 +95,11 @@ class QueryLoader {
         }
     }
 
-    private static Map<String, Judgments> loadJudmentsWithoutId(boolean hasJudgments, boolean hasQuerySet, boolean hasCount,
-                                                                Set<String> queryStringNames, Iterable<CSVRecord> records) {
+    private static Map<String, Judgments> loadJudmentsWithoutId(boolean hasJudgments,
+                                                                boolean hasQuerySet,
+                                                                boolean hasCount,
+                                                                Set<String> queryStringNames,
+                                                                Iterable<CSVRecord> records) {
         //queryset, Map<queryInfo.getId, Judgments>
         Map<String, Map<QueryStrings, Judgments>> queries = new HashMap<>();
 
@@ -101,7 +112,8 @@ class QueryLoader {
             Judgments judgments = null;
             if (queries.containsKey(querySet) && queries.get(querySet).containsKey(queryStrings)) {
                 QueryInfo cachedQueryInfo = queries.get(querySet).get(queryStrings).getQueryInfo();
-                QueryInfo newQueryInfo = new QueryInfo(cachedQueryInfo.getQueryId(), querySet, queryStrings, queryCount);
+                QueryInfo newQueryInfo = new QueryInfo(cachedQueryInfo.getQueryId(), querySet, queryStrings,
+                        queryCount);
                 if (!cachedQueryInfo.equals(newQueryInfo)) {
                     throw new IllegalArgumentException("There's a mismatch between the previously loaded:" +
                             cachedQueryInfo + "\nand the QueryInfo loaded for this row: " + newQueryInfo);

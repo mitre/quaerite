@@ -17,7 +17,6 @@
 package org.mitre.quaerite.core.features.factories;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -43,7 +42,7 @@ public class QueryOperatorFeatureFactory<T extends QueryOperator>
     private final float maxFloat;
 
     public QueryOperatorFeatureFactory(Set<QueryOperator.OPERATOR> operatorSet,
-                                        List<Integer> integers, List<Float> floats) {
+                                       List<Integer> integers, List<Float> floats) {
         super("q.op");
         this.operatorSet = operatorSet;
         this.integers = integers;
@@ -77,7 +76,8 @@ public class QueryOperatorFeatureFactory<T extends QueryOperator>
                 }
             }
             if (minFloat < -1.0f || minFloat > 1.0f) {
-                throw new IllegalArgumentException("minFloat must be >= -1.0 and <= 1.0:" +minFloat);
+                throw new IllegalArgumentException(
+                        "minFloat must be >= -1.0 and <= 1.0:" + minFloat);
             }
             this.minFloat = minFloat;
             this.maxFloat = maxFloat;
@@ -92,9 +92,9 @@ public class QueryOperatorFeatureFactory<T extends QueryOperator>
         List<T> ops = new ArrayList<>();
         if (operatorSet.contains(QueryOperator.OPERATOR.OR)) {
             if (integers != null) {
-                    for (Integer i : integers) {
-                        ops.add((T) new QueryOperator(QueryOperator.OPERATOR.OR, i));
-                    }
+                for (Integer i : integers) {
+                    ops.add((T) new QueryOperator(QueryOperator.OPERATOR.OR, i));
+                }
             }
             if (floats != null) {
                 for (Float f : floats) {
@@ -103,7 +103,7 @@ public class QueryOperatorFeatureFactory<T extends QueryOperator>
             }
         }
         for (QueryOperator.OPERATOR op : operatorSet) {
-                ops.add((T)new QueryOperator(op));
+            ops.add((T) new QueryOperator(op));
         }
         return ops;
     }
@@ -133,30 +133,31 @@ public class QueryOperatorFeatureFactory<T extends QueryOperator>
                 if (MathUtil.RANDOM.nextFloat() < 0.8) {
                     return newRandInt();
                 } else {
-                    return (T)new QueryOperator(QueryOperator.OPERATOR.OR);
+                    return (T) new QueryOperator(QueryOperator.OPERATOR.OR);
                 }
             } else if (floats != null) {
                 if (MathUtil.RANDOM.nextFloat() < 0.8) {
                     return newRandFloat();
                 } else {
-                    return (T)new QueryOperator(QueryOperator.OPERATOR.OR);
+                    return (T) new QueryOperator(QueryOperator.OPERATOR.OR);
                 }
             }
-            return (T)new QueryOperator(QueryOperator.OPERATOR.OR);
+            return (T) new QueryOperator(QueryOperator.OPERATOR.OR);
         }
-        return (T)new QueryOperator(QueryOperator.OPERATOR.AND);
+        return (T) new QueryOperator(QueryOperator.OPERATOR.AND);
     }
 
     private T newRandFloat() {
-        return (T)new QueryOperator(QueryOperator.OPERATOR.OR,
+        return (T) new QueryOperator(QueryOperator.OPERATOR.OR,
                 MathUtil.getRandomFloat(minFloat, maxFloat));
     }
+
     private T newRandInt() {
-        return (T)new QueryOperator(QueryOperator.OPERATOR.OR,
+        return (T) new QueryOperator(QueryOperator.OPERATOR.OR,
                 MathUtil.getRandomInt(minInt, maxInt));
     }
+
     /**
-     *
      * @param feature
      * @param probability
      * @param amplitude
@@ -172,7 +173,7 @@ public class QueryOperatorFeatureFactory<T extends QueryOperator>
             return mutateParam(feature.getOperator(), feature, amplitude);
         }
         QueryOperator.OPERATOR op = (MathUtil.RANDOM.nextFloat() < 0.5) ?
-                    QueryOperator.OPERATOR.AND : QueryOperator.OPERATOR.OR;
+                QueryOperator.OPERATOR.AND : QueryOperator.OPERATOR.OR;
         return mutateParam(op, feature, amplitude);
     }
 

@@ -57,7 +57,8 @@ public class ScorerListSerializer {
         private final Gson internalGson = new GsonBuilder().setPrettyPrinting().create();
 
         public T deserialize(JsonElement jsonElement, Type type,
-                             JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+                             JsonDeserializationContext jsonDeserializationContext)
+                throws JsonParseException {
 
             JsonObject jsonObject = jsonElement.getAsJsonObject();
             JsonPrimitive prim = (JsonPrimitive) jsonObject.get(CLASSNAME);
@@ -88,7 +89,8 @@ public class ScorerListSerializer {
             if (clazzName.startsWith(DEFAULT_CLASS_NAME_SPACE)) {
                 clazzName = clazzName.substring(DEFAULT_CLASS_NAME_SPACE.length());
             } else if (! clazzName.contains(".")) {
-                throw new IllegalArgumentException("custom scorers must not be in the default package:"+clazzName);
+                throw new IllegalArgumentException(
+                        "custom scorers must not be in the default package:" + clazzName);
             }
             jsonObject.addProperty(CLASSNAME, clazzName);
             JsonObject params = new JsonObject();

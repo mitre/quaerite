@@ -89,7 +89,8 @@ public class ComparePerQuery {
         if (commandLine.hasOption("s")) {
             scorer = commandLine.getOptionValue("s");
         }
-        List<String> experiments = Arrays.asList(commandLine.getOptionValue("e").split(","));
+        List<String> experiments = Arrays.asList(commandLine.getOptionValue("e")
+                .split(","));
         if (experiments.size() < 2) {
             System.err.println("must have > 1 experiment to compare");
         }
@@ -97,13 +98,15 @@ public class ComparePerQuery {
 
     }
 
-    private static void dump(Path resultsDir, Path dbDir, String scorer, List<String> experiments) throws IOException, SQLException {
+    private static void dump(Path resultsDir, Path dbDir, String scorer,
+                             List<String> experiments) throws IOException, SQLException {
         if (!Files.isDirectory(resultsDir)) {
             Files.createDirectories(resultsDir);
         }
         try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
             experimentDB.createQueryComparisons(scorer, experiments);
-            try (BufferedWriter writer = Files.newBufferedWriter(resultsDir.resolve("per_query_comparisons.csv"),
+            try (BufferedWriter writer = Files.newBufferedWriter(
+                    resultsDir.resolve("per_query_comparisons.csv"),
                     StandardCharsets.UTF_8)) {
                 try (ResultSet rs = experimentDB.getQueryComparisons()) {
                     writeHeaders(rs.getMetaData(), writer);
@@ -117,7 +120,8 @@ public class ComparePerQuery {
 
     }
 
-    private static void writeHeaders(ResultSetMetaData metaData, BufferedWriter writer) throws IOException, SQLException {
+    private static void writeHeaders(ResultSetMetaData metaData,
+                                     BufferedWriter writer) throws IOException, SQLException {
         for (int i = 1; i <= metaData.getColumnCount(); i++) {
             writer.write(clean(metaData.getColumnName(i)));
             writer.write(",");
@@ -125,7 +129,8 @@ public class ComparePerQuery {
         writer.write("\n");
     }
 
-    private static void writeRow(java.sql.ResultSet resultSet, BufferedWriter writer) throws IOException, SQLException {
+    private static void writeRow(java.sql.ResultSet resultSet,
+                                 BufferedWriter writer) throws IOException, SQLException {
         for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
             writer.write(clean(resultSet.getString(i)));
             writer.write(",");

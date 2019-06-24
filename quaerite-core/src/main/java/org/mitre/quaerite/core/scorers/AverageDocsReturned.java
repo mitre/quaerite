@@ -23,7 +23,7 @@ import org.mitre.quaerite.core.QueryInfo;
 import org.mitre.quaerite.core.SearchResultSet;
 
 public class AverageDocsReturned extends DistributionalScoreAggregator
-    implements SearchResultSetScorer {
+        implements SearchResultSetScorer {
 
     public AverageDocsReturned(int atN) {
         super("AverageDocsReturned", atN);
@@ -41,5 +41,10 @@ public class AverageDocsReturned extends DistributionalScoreAggregator
         if (this == o) return true;
         if (!(o instanceof AverageDocsReturned)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

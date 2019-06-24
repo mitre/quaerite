@@ -243,18 +243,20 @@ public class SolrClient extends SearchClient {
             }
         }
         if (query.getPs2() != null) {
-            sb.append("&ps2="+query.getPs2().getValue());
+            sb.append("&ps2=" + query.getPs2().getValue());
         }
         if (query.getPs3() != null) {
-            sb.append("&ps2="+query.getPs3().getValue());
+            sb.append("&ps2=" + query.getPs3().getValue());
         }
 
         addDisMaxParams((DisMaxQuery) query, handler, sb);
     }
 
-    private void addDisMaxParams(DisMaxQuery query, CustomHandler handler, StringBuilder sb) {
+    private void addDisMaxParams(DisMaxQuery query, CustomHandler handler,
+                                 StringBuilder sb) {
 
-        sb.append("&").append(handler.getCustomQueryKey()).append("=").append(encode(query.getQueryString()));
+        sb.append("&").append(handler.getCustomQueryKey())
+                .append("=").append(encode(query.getQueryString()));
         QF qf = query.getQF();
         sb.append("&qf=");
         int i = 0;
@@ -282,7 +284,7 @@ public class SolrClient extends SearchClient {
                 sb.append("&mm=").append(encode(
                         String.format(Locale.US,
                                 "%.0f%s",
-                                qop.getMmFloat()*100f, "%")));
+                                qop.getMmFloat() * 100f, "%")));
             }
         }
         if (query.getBQ() != null) {
@@ -306,7 +308,7 @@ public class SolrClient extends SearchClient {
             }
         }
         if (query.getPS() != null) {
-            sb.append("&ps="+query.getPS().getValue());
+            sb.append("&ps=" + query.getPS().getValue());
         }
     }
 
@@ -351,7 +353,8 @@ public class SolrClient extends SearchClient {
             data.add(d.getFields());
         }
         String json = GSON.toJson(data);
-        JsonResponse response = postJson(url + "/update/json?commitWithin=10000", json);
+        JsonResponse response = postJson(url +
+                "/update/json?commitWithin=10000", json);
         if (response.getStatus() != 200) {
             throw new SearchClientException(response.getMsg());
         }
@@ -359,7 +362,9 @@ public class SolrClient extends SearchClient {
 
     @Override
     public List<StoredDocument> getDocs(String idField, Set<String> ids,
-                                        Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException {
+                                        Set<String> whiteListFields,
+                                        Set<String> blackListFields)
+            throws IOException, SearchClientException {
         StringBuilder sb = new StringBuilder();
         int i = 0;
         sb.append(idField + ":(");
@@ -437,7 +442,8 @@ public class SolrClient extends SearchClient {
 
 
     @Override
-    public synchronized String getDefaultIdField() throws IOException, SearchClientException {
+    public synchronized String getDefaultIdField()
+            throws IOException, SearchClientException {
         if (idField == null) {
             JsonResponse jsonResponse = getJson(url + "/schema/uniquekey");
             if (jsonResponse.getStatus() != 200) {
@@ -457,8 +463,10 @@ public class SolrClient extends SearchClient {
 
     @Override
     public IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids, int batchSize,
-                                  int copierThreads, Collection<Query> filterQueries) throws IOException, SearchClientException {
-        return new SolrIdGrabber(getDefaultIdField(), ids, batchSize, copierThreads, filterQueries);
+                                  int copierThreads, Collection<Query> filterQueries)
+            throws IOException, SearchClientException {
+        return new SolrIdGrabber(getDefaultIdField(), ids,
+                batchSize, copierThreads, filterQueries);
     }
 
     @Override
@@ -467,10 +475,12 @@ public class SolrClient extends SearchClient {
     }
 
     @Override
-    public List<String> analyze(String field, String string) throws IOException, SearchClientException {
+    public List<String> analyze(String field, String string)
+            throws IOException, SearchClientException {
         StringBuilder request = new StringBuilder();
         request.append(url);
-        request.append("/analysis/field?wt=json").append("&analysis.fieldname=").append(encode(field));
+        request.append("/analysis/field?wt=json")
+                .append("&analysis.fieldname=").append(encode(field));
         request.append("&analysis.fieldvalue=").append(encode(string));
         JsonResponse jsonResponse = getJson(request.toString());
         if (jsonResponse.getStatus() != 200) {
@@ -491,7 +501,8 @@ public class SolrClient extends SearchClient {
     }
 
     @Override
-    public List<TokenDF> getTerms(String field, String lower, int limit, int minCount) throws IOException, SearchClientException {
+    public List<TokenDF> getTerms(String field, String lower,
+                                  int limit, int minCount) throws IOException, SearchClientException {
         StringBuilder request = new StringBuilder();
         request.append(url).append("/terms?terms=true");
         request.append("&terms.fl=").append(encode(field));
@@ -510,7 +521,8 @@ public class SolrClient extends SearchClient {
             throw new SearchClientException(jsonResponse.getMsg());
         }
         List<TokenDF> termDFList = new ArrayList<>();
-        JsonObject termObj = jsonResponse.getJson().getAsJsonObject().getAsJsonObject("terms");
+        JsonObject termObj = jsonResponse.getJson().getAsJsonObject()
+                .getAsJsonObject("terms");
 
         JsonArray fieldArr = termObj.getAsJsonArray(field);
 
@@ -527,7 +539,8 @@ public class SolrClient extends SearchClient {
     class SolrIdGrabber extends IdGrabber {
 
         public SolrIdGrabber(String idField, ArrayBlockingQueue<Set<String>> ids,
-                             int batchSize, int copierThreads, Collection<Query> filterQueries) {
+                             int batchSize, int copierThreads,
+                             Collection<Query> filterQueries) {
             super(idField, ids, batchSize, copierThreads, filterQueries);
         }
 
@@ -537,7 +550,8 @@ public class SolrClient extends SearchClient {
             int totalAdded = 0;
             int idSize = 10000;
             try {
-                QueryRequest queryRequest = buildQueryRequest(idField, start, idSize, filterQueries);
+                QueryRequest queryRequest =
+                        buildQueryRequest(idField, start, idSize, filterQueries);
                 SearchResultSet rs = search(queryRequest);
                 while (rs.size() > 0) {
                     Set<String> set = new HashSet<>();
@@ -553,7 +567,8 @@ public class SolrClient extends SearchClient {
                     }
                     LOG.info("ids added: " + totalAdded);
                     start += idSize;
-                    queryRequest = buildQueryRequest(idField, start, idSize, filterQueries);
+                    queryRequest = buildQueryRequest(idField, start, idSize,
+                            filterQueries);
                     rs = search(queryRequest);
                 }
                 LOG.debug("id grabber is finishing" + start);
@@ -563,7 +578,9 @@ public class SolrClient extends SearchClient {
             return -1;
         }
 
-        private QueryRequest buildQueryRequest(String idField, int start, int numResults, Collection<Query> filterQueries) {
+        private QueryRequest buildQueryRequest(String idField, int start,
+                                               int numResults,
+                                               Collection<Query> filterQueries) {
             QueryRequest queryRequest = new QueryRequest(new MatchAllDocsQuery());
             queryRequest.setNumResults(numResults);
 
@@ -586,6 +603,4 @@ public class SolrClient extends SearchClient {
             return sz;
         }
     }
-
-
 }

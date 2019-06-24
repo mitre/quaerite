@@ -56,7 +56,8 @@ public class QueryStrings {
 
     public void addQueryString(String name, String queryString) {
         if (map.containsKey(name)) {
-            throw new IllegalArgumentException("string with name="+name+
+            throw new IllegalArgumentException("string with name="
+                    + name +
                     " already exists!");
         }
         map.put(name, queryString);

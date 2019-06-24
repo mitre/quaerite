@@ -35,20 +35,24 @@ public class TestStringListFeatureFactory {
         lA.add("a");
         lA.add("b");
         lA.add("c");
-        StringListFeatureFactory<FQ> factoryA = new StringListFeatureFactory<FQ>("fq", FQ.class, lA, minSetSize, maxSetSize);
+        StringListFeatureFactory<FQ> factoryA = new StringListFeatureFactory<FQ>(
+                "fq", FQ.class, lA, minSetSize, maxSetSize);
 
         List<String> lB = new ArrayList<>();
         lB.addAll(lA);
-        StringListFeatureFactory<FQ> factoryB = new StringListFeatureFactory<FQ>("fq", FQ.class, lB, minSetSize, maxSetSize);
+        StringListFeatureFactory<FQ> factoryB = new StringListFeatureFactory<FQ>(
+                "fq", FQ.class, lB, minSetSize, maxSetSize);
         for (int i = 0; i < 1000000; i++) {
             FQ fqA = factoryA.random();
             FQ fqB = factoryB.random();
             Pair<FQ, FQ> pair = factoryA.crossover(fqA, fqB);
 
-            if (pair.getLeft().getAll().size() > maxSetSize || pair.getLeft().getAll().size() < minSetSize) {
+            if (pair.getLeft().getAll().size() > maxSetSize ||
+                    pair.getLeft().getAll().size() < minSetSize) {
                 fail(pair.getLeft().toString() + " not within set size range");
             }
-            if (pair.getRight().getAll().size() > maxSetSize || pair.getRight().getAll().size() < minSetSize) {
+            if (pair.getRight().getAll().size() > maxSetSize ||
+                    pair.getRight().getAll().size() < minSetSize) {
                 fail(pair.getRight().toString() + " not within set size range");
             }
 

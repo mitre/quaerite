@@ -118,11 +118,13 @@ public class TestSolrClient {
     @Test
     public void testQuery() throws Exception {
         SearchClient client = SearchClientFactory.getClient(TMDB_URL);
-        QueryRequest queryRequest = new QueryRequest(new LuceneQuery("title", "psycho"), null, "id");
+        QueryRequest queryRequest = new QueryRequest(new LuceneQuery("title",
+                "psycho"), null, "id");
         SearchResultSet searchResultSet = client.search(queryRequest);
         assertEquals(9, searchResultSet.getTotalHits());
         for (String id : new String[]{
-                "539", "11252", "1359", "10576", "12662", "27723", "35683", "10726", "214250"
+                "539", "11252", "1359", "10576", "12662", "27723", "35683",
+                "10726", "214250"
         }) {
             assertTrue(searchResultSet.getIds().contains(id));
         }
@@ -133,7 +135,8 @@ public class TestSolrClient {
         Set<String> ids = new HashSet<>();
         ids.addAll(Arrays.asList("539 11252 1359 10576 12662".split(" ")));
         SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
-        List<StoredDocument> docs = searchClient.getDocs("id", ids, Collections.EMPTY_SET, Collections.EMPTY_SET);
+        List<StoredDocument> docs = searchClient.getDocs("id", ids,
+                Collections.EMPTY_SET, Collections.EMPTY_SET);
         assertEquals(5, docs.size());
         StoredDocument doc1359 = null;
         for (int i = 0; i < docs.size(); i++) {
@@ -159,7 +162,8 @@ public class TestSolrClient {
         Set<String> whiteListFields = new HashSet<>();
         whiteListFields.add("original_title");
         whiteListFields.add("id");
-        List<StoredDocument> docs = searchClient.getDocs("id", ids, whiteListFields, Collections.EMPTY_SET);
+        List<StoredDocument> docs = searchClient.getDocs("id", ids,
+                whiteListFields, Collections.EMPTY_SET);
         assertEquals(5, docs.size());
         StoredDocument doc1359 = null;
         for (int i = 0; i < docs.size(); i++) {
@@ -179,7 +183,8 @@ public class TestSolrClient {
         String lower = "";
         Set<TokenDF> allTerms = new HashSet<>();
         while (true) {
-            List<TokenDF> terms = client.getTerms("production_companies_facet", lower, 100, 0);
+            List<TokenDF> terms = client.getTerms("production_companies_facet",
+                    lower, 100, 0);
             if (terms.size() == 0) {
                 break;
             }
@@ -199,7 +204,8 @@ public class TestSolrClient {
         allTerms = new HashSet<>();
         lower = "";
         while (true) {
-            List<TokenDF> terms = client.getTerms("production_companies_facet_lc", lower, 100, 0);
+            List<TokenDF> terms = client.getTerms("production_companies_facet_lc",
+                    lower, 100, 0);
             if (terms.size() == 0) {
                 break;
             }

@@ -17,7 +17,6 @@
 package org.mitre.quaerite.core.features.factories;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -54,7 +53,8 @@ public class TestFeatureFactories {
         defaultWeights.add(1.0f);
         defaultWeights.add(2.0f);
 
-        WeightableListFeatureFactory qf = new WeightableListFeatureFactory<QF>("qf", QF.class, fields, defaultWeights, 1,-1);
+        WeightableListFeatureFactory qf = new WeightableListFeatureFactory<QF>(
+                "qf", QF.class, fields, defaultWeights, 1,-1);
         //test random
         for (int i = 0; i < 10; i++) {
             boolean foundAuthor = false;
@@ -110,7 +110,8 @@ public class TestFeatureFactories {
     @Test
     public void testMultipleTrainScorers() throws Exception {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            ExperimentFactory.fromJson(newReader("/test-documents/experiment_features_solr_2.json")).getTrainScorer();
+            ExperimentFactory.fromJson(newReader(
+                    "/test-documents/experiment_features_solr_2.json")).getTrainScorer();
         });
     }
 

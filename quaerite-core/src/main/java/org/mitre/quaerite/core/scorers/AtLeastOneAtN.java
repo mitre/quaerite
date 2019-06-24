@@ -23,8 +23,7 @@ import org.mitre.quaerite.core.SearchResultSet;
 /**
  * Returns 1 if there was any hit in the results; 0 otherwise.
  */
-public class AtLeastOneAtN extends SummingScoreAggregator
-    implements JudgmentScorer {
+public class AtLeastOneAtN extends SummingScoreAggregator implements JudgmentScorer {
 
     public AtLeastOneAtN(int atN) {
         super("AtLeastOneAtN", atN);
@@ -48,6 +47,11 @@ public class AtLeastOneAtN extends SummingScoreAggregator
         if (this == o) return true;
         if (!(o instanceof AtLeastOneAtN)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
 }

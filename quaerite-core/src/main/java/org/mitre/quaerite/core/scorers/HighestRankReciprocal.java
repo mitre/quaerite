@@ -35,7 +35,7 @@ public class HighestRankReciprocal extends HighestRank {
         if (rank == NOT_FOUND) {
             return NOT_FOUND;
         } else {
-            double ret = (double)1/rank;
+            double ret = (double)1 / rank;
             addScore(judgments.getQueryInfo(), ret);
             return ret;
         }
@@ -46,5 +46,10 @@ public class HighestRankReciprocal extends HighestRank {
         if (this == o) return true;
         if (!(o instanceof HighestRankReciprocal)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

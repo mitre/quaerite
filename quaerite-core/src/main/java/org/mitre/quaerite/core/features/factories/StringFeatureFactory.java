@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.core.features.factories;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -42,7 +41,7 @@ public class StringFeatureFactory<T extends StringFeature>
             try {
                 features.add(clazz.getConstructor(String.class).newInstance(s));
             } catch (Exception e) {
-                throw new IllegalArgumentException("Can't build "+clazz, e);
+                throw new IllegalArgumentException("Can't build " + clazz, e);
             }
         }
     }

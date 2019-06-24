@@ -20,9 +20,6 @@ package org.mitre.quaerite.core.features;
 
 import java.util.Objects;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.mitre.quaerite.core.util.MathUtil;
-
 public abstract class StringFeature<T extends StringFeature>
         extends AbstractFeature<T> {
 

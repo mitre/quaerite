@@ -43,10 +43,9 @@ import org.mitre.quaerite.core.features.Fuzziness;
 import org.mitre.quaerite.core.features.IntFeature;
 import org.mitre.quaerite.core.features.MultiMatchType;
 import org.mitre.quaerite.core.features.NegativeBoost;
-import org.mitre.quaerite.core.features.PS2;
 import org.mitre.quaerite.core.features.QueryOperator;
-import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.StringFeature;
+import org.mitre.quaerite.core.features.StringListFeature;
 import org.mitre.quaerite.core.features.WeightableListFeature;
 import org.mitre.quaerite.core.features.factories.BoostingQueryFactory;
 import org.mitre.quaerite.core.features.factories.CustomHandlerFactory;
@@ -56,10 +55,9 @@ import org.mitre.quaerite.core.features.factories.FloatFeatureFactory;
 import org.mitre.quaerite.core.features.factories.IntFeatureFactory;
 import org.mitre.quaerite.core.features.factories.QueryFactory;
 import org.mitre.quaerite.core.features.factories.QueryOperatorFeatureFactory;
-import org.mitre.quaerite.core.features.factories.StringListFeatureFactory;
 import org.mitre.quaerite.core.features.factories.StringFeatureFactory;
+import org.mitre.quaerite.core.features.factories.StringListFeatureFactory;
 import org.mitre.quaerite.core.features.factories.WeightableListFeatureFactory;
-import org.mitre.quaerite.core.queries.BoostingQuery;
 import org.mitre.quaerite.core.queries.DisMaxQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.MultiFieldQuery;
@@ -81,7 +79,9 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
 
     @Override
     public FeatureFactories deserialize(JsonElement jsonElement, Type type,
-                                        JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+                                        JsonDeserializationContext
+                                                jsonDeserializationContext)
+            throws JsonParseException {
         JsonObject jsonObject = jsonElement.getAsJsonObject();
         Map<String, FeatureFactory> featureSetMap = new HashMap<>();
         for (String name : jsonObject.keySet()) {
@@ -93,7 +93,7 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
     private FeatureFactory buildFeatureFactory(String paramName, JsonElement jsonFeatureFactory) {
         Class clazz = determineClass(paramName);
         if (WeightableListFeature.class.isAssignableFrom(clazz)) {
-            JsonObject featureSetObj = (JsonObject)jsonFeatureFactory;
+            JsonObject featureSetObj = (JsonObject) jsonFeatureFactory;
             return buildWeightableFeatureFactory(paramName, featureSetObj);
         } else if (FloatFeature.class.isAssignableFrom(clazz)) {
             return buildFloatFeatureFactory(paramName, jsonFeatureFactory);
@@ -104,7 +104,7 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         } else if (StringListFeature.class.isAssignableFrom(clazz)) {
             return buildStringListFeatureFactory(paramName, jsonFeatureFactory);
         } else if (Query.class.isAssignableFrom(clazz)) {
-            return createQueryFactory((JsonObject)jsonFeatureFactory);
+            return createQueryFactory((JsonObject) jsonFeatureFactory);
         } else if (CustomHandler.class.isAssignableFrom(clazz)) {
             return buildCustomHandlerFactory(jsonFeatureFactory.getAsJsonObject());
         } else {
@@ -119,11 +119,12 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             JsonObject child = obj.get(handler).getAsJsonObject();
             String customQueryKey = null;
             if (child.has(CustomHandlerFactory.CUSTOM_QUERY_KEY)) {
-                customQueryKey = child.get(CustomHandlerFactory.CUSTOM_QUERY_KEY).getAsString();
+                customQueryKey = child.get(CustomHandlerFactory.CUSTOM_QUERY_KEY)
+                        .getAsString();
             }
             customHandlerFactory.add(new CustomHandler(handler, customQueryKey));
         }
-        return  customHandlerFactory;
+        return customHandlerFactory;
     }
 
 
@@ -138,9 +139,9 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             return buildMultiMatchFactory(childRoot);
         } else if (name.equals("boosting")) {
             return buildBoostingFactory(childRoot);
-        }else {
+        } else {
             //TODO: add boolean query
-            throw new IllegalArgumentException("I regret I don't yet support: "+name);
+            throw new IllegalArgumentException("I regret I don't yet support: " + name);
         }
     }
 
@@ -149,16 +150,19 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         QueryFactory negative = createQueryFactory(childRoot.getAsJsonObject("negative"));
 
         FloatFeatureFactory<NegativeBoost> negBoostFactory =
-                    new FloatFeatureFactory<>(NegativeBoost.class, toFloatList(childRoot.get("negativeBoost")));
+                new FloatFeatureFactory<>(NegativeBoost.class, toFloatList(
+                        childRoot.get("negativeBoost")));
         return new BoostingQueryFactory(positive, negative, negBoostFactory);
     }
 
     private QueryFactory buildMultiMatchFactory(JsonObject childRoot) {
-        QueryFactory<MultiMatchQuery> factory = new QueryFactory<>("multi_match", MultiMatchQuery.class);
+        QueryFactory<MultiMatchQuery> factory = new QueryFactory<>(
+                "multi_match", MultiMatchQuery.class);
         addMultiFieldFeatures(factory, childRoot);
         List<String> types = toStringList(childRoot.get("type"));
         if (types.size() == 0) {
-            throw new IllegalArgumentException("Must specify at least one type for a multi_match: 'best_match', etc.");
+            throw new IllegalArgumentException(
+                    "Must specify at least one type for a multi_match: 'best_match', etc.");
         }
 
         StringFeatureFactory<MultiMatchType> typeFactory =
@@ -185,7 +189,7 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
 
     private QueryFactory buildEDisMaxFactory(JsonObject obj) {
         //TODO -- PICK UP HERE
-        QueryFactory<EDisMaxQuery> factory = new  QueryFactory<>("edismax", EDisMaxQuery.class);
+        QueryFactory<EDisMaxQuery> factory = new QueryFactory<>("edismax", EDisMaxQuery.class);
         if (obj.has("pf2")) {
             factory.add(buildFeatureFactory("pf2", obj.get("pf2")));
         }
@@ -233,13 +237,13 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         List<Float> floats = null;
         if (jsonObj.has("mmInts")) {
             integers = new ArrayList<>();
-            for (JsonElement el : ((JsonArray)jsonObj.get("mmInts"))) {
+            for (JsonElement el : ((JsonArray) jsonObj.get("mmInts"))) {
                 integers.add(el.getAsInt());
             }
         }
         if (jsonObj.has("mmFloats")) {
             floats = new ArrayList<>();
-            for (JsonElement el : ((JsonArray)jsonObj.get("mmFloats"))) {
+            for (JsonElement el : ((JsonArray) jsonObj.get("mmFloats"))) {
                 String mmString = el.getAsString();
                 Matcher percentMatcher = PERCENT_MATCHER.matcher(mmString);
                 if (percentMatcher.reset(mmString).find()) {
@@ -259,8 +263,8 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
                     operators.add(QueryOperator.OPERATOR.AND);
                 } else {
                     throw new IllegalArgumentException(
-                            "I'm sorry, but I was expecting 'and' or 'or'. "+
-                                    "I don't understand: "+el
+                            "I'm sorry, but I was expecting 'and' or 'or'. " +
+                                    "I don't understand: " + el
                     );
                 }
             }
@@ -278,10 +282,10 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         if (jsonFeatureFactory.isJsonArray()) {
             fields = toStringList(jsonFeatureFactory);
         } else {
-            if (! jsonFeatureFactory.isJsonObject()) {
-                throw new IllegalArgumentException("Expected array or json object for: "+paramName);
+            if (!jsonFeatureFactory.isJsonObject()) {
+                throw new IllegalArgumentException("Expected array or json object for: " + paramName);
             }
-            JsonObject obj = (JsonObject)jsonFeatureFactory;
+            JsonObject obj = (JsonObject) jsonFeatureFactory;
             if (obj.has(MIN_SET_SIZE_KEY)) {
                 minSetSize = obj.get(MIN_SET_SIZE_KEY).getAsInt();
             }
@@ -293,8 +297,8 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             if (obj.has(FIELDS_KEY)) {
                 fields = toStringList(obj.get(VALUES_KEY));
             } else {
-                throw new IllegalArgumentException(paramName +" param requires a '"+
-                        VALUES_KEY+"'");
+                throw new IllegalArgumentException(paramName + " param requires a '" +
+                        VALUES_KEY + "'");
             }
         }
         try {
@@ -304,6 +308,7 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             throw new IllegalArgumentException(e);
         }
     }
+
     private FeatureFactory buildIntFeatureFactory(String name, JsonElement intArr) {
         List<Integer> values = toIntList(intArr);
         Class clazz = null;
@@ -327,7 +332,8 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         return new FloatFeatureFactory(clazz, values);
     }
 
-    private FeatureFactory buildStringFeatureFactory(String paramName, JsonElement valuesElement) {
+    private FeatureFactory buildStringFeatureFactory(String paramName,
+                                                     JsonElement valuesElement) {
         List<String> values = toStringList(valuesElement);
         try {
             return new StringFeatureFactory(paramName,
@@ -338,7 +344,9 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
     }
 
     @Override
-    public JsonElement serialize(FeatureFactories featureFactories, Type type, JsonSerializationContext jsonSerializationContext) {
+    public JsonElement serialize(FeatureFactories featureFactories,
+                                 Type type,
+                                 JsonSerializationContext jsonSerializationContext) {
         JsonObject jsonObject = new JsonObject();
         for (Map.Entry<String, FeatureFactory> e : featureFactories.getFeatureFactories().entrySet()) {
             String name = e.getKey();
@@ -356,7 +364,8 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             ret.add(FIELDS_KEY, weightFeatureToJsonArray(
                     ((WeightableListFeatureFactory) featureFactory).getFeatures()));
             ret.add(DEFAULT_WEIGHT_KEY,
-                    floatListToJsonArr(((WeightableListFeatureFactory) featureFactory).getDefaultWeights()));
+                    floatListToJsonArr(((WeightableListFeatureFactory) featureFactory)
+                            .getDefaultWeights()));
             return ret;
         } else if (featureFactory instanceof StringFeatureFactory) {
             return stringListToJsonArr(((StringFeatureFactory) featureFactory).getStrings());
@@ -413,7 +422,8 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         } catch (ClassNotFoundException e) {
             throw new RuntimeException();
         }
-        return new WeightableListFeatureFactory(paramName, clazz, fields, defaultWeights, minSetSizeInt, maxSetSizeInt);
+        return new WeightableListFeatureFactory(paramName, clazz, fields,
+                defaultWeights, minSetSizeInt, maxSetSizeInt);
     }
 }
 

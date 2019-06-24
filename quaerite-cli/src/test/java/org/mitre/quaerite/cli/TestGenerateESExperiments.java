@@ -17,7 +17,6 @@
 package org.mitre.quaerite.cli;
 
 
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.Reader;
@@ -33,9 +32,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.Experiment;
 import org.mitre.quaerite.core.ExperimentSet;
+import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.Query;
-import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.scorers.NDCG;
 import org.mitre.quaerite.core.scorers.Scorer;
 
@@ -49,7 +48,8 @@ public class TestGenerateESExperiments {
         JSON = Files.createTempFile("quaerite-features", ".json");
         EXPERIMENTS = Files.createTempFile("quaerite-experiments", ".json");
         Files.copy(
-                TestGenerateESExperiments.class.getResourceAsStream("/test-documents/experiment_features_es_1.json"),
+                TestGenerateESExperiments.class.getResourceAsStream(
+                        "/test-documents/experiment_features_es_1.json"),
                 JSON, StandardCopyOption.REPLACE_EXISTING);
     }
 
@@ -82,7 +82,7 @@ public class TestGenerateESExperiments {
             List<Query> filterQueries = experiments.get(i).getFilterQueries();
             assertEquals(3, filterQueries.size());
             assertEquals(LuceneQuery.class, filterQueries.get(0).getClass());
-            LuceneQuery q = (LuceneQuery)filterQueries.get(0);
+            LuceneQuery q = (LuceneQuery) filterQueries.get(0);
             assertEquals("xyz:fox", q.getQueryString());
             assertEquals("text", q.getDefaultField());
             assertEquals(QueryOperator.OPERATOR.AND, q.getQueryOperator());

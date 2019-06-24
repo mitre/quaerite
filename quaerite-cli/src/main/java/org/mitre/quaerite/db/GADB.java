@@ -18,7 +18,6 @@
 package org.mitre.quaerite.db;
 
 import java.io.IOException;
-import java.net.JarURLConnection;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -37,7 +36,6 @@ import org.mitre.quaerite.core.util.MathUtil;
 
 /**
  * Extends ExperimentDB to add more functionality for GA.
- *
  */
 public class GADB extends ExperimentDB {
 
@@ -53,12 +51,12 @@ public class GADB extends ExperimentDB {
 
     public static GADB open(Path dbDir) throws SQLException, IOException {
         try {
-            Class.forName ("org.h2.Driver");
+            Class.forName("org.h2.Driver");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
         return new GADB(DriverManager.getConnection(
-                "jdbc:h2:"+dbDir.resolve("h2_database").toAbsolutePath()), false);
+                "jdbc:h2:" + dbDir.resolve("h2_database").toAbsolutePath()), false);
     }
 
     private PreparedStatement getTestingStatement;
@@ -90,13 +88,15 @@ public class GADB extends ExperimentDB {
             insertTrainTest.execute();
         }
     }
+
     public void initTrainTest(int nFolds) throws SQLException {
         PreparedStatement insertTrainTest = initTrainTest();
         JudgmentList judgmentList = getJudgments();
 
         List<Integer> foldIds = new ArrayList<>();
         while (foldIds.size() < judgmentList.getJudgmentsList().size()) {
-            for (int i = 0; i < nFolds && foldIds.size() < judgmentList.getJudgmentsList().size(); i++) {
+            for (int i = 0; i < nFolds && foldIds.size() <
+                    judgmentList.getJudgmentsList().size(); i++) {
                 foldIds.add(i);
             }
         }
@@ -144,8 +144,8 @@ public class GADB extends ExperimentDB {
                 train.addJudgments(judgments);
             }
         }
-        LOG.debug("train size: "+train.getJudgmentsList().size() +
-                "; test size: "+test.getJudgmentsList().size());
+        LOG.debug("train size: " + train.getJudgmentsList().size() +
+                "; test size: " + test.getJudgmentsList().size());
         return new TrainTestJudmentListPair(train, test);
     }
 }

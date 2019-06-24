@@ -53,7 +53,9 @@ import org.mitre.quaerite.core.stats.TokenDF;
 public abstract class SearchClient implements Closeable {
 
     public abstract SearchResultSet search(QueryRequest query) throws SearchClientException, IOException;
+
     public abstract FacetResult facet(QueryRequest query) throws SearchClientException, IOException;
+
     static Logger LOG = Logger.getLogger(SearchClient.class);
 
     private final CloseableHttpClient httpClient;
@@ -62,6 +64,7 @@ public abstract class SearchClient implements Closeable {
     public SearchClient() {
         httpClient = HttpClients.createDefault();
     }
+
     protected byte[] get(String url) throws SearchClientException {
         //overly simplistic...need to add proxy, etc., but good enough for now
         URI uri = null;
@@ -75,7 +78,7 @@ public abstract class SearchClient implements Closeable {
         try {
             String get = uri.getPath();
             if (!StringUtils.isBlank(uri.getQuery())) {
-                get += "?"+uri.getRawQuery();
+                get += "?" + uri.getRawQuery();
             }
             httpGet = new HttpGet(get);
         } catch (Exception e) {
@@ -86,15 +89,16 @@ public abstract class SearchClient implements Closeable {
         //httpGet.setHeader("Connection", "close");
 
         //try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            try(CloseableHttpResponse httpResponse = httpClient.execute(target, httpGet)) {
-                if (httpResponse.getStatusLine().getStatusCode() != 200) {
-                    String msg = new String(EntityUtils.toByteArray(httpResponse.getEntity()), StandardCharsets.UTF_8);
-                    throw new SearchClientException("Bad status code: "+httpResponse.getStatusLine().getStatusCode()
-                    + "for url: "+url + "; msg: "+msg);
-                }
-                return EntityUtils.toByteArray(httpResponse.getEntity());
+        try (CloseableHttpResponse httpResponse = httpClient.execute(target, httpGet)) {
+            if (httpResponse.getStatusLine().getStatusCode() != 200) {
+                String msg = new String(EntityUtils.toByteArray(
+                        httpResponse.getEntity()), StandardCharsets.UTF_8);
+                throw new SearchClientException("Bad status code: "
+                        + httpResponse.getStatusLine().getStatusCode()
+                        + "for url: " + url + "; msg: " + msg);
             }
-         catch (IOException e) {
+            return EntityUtils.toByteArray(httpResponse.getEntity());
+        } catch (IOException e) {
             throw new SearchClientException(url, e);
         }
     }
@@ -113,15 +117,19 @@ public abstract class SearchClient implements Closeable {
         try (CloseableHttpResponse response = httpClient.execute(httpRequest)) {
             int status = response.getStatusLine().getStatusCode();
             if (status == 200) {
-                try (Reader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8))) {
-                    JsonElement element =  parser.parse(reader);
+                try (Reader reader = new BufferedReader(
+                        new InputStreamReader(response.getEntity().getContent(),
+                                StandardCharsets.UTF_8))) {
+                    JsonElement element = parser.parse(reader);
                     if (LOG.isTraceEnabled()) {
                         LOG.trace(element);
                     }
                     return new JsonResponse(200, element);
                 }
             } else {
-                return new JsonResponse(status, new String(EntityUtils.toByteArray(response.getEntity()), StandardCharsets.UTF_8));
+                return new JsonResponse(status,
+                        new String(EntityUtils.toByteArray(response.getEntity()),
+                                StandardCharsets.UTF_8));
             }
         } finally {
             httpRequest.releaseConnection();
@@ -141,18 +149,24 @@ public abstract class SearchClient implements Closeable {
         httpClient.close();
     }
 
-    public abstract void addDocuments(List<StoredDocument> buildDocuments) throws IOException, SearchClientException;
+    public abstract void addDocuments(List<StoredDocument> buildDocuments)
+            throws IOException, SearchClientException;
 
     public abstract List<StoredDocument> getDocs(String idField, Set<String> ids,
-                                                 Set<String> whiteListFields, Set<String> blackListFields) throws IOException, SearchClientException;
+                                                 Set<String> whiteListFields,
+                                                 Set<String> blackListFields)
+            throws IOException, SearchClientException;
 
     /**
      * if not supported, this should return an empty collection
+     *
      * @return
      */
-    public abstract Collection<? extends String> getCopyFields() throws IOException, SearchClientException;
+    public abstract Collection<? extends String> getCopyFields()
+            throws IOException, SearchClientException;
 
-    public String getIdField(ExperimentConfig config) throws IOException, SearchClientException {
+    public String getIdField(ExperimentConfig config)
+            throws IOException, SearchClientException {
         if (!StringUtils.isBlank(config.getIdField())) {
             return config.getIdField();
         }
@@ -163,18 +177,24 @@ public abstract class SearchClient implements Closeable {
 
     public abstract void deleteAll() throws SearchClientException, IOException;
 
-    public abstract IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids, int batchSize,
-                                  int copierThreads, Collection<Query> filterQueries) throws IOException, SearchClientException;
+    public abstract IdGrabber getIdGrabber(ArrayBlockingQueue<Set<String>> ids,
+                                           int batchSize,
+                                           int copierThreads,
+                                           Collection<Query> filterQueries)
+            throws IOException, SearchClientException;
 
 
-    protected JsonResponse getJson(String url) throws IOException, SearchClientException {
+    protected JsonResponse getJson(String url) throws IOException,
+            SearchClientException {
         byte[] bytes;
         try {
             bytes = get(url);
         } catch (SearchClientException e) {
             return new JsonResponse(-1, e.getMessage());
         }
-        try (Reader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8))) {
+        try (Reader reader = new BufferedReader(
+                new InputStreamReader(new ByteArrayInputStream(bytes),
+                        StandardCharsets.UTF_8))) {
             return new JsonResponse(200, parser.parse(reader));
         }
     }
@@ -182,11 +202,15 @@ public abstract class SearchClient implements Closeable {
     /**
      * return common system internal fields, such as "_version_"
      * in Solr
+     *
      * @return
      */
     public abstract Set<String> getSystemInternalFields();
 
-    public abstract List<String> analyze(String field, String string) throws IOException, SearchClientException;
+    public abstract List<String> analyze(String field, String string)
+            throws IOException, SearchClientException;
 
-    public abstract List<TokenDF> getTerms(String field, String lower, int limit, int minCount) throws IOException, SearchClientException;
+    public abstract List<TokenDF> getTerms(String field, String lower,
+                                           int limit, int minCount)
+            throws IOException, SearchClientException;
 }

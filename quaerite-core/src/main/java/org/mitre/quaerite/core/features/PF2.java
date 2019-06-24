@@ -44,4 +44,9 @@ public class PF2 extends WeightableListFeature {
         if (!(o instanceof PF2)) return false;
         return super.equals(o);
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

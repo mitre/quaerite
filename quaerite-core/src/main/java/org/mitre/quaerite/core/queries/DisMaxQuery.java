@@ -19,7 +19,6 @@ package org.mitre.quaerite.core.queries;
 
 import org.mitre.quaerite.core.features.BF;
 import org.mitre.quaerite.core.features.BQ;
-import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.PF;
 import org.mitre.quaerite.core.features.PS;
 

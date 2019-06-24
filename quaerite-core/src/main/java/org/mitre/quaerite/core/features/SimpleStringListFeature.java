@@ -37,4 +37,9 @@ public class SimpleStringListFeature extends StringListFeature<SimpleStringListF
         return super.equals(o);
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
 }

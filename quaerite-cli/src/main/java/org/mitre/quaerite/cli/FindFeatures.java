@@ -41,18 +41,17 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.stat.inference.ChiSquareTest;
-import org.mitre.quaerite.core.ExperimentConfig;
-import org.mitre.quaerite.core.FacetResult;
-import org.mitre.quaerite.core.JudgmentList;
-import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.connectors.QueryRequest;
 import org.mitre.quaerite.connectors.SearchClient;
 import org.mitre.quaerite.connectors.SearchClientFactory;
+import org.mitre.quaerite.core.FacetResult;
+import org.mitre.quaerite.core.JudgmentList;
+import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
-import org.mitre.quaerite.db.ExperimentDB;
 import org.mitre.quaerite.core.stats.ContrastResult;
+import org.mitre.quaerite.db.ExperimentDB;
 
 public class FindFeatures extends AbstractCLI {
 
@@ -88,16 +87,19 @@ public class FindFeatures extends AbstractCLI {
                         .longOpt("judgments")
                         .hasArg(true)
                         .required(false)
-                        .desc("judgment .csv file (optional as long as judgements have been loaded earlier!)").build()
+                        .desc("judgment .csv file (optional as long as " +
+                                "judgements have been loaded earlier!)").build()
         );
         OPTIONS.addOption(
                 Option.builder("id")
                         .hasArg()
                         .required(false)
-                        .desc("field name for id field for judgments file (optional; default: 'id')").build()
+                        .desc("field name for id field for judgments file " +
+                                "(optional; default: 'id')").build()
         );
 
     }
+
     ChiSquareTest chi = new ChiSquareTest();
     private NumberFormat decimalFormat = new DecimalFormat("0.000",
             DecimalFormatSymbols.getInstance(Locale.US));
@@ -159,7 +161,8 @@ public class FindFeatures extends AbstractCLI {
     }
 
     private FacetResult getFacets(String f, String idField, Set<String> ids,
-                                  String filterQuery, SearchClient searchClient) throws Exception {
+                                  String filterQuery, SearchClient searchClient)
+            throws Exception {
         Map<String, Long> ret = new HashMap<>();
         List<String> cache = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
@@ -208,19 +211,23 @@ public class FindFeatures extends AbstractCLI {
                 break;
             }
             String targPercent = (chi.getTargTotal() == 0L) ? "" :
-                    String.format(Locale.US, "%.2f%%", ((double)chi.getTargCount()/(double)chi.getTargTotal())*100.0f);
+                    String.format(Locale.US, "%.2f%%", (
+                            (double) chi.getTargCount() /
+                                    (double) chi.getTargTotal()) * 100.0f);
             String otherPercent = (chi.getOtherTotal() == 0L) ? "" :
-                    String.format(Locale.US, "%.2f%%", ((double)chi.getOtherCount()/(double)chi.getOtherTotal())*100.0f);
+                    String.format(Locale.US, "%.2f%%",
+                            ((double) chi.getOtherCount() /
+                                    (double) chi.getOtherTotal()) * 100.0f);
 
             System.out.println(StringUtils.join(new String[]{
-                    "\tfacet_value="+chi.getTerm(),
-                    "\t\ttargCount="+chi.getTargCount(),
-                    "\t\ttargTotal="+chi.getTargTotal(),
-                    "\t\ttargPercent="+targPercent,
-                    "\t\tbackgroundCount="+chi.getOtherCount(),
-                    "\t\tbackgroundTotal="+chi.getOtherTotal(),
-                    "\t\tbackgroundPercent="+otherPercent,
-                    "\t\tcontrastValue="+decimalFormat.format(chi.getContrastValue())
+                    "\tfacet_value=" + chi.getTerm(),
+                    "\t\ttargCount=" + chi.getTargCount(),
+                    "\t\ttargTotal=" + chi.getTargTotal(),
+                    "\t\ttargPercent=" + targPercent,
+                    "\t\tbackgroundCount=" + chi.getOtherCount(),
+                    "\t\tbackgroundTotal=" + chi.getOtherTotal(),
+                    "\t\tbackgroundPercent=" + otherPercent,
+                    "\t\tcontrastValue=" + decimalFormat.format(chi.getContrastValue())
 
             }, '\n'));
         }
@@ -250,7 +257,8 @@ public class FindFeatures extends AbstractCLI {
             if (a == 0L && b == 0L) {
                 //skip
             } else {
-                ret.add(new ContrastResult(e.getKey(), a, foreground.getTotalDocs(), b, totalDocs, chi));
+                ret.add(new ContrastResult(e.getKey(), a,
+                        foreground.getTotalDocs(), b, totalDocs, chi));
             }
         }
         Collections.sort(ret);

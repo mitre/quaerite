@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.core.features;
 
-import java.util.Objects;
 
 public class QF extends WeightableListFeature {
 
@@ -45,6 +44,11 @@ public class QF extends WeightableListFeature {
         if (this == o) return true;
         if (!(o instanceof QF)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
 }

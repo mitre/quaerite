@@ -74,14 +74,16 @@ public class RunExperiments extends AbstractExperimentRunner {
                         .longOpt("judgments")
                         .hasArg(true)
                         .required(true)
-                        .desc("judgment .csv file (may contain queries only...no judgments").build()
+                        .desc("judgment .csv file (may contain " +
+                                "queries only...no judgments").build()
         );
 
         OPTIONS.addOption(
                 Option.builder("freshStart")
                         .required(false)
                         .hasArg(false)
-                        .desc("delete all existing scores (optional; used only in iterative mode)").build()
+                        .desc("delete all existing scores (optional; " +
+                                "used only in iterative mode)").build()
         );
 
         OPTIONS.addOption(
@@ -89,7 +91,8 @@ public class RunExperiments extends AbstractExperimentRunner {
                         .longOpt("experiment")
                         .required(false)
                         .hasArg()
-                        .desc("run an already loaded experiment by name (optional; default=all)").build()
+                        .desc("run an already loaded experiment by name (optional; " +
+                                "default=all)").build()
         );
 
         OPTIONS.addOption(
@@ -97,7 +100,8 @@ public class RunExperiments extends AbstractExperimentRunner {
                         .longOpt("latest")
                         .hasArg(false)
                         .required(false)
-                        .desc("run the most recently added experiment (optional; default=false)").build()
+                        .desc("run the most recently added experiment (optional; " +
+                                "default=false)").build()
         );
 
         OPTIONS.addOption(
@@ -105,7 +109,8 @@ public class RunExperiments extends AbstractExperimentRunner {
                         .hasArg(false)
                         .required(false)
                         .desc("use this if running a test set; " +
-                                "this will sort results by desc order of the test scorer").build()
+                                "this will sort results by desc order " +
+                                "of the test scorer").build()
         );
     }
 
@@ -132,7 +137,8 @@ public class RunExperiments extends AbstractExperimentRunner {
         }
 
         Path dbDir = Paths.get(commandLine.getOptionValue("db"));
-        String experimentName = (commandLine.hasOption("experiment")) ? commandLine.getOptionValue("experiment") : "";
+        String experimentName = (commandLine.hasOption("experiment")) ?
+                commandLine.getOptionValue("experiment") : "";
         boolean freshStart = getBoolean(commandLine, "freshStart");
         boolean latest = getBoolean(commandLine, "latest");
         boolean isTest = getBoolean(commandLine, "test");
@@ -140,7 +146,8 @@ public class RunExperiments extends AbstractExperimentRunner {
         Path judgments = getPath(commandLine, "j", true);
         Path experiments = getPath(commandLine, "e", false);
         Path reportDir = getPath(commandLine, "r", false);
-        reportDir = (reportDir == null) ? Paths.get(DumpResults.DEFAULT_REPORT_DIR) : reportDir;
+        reportDir = (reportDir == null) ? Paths.get(DumpResults.DEFAULT_REPORT_DIR) :
+                reportDir;
         RunExperiments runExperiments = new RunExperiments();
 
         //TODO: this should be optimized to handle a single experiment
@@ -149,15 +156,17 @@ public class RunExperiments extends AbstractExperimentRunner {
         try (ExperimentDB experimentDB = ExperimentDB.open(dbDir)) {
             if (judgments != null && experiments != null) {
                 QueryLoader.loadJudgments(experimentDB, judgments, true);
-                experimentSet = addExperiments(experimentDB, experiments, false, true);
+                experimentSet = addExperiments(experimentDB, experiments, false,
+                        true);
                 runExperiments = new RunExperiments(experimentSet.getExperimentConfig());
                 freshStart = false;
 
             }
-            runExperiments.run(experimentSet, experimentDB, experimentName, freshStart, latest);
+            runExperiments.run(experimentSet, experimentDB, experimentName,
+                    freshStart, latest);
 
 
-            LOG.info("starting to write reports to: "+reportDir);
+            LOG.info("starting to write reports to: " + reportDir);
             dumpResults(experimentSet, experimentDB, experimentDB.getQuerySets(),
                     experimentDB.getExperiments().getScorers(), reportDir, isTest);
         }
@@ -165,7 +174,9 @@ public class RunExperiments extends AbstractExperimentRunner {
     }
 
 
-    private void run(ExperimentSet experimentSet, ExperimentDB experimentDB, String experimentName, boolean freshStart, boolean latest) throws SQLException, IOException, SearchClientException {
+    private void run(ExperimentSet experimentSet, ExperimentDB experimentDB,
+                     String experimentName, boolean freshStart, boolean latest)
+            throws SQLException, IOException, SearchClientException {
         if (freshStart) {
             experimentDB.clearScores();
         }
@@ -193,18 +204,21 @@ public class RunExperiments extends AbstractExperimentRunner {
                 int togo = experimentSet.getExperiments().entrySet().size() - finished;
                 if (togo > 0) {
                     LOG.info("Still have " + togo + " to go; estimate: " +
-                            threePlaces.format(((double) togo * perExperiment) / (double) 1000) + " seconds\n\n");
+                            threePlaces.format(((double) togo * perExperiment) /
+                                    (double) 1000) + " seconds\n\n");
                 }
             }
         } else {
             Experiment experiment = experimentSet.getExperiment(experimentName);
             if (experiment == null) {
-                LOG.warn("I'm sorry, but I couldn't find this experiment:" + experimentName);
+                LOG.warn("I'm sorry, but I couldn't find this experiment:" +
+                        experimentName);
                 return;
             }
             experimentDB.clearScores(experimentName);
 
-            runExperiment(experiment, experimentSet.getScorers(), experimentSet.getMaxRows(), experimentDB, experimentDB.getJudgments(),
+            runExperiment(experiment, experimentSet.getScorers(),
+                    experimentSet.getMaxRows(), experimentDB, experimentDB.getJudgments(),
                     "train", true);
         }
     }

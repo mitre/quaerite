@@ -25,23 +25,25 @@ import java.util.Set;
 public class MultiMatchType extends StringFeature {
 
     private static final Set<String> ALLOWABLE;
+
     static {
         Set<String> tmp = new HashSet<>();
         tmp.addAll(Arrays.asList(new String[]{
-            "best_fields",
-            "most_fields",
-            "cross_fields", "phrase"//add query_string or make a new class?
+                "best_fields",
+                "most_fields",
+                "cross_fields", "phrase"//add query_string or make a new class?
         }));
         ALLOWABLE = Collections.unmodifiableSet(tmp);
     }
+
     private static final String NAME = "type";
 
 
     public MultiMatchType(String feature) {
         super(NAME, feature);
         if (!ALLOWABLE.contains(feature)) {
-            throw new IllegalArgumentException("Must have type in: "+ALLOWABLE+
-                    ". I see: "+feature);
+            throw new IllegalArgumentException("Must have type in: " + ALLOWABLE +
+                    ". I see: " + feature);
         }
     }
 
@@ -55,13 +57,18 @@ public class MultiMatchType extends StringFeature {
         if (obj == null) {
             return false;
         }
-        if (! MultiMatchType.class.equals(obj.getClass())) {
+        if (!MultiMatchType.class.equals(obj.getClass())) {
             return false;
         }
         if (this == obj) {
             return true;
         }
         return super.equals(obj);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
 }

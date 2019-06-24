@@ -17,8 +17,6 @@
 
 package org.mitre.quaerite.core.stats;
 
-import org.mitre.quaerite.core.Experiment;
-
 public class ExperimentNameScorePair {
     private final String experimentName;
     private final double score;

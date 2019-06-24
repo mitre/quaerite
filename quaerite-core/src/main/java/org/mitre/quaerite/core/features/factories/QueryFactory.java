@@ -16,7 +16,6 @@
  */
 package org.mitre.quaerite.core.features.factories;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,7 +64,7 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
         for (Object feature : featureFactory.permute(maxSize)) {
             Query cp = (Query)query.deepCopy();
             setFeature(cp, feature);
-            recurseFactory(factoryIndex+1, factories, queries, cp, maxSize);
+            recurseFactory(factoryIndex + 1, factories, queries, cp, maxSize);
         }
     }
 
@@ -85,7 +84,7 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
         if (MathUtil.RANDOM.nextFloat() > probability) {
             return (T)query.deepCopy();
         }
-        int numMods = (int)Math.ceil(factories.size()*amplitude);
+        int numMods = (int)Math.ceil(factories.size() * amplitude);
         List<FeatureFactory> tmp = new ArrayList<>(factories);
         Collections.shuffle(tmp);
         T cp = (T)query.deepCopy();
@@ -134,7 +133,8 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
     private void setFeature(Query q, Object obj) {
         String className = obj.getClass().getSimpleName();
-        String name = "set"+className.substring(0,1).toUpperCase(Locale.US)+className.substring(1);
+        String name = "set" + className.substring(0,1)
+                .toUpperCase(Locale.US) + className.substring(1);
         Method method = null;
         if (! methodCache.containsKey(name)) {
             try {
@@ -155,7 +155,8 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
             method = methodCache.get(name);
         }
         if (method == null) {
-            throw new RuntimeException("I regret I couldn't find a method for: "+name);
+            throw new RuntimeException(
+                    "I regret I couldn't find a method for: " + name);
         }
         try {
             method.invoke(q, obj);
@@ -167,7 +168,8 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
     private Feature getFeature(Query q, AbstractFeatureFactory obj) {
         String className = obj.getName();
-        String name = "get"+className.substring(0,1).toUpperCase(Locale.US)+className.substring(1);
+        String name = "get" + className.substring(0,1).toUpperCase(Locale.US)
+                + className.substring(1);
         Method method = null;
         if (! methodCache.containsKey(name)) {
             try {
@@ -188,7 +190,8 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
             method = methodCache.get(name);
         }
         if (method == null) {
-            throw new RuntimeException("I regret I couldn't find a method for: "+name);
+            throw new RuntimeException(
+                    "I regret I couldn't find a method for: " + name);
         }
         Feature ret = null;
         try {
@@ -206,7 +209,7 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
     T newInstance() {
         try {
             return (T)clazz.newInstance();
-        } catch (InstantiationException|IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }

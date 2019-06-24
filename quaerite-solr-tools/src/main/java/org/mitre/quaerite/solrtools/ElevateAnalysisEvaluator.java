@@ -23,7 +23,6 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -41,7 +40,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.BOMInputStream;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.analysis.EquivalenceSet;
@@ -94,7 +92,8 @@ public class ElevateAnalysisEvaluator {
                         .longOpt("regex")
                         .hasArg(true)
                         .required(false)
-                        .desc("regex to subset ids (in case of multiple logical indices stored in a single Solr index)").build()
+                        .desc("regex to subset ids (in case of multiple logical " +
+                                "indices stored in a single Solr index)").build()
         );
     }
 
@@ -140,7 +139,8 @@ public class ElevateAnalysisEvaluator {
                          SearchClient client) throws IOException, SearchClientException {
         Map<String, Integer> queries = loadQueries(queryFile);
         Map<String, Integer> queryTokenCounts = new HashMap<>();
-        Map<String, EquivalenceSet> elevateEquivalences = equivalate(field, elevate, client, queryTokenCounts);
+        Map<String, EquivalenceSet> elevateEquivalences = equivalate(field, elevate,
+                client, queryTokenCounts);
 
         int noAnalysisCovered = 0;
         int noAnalysisNotCovered = 0;
@@ -151,8 +151,9 @@ public class ElevateAnalysisEvaluator {
                 noAnalysisNotCovered += e.getValue();
             }
         }
-        double percentNoAnalysisCovered = (noAnalysisCovered+noAnalysisNotCovered == 0) ? 0.0 :
-                100.0* ((double) noAnalysisCovered) / (double) (noAnalysisCovered + noAnalysisNotCovered);
+        double percentNoAnalysisCovered = (noAnalysisCovered + noAnalysisNotCovered == 0) ? 0.0 :
+                100.0 * ((double) noAnalysisCovered) / (double) (noAnalysisCovered
+                        + noAnalysisNotCovered);
         System.out.println(String.format(Locale.US,
                 "Without analysis %,d queries are covered, " +
                         "and %,d queries are not covered.%n",
@@ -184,8 +185,8 @@ public class ElevateAnalysisEvaluator {
                 unelevatedQueries.put(e.getKey(), e.getValue());
             }
         }
-        double percentAnalysisCovered = (analysisCovered+analysisNotCovered == 0) ? 0.0 :
-                100.0* ((double) analysisCovered) / (double) (analysisCovered + analysisNotCovered);
+        double percentAnalysisCovered = (analysisCovered + analysisNotCovered == 0) ? 0.0 :
+                100.0 * ((double) analysisCovered) / (double) (analysisCovered + analysisNotCovered);
 
         System.out.println(String.format(Locale.US,
                 "Without analysis %,d queries are covered, " +
@@ -194,7 +195,7 @@ public class ElevateAnalysisEvaluator {
                 analysisCovered, analysisNotCovered));//,         percentAnalysisCovered));
 
         int topN = 100;
-        System.out.println("Top "+topN+" queries not currently covered");
+        System.out.println("Top " + topN + " queries not currently covered");
         int i = 0;
         for (Map.Entry<String, EquivalenceSet> e :
                 MapUtil.sortByDescendingValue(unelevatedQueries,
@@ -204,22 +205,23 @@ public class ElevateAnalysisEvaluator {
             }
             Map<String, MutableLong> sorted = e.getValue().getSortedMap();
 
+            System.out.println(
+                    String.format(Locale.US, "%s (%,d): ",
+                            e.getKey(), e.getValue().getTotalCount()));
+            for (Map.Entry<String, MutableLong> setEntry : sorted.entrySet()) {
                 System.out.println(
-                        String.format(Locale.US, "%s (%,d): ",
-                                e.getKey(), e.getValue().getTotalCount()));
-                for (Map.Entry<String, MutableLong> setEntry : sorted.entrySet()) {
-                    System.out.println(
-                            String.format(Locale.US,
-                                    "\t%s (%,d)",
-                                    setEntry.getKey(), setEntry.getValue().longValue()));
-                }
-                i++;
+                        String.format(Locale.US,
+                                "\t%s (%,d)",
+                                setEntry.getKey(), setEntry.getValue().longValue()));
+            }
+            i++;
 
         }
     }
 
 
-    private void execute(String field, Map<String, Elevate> elevate, SearchClient client) throws IOException, SearchClientException {
+    private void execute(String field, Map<String, Elevate> elevate, SearchClient client)
+            throws IOException, SearchClientException {
 
         Map<String, Integer> tokenCounts = new HashMap<>();
         Map<String, EquivalenceSet> equivalenceMap = equivalate(field, elevate, client, tokenCounts);
@@ -278,7 +280,9 @@ public class ElevateAnalysisEvaluator {
 
     private Map<String, EquivalenceSet> equivalate(String field,
                                                    Map<String, Elevate> elevate,
-                                                   SearchClient client, Map<String, Integer> tokenCounts) throws IOException, SearchClientException {
+                                                   SearchClient client,
+                                                   Map<String, Integer> tokenCounts)
+            throws IOException, SearchClientException {
         Map<String, EquivalenceSet> equivalenceMap = new HashMap<>();
         for (String q : elevate.keySet()) {
             List<String> tokens = client.analyze(field, q);

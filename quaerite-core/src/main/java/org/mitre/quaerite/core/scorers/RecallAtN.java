@@ -40,7 +40,7 @@ public class RecallAtN extends AbstractJudgmentScorer {
                 hits++;
             }
         }
-        double v = (double)hits/(double)getAtN();
+        double v = (double)hits / (double)getAtN();
         addScore(judgments.getQueryInfo(), v);
         return v;
     }
@@ -50,5 +50,10 @@ public class RecallAtN extends AbstractJudgmentScorer {
         if (this == o) return true;
         if (!(o instanceof RecallAtN)) return false;
         return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

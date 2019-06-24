@@ -17,9 +17,6 @@
  */
 package org.mitre.quaerite.solrtools;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParserFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -30,10 +27,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
@@ -44,17 +42,18 @@ import org.xml.sax.helpers.DefaultHandler;
 public class ElevateScraper extends DefaultHandler {
 
     static Logger LOG = Logger.getLogger(ElevateScraper.class);
-
+    private final Matcher idMatcher;
     private boolean inQuery = false;
     private String currentQuery = null;
     private Set<String> ids = new LinkedHashSet<>();
     private Map<String, Elevate> elevates = new HashMap<>();
-    private final Matcher idMatcher;
+
     public ElevateScraper(Matcher idMatcher) {
         this.idMatcher = idMatcher;
     }
 
-    public static Map<String, Elevate> scrape(Path p, Matcher idMatcher) throws SAXException, IOException, ParserConfigurationException {
+    public static Map<String, Elevate> scrape(Path p, Matcher idMatcher)
+            throws SAXException, IOException, ParserConfigurationException {
 
         ElevateScraper scraper = new ElevateScraper(idMatcher);
         try (InputStream is = Files.newInputStream(p)) {
@@ -66,13 +65,30 @@ public class ElevateScraper extends DefaultHandler {
         }
     }
 
+    private static void appendMissing(Elevate elevate, Set<String> newIds) {
+        for (String newId : newIds) {
+            if (!elevate.ids.contains(newId)) {
+                elevate.ids.add(newId);
+            }
+        }
+    }
+
+    public static String getValue(String attrName, Attributes attrs) {
+        for (int i = 0; i < attrs.getLength(); i++) {
+            if (attrs.getLocalName(i).equalsIgnoreCase(attrName)) {
+                return attrs.getValue(i);
+            }
+        }
+        return null;
+    }
+
     private Map<String, Elevate> getElevates() {
         return elevates;
     }
 
-
     @Override
-    public void startElement(String uri, String localName, String name, Attributes attrs) throws SAXException {
+    public void startElement(String uri, String localName, String name,
+                             Attributes attrs) throws SAXException {
         if ("query".equals(name)) {
             inQuery = true;
             currentQuery = getValue("text", attrs);
@@ -94,7 +110,8 @@ public class ElevateScraper extends DefaultHandler {
         if ("query".equals(name)) {
             Elevate elevate = elevates.get(currentQuery);
             if (elevate != null) {
-                LOG.warn("duplicate entry in elevate file after white space is trimmed(?!): >"+currentQuery+"<");
+                LOG.warn("duplicate entry in elevate file after white space is trimmed(?!): >"
+                        + currentQuery + "<");
                 appendMissing(elevate, ids);
             } else {
                 elevates.put(currentQuery, new Elevate(currentQuery, new ArrayList<>(ids)));
@@ -102,23 +119,6 @@ public class ElevateScraper extends DefaultHandler {
             currentQuery = null;
             ids.clear();
         }
-    }
-
-    private static void appendMissing(Elevate elevate, Set<String> newIds) {
-        for (String newId : newIds) {
-            if (! elevate.ids.contains(newId)) {
-                elevate.ids.add(newId);
-            }
-        }
-    }
-
-    public static String getValue(String attrName, Attributes attrs) {
-        for (int i = 0; i < attrs.getLength(); i++) {
-            if (attrs.getLocalName(i).equalsIgnoreCase(attrName)) {
-                return attrs.getValue(i);
-            }
-        }
-        return null;
     }
 
 }

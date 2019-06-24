@@ -49,7 +49,7 @@ public class DiscountedCumulativeGain2002 extends AbstractJudgmentScorer {
             String id = searchResultSet.get(i);
             if (judgments.containsJudgment(id)) {
                 double rel = judgments.getJudgment(id);
-                sum += rel/FastMath.log(2, rank+1);
+                sum += rel / FastMath.log(2, rank + 1);
             }
             rank++;
         }
@@ -63,4 +63,8 @@ public class DiscountedCumulativeGain2002 extends AbstractJudgmentScorer {
         return super.equals(o);
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

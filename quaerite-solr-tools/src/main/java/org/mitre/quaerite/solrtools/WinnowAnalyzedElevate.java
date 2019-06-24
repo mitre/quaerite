@@ -18,10 +18,6 @@
 package org.mitre.quaerite.solrtools;
 
 
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
-
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +30,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -118,12 +117,12 @@ public class WinnowAnalyzedElevate {
     }
 
     private void execute(Path inputElevate, Path winnowedElevate,
-                         Path removedElevate, SearchClient client, String analysisField) throws Exception {
+                         Path removedElevate, SearchClient client, String analysisField)
+            throws Exception {
         Map<String, Elevate> elevateMap = ElevateScraper.scrape(inputElevate, null);
         Map<String, List<Elevate>> analyzed = new TreeMap<>();
         for (String q : elevateMap.keySet()) {
             List<String> tokens = client.analyze(analysisField, q);
-            //Solr 4.5.1 does this!!!
             String analyzedKey = StringUtil.joinWith("", tokens);
             if (analyzed.containsKey(analyzedKey)) {
                 analyzed.get(analyzedKey).add(elevateMap.get(q));
@@ -155,8 +154,8 @@ public class WinnowAnalyzedElevate {
     private void dumpElevates(Path elevateFile, Collection<Elevate> elevates) throws Exception {
         try (OutputStream os = Files.newOutputStream(elevateFile)) {
             XMLStreamWriter out = XMLOutputFactory.newInstance()
-                .createXMLStreamWriter(
-                new OutputStreamWriter(os, StandardCharsets.UTF_8));
+                    .createXMLStreamWriter(
+                            new OutputStreamWriter(os, StandardCharsets.UTF_8));
             out.writeStartDocument("UTF-8", "1.0");
             out.writeCharacters("\n");
             out.writeStartElement("elevate");

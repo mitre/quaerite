@@ -209,7 +209,8 @@ public class TestESClient {
         Set<String> ids = new HashSet<>();
         ids.addAll(Arrays.asList("539 11252 1359 10576 12662".split(" ")));
         SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
-        List<StoredDocument> docs = searchClient.getDocs("_id", ids, Collections.EMPTY_SET, Collections.EMPTY_SET);
+        List<StoredDocument> docs = searchClient.getDocs("_id",
+                ids, Collections.EMPTY_SET, Collections.EMPTY_SET);
         assertEquals(5, docs.size());
         StoredDocument doc1359 = null;
         for (int i = 0; i < docs.size(); i++) {
@@ -314,7 +315,7 @@ public class TestESClient {
                     try {
                         set = ids.poll(1, TimeUnit.SECONDS);
                     } catch (InterruptedException e) {
-
+                        //swallow
                     }
                     if (set != null) {
                         idCounter.addAndGet(set.size());
@@ -364,7 +365,7 @@ public class TestESClient {
                         "  }\n" +
                         "}";
         SearchClient searchClient = SearchClientFactory.getClient(TMDB_URL);
-        String url = TMDB_URL+"/_search";
+        String url = TMDB_URL + "/_search";
         JsonResponse r = searchClient.postJson(url, json);
         System.out.println(r);
     }

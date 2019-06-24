@@ -37,5 +37,9 @@ public class FQ extends StringListFeature<FQ> {
         return super.equals(o);
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 
 }

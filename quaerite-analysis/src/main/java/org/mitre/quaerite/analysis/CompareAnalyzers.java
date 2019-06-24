@@ -62,12 +62,11 @@ import org.mitre.quaerite.core.util.MapUtil;
 
 public class CompareAnalyzers {
 
+    static Options OPTIONS = new Options();
+    static Logger LOG = Logger.getLogger(SearchClient.class);
     private static int DEFAULT_NUM_THREADS = 10;
     private static int DEFAULT_MIN_SET_SIZE = 1;
     private static long DEFAULT_MIN_DF = 0;
-
-    static Options OPTIONS = new Options();
-    static Logger LOG = Logger.getLogger(SearchClient.class);
 
     static {
         OPTIONS.addOption(
@@ -93,7 +92,8 @@ public class CompareAnalyzers {
                         .longOpt("queries")
                         .hasArg()
                         .required(false)
-                        .desc("query csv file to filter results -- UTF-8 csv with at least 'query' column header").build()
+                        .desc("query csv file to filter results -- UTF-8 csv with at least " +
+                                "'query' column header").build()
         );
         OPTIONS.addOption(
                 Option.builder("n")
@@ -107,8 +107,8 @@ public class CompareAnalyzers {
                         .longOpt("minEquivalenceSetSize")
                         .hasArg()
                         .required(false)
-                        .desc("minimum size for an equivalence set (default ="+
-                                DEFAULT_MIN_SET_SIZE+")").build()
+                        .desc("minimum size for an equivalence set (default =" +
+                                DEFAULT_MIN_SET_SIZE + ")").build()
         );
         OPTIONS.addOption(
                 Option.builder("minDF")
@@ -118,8 +118,10 @@ public class CompareAnalyzers {
                         .desc("minimum document frequency (default = 0)").build()
         );
     }
+
     private int numThreads = DEFAULT_NUM_THREADS;
     private Set<String> targetTokens = Collections.EMPTY_SET;
+
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
 
@@ -170,7 +172,7 @@ public class CompareAnalyzers {
                     if (orig.getValue().longValue() < minDF) {
                         continue;
                     }
-                    if (! printed) {
+                    if (!printed) {
                         System.out.println(e.getKey());
                         printed = true;
                     }
@@ -186,12 +188,12 @@ public class CompareAnalyzers {
             for (String token : q.getTokens()) {
                 EquivalenceSet e = map.get(token);
                 if (e == null) {
-                    System.out.println("\t"+token);
+                    System.out.println("\t" + token);
                 } else {
                     boolean printed = false;
                     int equivs = 0;
                     for (Map.Entry<String, MutableLong> orig : e.getSortedMap().entrySet()) {
-                        if (! printed) {
+                        if (!printed) {
                             System.out.println("\t" + token);
                             printed = true;
                         }
@@ -207,13 +209,10 @@ public class CompareAnalyzers {
         }
     }
 
-    private void setTargetTokens(Set<String> targetTokens) {
-        this.targetTokens = targetTokens;
-    }
-
     private static List<QueryTokenPair> loadQueries(Path path,
                                                     SearchClient searchClient,
-                                                    String baseField, String filterField) throws IOException, SearchClientException {
+                                                    String baseField, String filterField)
+            throws IOException, SearchClientException {
 
         Set<String> queries = new HashSet<>();
         try (InputStream is = Files.newInputStream(path)) {
@@ -245,6 +244,10 @@ public class CompareAnalyzers {
         return queryTokenPairs;
     }
 
+    private void setTargetTokens(Set<String> targetTokens) {
+        this.targetTokens = targetTokens;
+    }
+
     private void setNumThreads(int numThreads) {
         this.numThreads = numThreads;
     }
@@ -259,8 +262,9 @@ public class CompareAnalyzers {
             reAnalyzers.add(new ReAnalyzer(queue, client, filteredField));
         }
 
-        ExecutorService executorService = Executors.newFixedThreadPool(numThreads+1);
-        ExecutorCompletionService<Integer> completionService = new ExecutorCompletionService<>(executorService);
+        ExecutorService executorService = Executors.newFixedThreadPool(numThreads + 1);
+        ExecutorCompletionService<Integer> completionService =
+                new ExecutorCompletionService<>(executorService);
         completionService.submit(new TermGetter(queue, numThreads, client, baseField));
         for (int i = 0; i < numThreads; i++) {
             completionService.submit(reAnalyzers.get(i));
@@ -268,7 +272,7 @@ public class CompareAnalyzers {
         //map
         int completed = 0;
         int totalAnalyzed = 0;
-        while (completed < numThreads+1) {
+        while (completed < numThreads + 1) {
             try {
                 Future<Integer> future = completionService.poll(1, TimeUnit.SECONDS);
                 if (future != null) {
@@ -282,7 +286,7 @@ public class CompareAnalyzers {
                 throw new RuntimeException(e);
             }
         }
-        LOG.info("Analyzed "+totalAnalyzed);
+        LOG.info("Analyzed " + totalAnalyzed);
         executorService.shutdownNow();
         //reduce
         Map<String, EquivalenceSet> overall = new HashMap<>();
@@ -358,6 +362,20 @@ public class CompareAnalyzers {
         }
     }
 
+    private static class QueryTokenPair {
+        private final String query;
+        private final List<String> filteredTokens;
+
+        public QueryTokenPair(String query, List<String> filteredTokens) {
+            this.query = query;
+            this.filteredTokens = filteredTokens;
+        }
+
+        public List<String> getTokens() {
+            return filteredTokens;
+        }
+    }
+
     private class ReAnalyzer implements Callable<Integer> {
 
         private final ArrayBlockingQueue<Set<TokenDF>> queue;
@@ -365,7 +383,8 @@ public class CompareAnalyzers {
         private final String field;
         private final Map<String, EquivalenceSet> equivalenceMap = new HashMap<>();
 
-        public ReAnalyzer(ArrayBlockingQueue<Set<TokenDF>> queue, SearchClient client, String field) {
+        public ReAnalyzer(ArrayBlockingQueue<Set<TokenDF>> queue, SearchClient client,
+                          String field) {
             this.queue = queue;
             this.client = client;
             this.field = field;
@@ -406,7 +425,7 @@ public class CompareAnalyzers {
             List<String> tokens = null;
             try {
                 tokens = client.analyze(field, s);
-            } catch (IOException|SearchClientException e) {
+            } catch (IOException | SearchClientException e) {
                 LOG.warn(e);
                 return null;
             }
@@ -415,21 +434,6 @@ public class CompareAnalyzers {
 
         public Map<String, EquivalenceSet> getMap() {
             return equivalenceMap;
-        }
-    }
-
-
-    private static class QueryTokenPair {
-        private final String query;
-        private final List<String> filteredTokens;
-
-        public QueryTokenPair(String query, List<String> filteredTokens) {
-            this.query = query;
-            this.filteredTokens = filteredTokens;
-        }
-
-        public List<String> getTokens() {
-            return filteredTokens;
         }
     }
 }

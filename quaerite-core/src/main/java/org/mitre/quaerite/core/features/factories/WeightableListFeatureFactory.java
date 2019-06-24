@@ -17,7 +17,6 @@
 package org.mitre.quaerite.core.features.factories;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -59,7 +58,11 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
     final int minSetSize;
     final int maxSetSize;
     final Class clazz;
-    public WeightableListFeatureFactory(String name, Class clazz, List<String> fields, List<Float> defaultWeights, int minSetSize, int maxSetSize) {
+
+    public WeightableListFeatureFactory(String name, Class clazz,
+                                        List<String> fields,
+                                        List<Float> defaultWeights,
+                                        int minSetSize, int maxSetSize) {
         super(name);
         this.clazz = clazz;
         this.minSetSize = minSetSize;
@@ -114,7 +117,8 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
             List<WeightableField> tmp = new ArrayList<>();
             tmp.addAll(features.getWeightableFields());
             Collections.shuffle(tmp, MathUtil.RANDOM);
-            int numFeatures = MathUtil.RANDOM.nextInt(minSetSize, Math.min(tmp.size(), maxSetSize)+1);
+            int numFeatures = MathUtil.RANDOM.nextInt(minSetSize,
+                    Math.min(tmp.size(), maxSetSize) + 1);
             for (int i = 0; i < numFeatures; i++) {
                 WeightableField field = tmp.get(i);
                 if (field.hasWeight()) {
@@ -168,9 +172,9 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
         if (features.get(i).hasWeight()) {
             base.add(features.get(i));
             collector.add((T)base);
-            recurse(i + 1, depth+1, maxSize, base, collector);
+            recurse(i + 1, depth + 1, maxSize, base, collector);
         } else {
-            int newDepth = depth+1;
+            int newDepth = depth + 1;
             for (Float f : defaultWeights) {
                 if (f > 0.0f) {
                     T tmp = (T)newInstance(getName());
@@ -313,7 +317,7 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
             return;
         }
         String newFeatureName = newFeatures.get(MathUtil.RANDOM.nextInt(newFeatures.size()));
-        float mid = (float)((double)min/(double)max);
+        float mid = (float)((double)min / (double)max);
         mutated.add(
                 new WeightableField(newFeatureName,
                         MathUtil.calcMutatedWeight(mid, min, max, amplitude)));
