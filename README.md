@@ -80,11 +80,13 @@ far fewer resources for use initially by one relevance engineer...there are area
 Current Status
 ----------------
 As of this writing, `Quaerite` allows for experimentation with the following parameters:
-`bq`, `qf`, `pf`, `pf2`, `pf3`, `solr url` (so that you can run experiments against 
+`bf`, `bq`, `qf`, `pf`, `pf2`, `pf3`, `ps`, `ps2`, `ps3`, `q.op` (and `mm`), `solr url` 
+(so that you can run experiments against 
 different cores and/or different versions of Solr),
 `customHandler` (so that you can compare different customized handlers), `tie`.
+For ES, specifically, parameters include: `boost`, `fuzziness` and `multi_match_type` 
+(e.g. `best_fields`, `most_fields`, `cross_fields` and `phrase`).
 
-Before the `BETA` release, we'll add:  `q.op`, `mm`, `bf` and a more parameterizable version of `bq`.
 
 Getting Started
 ---------------
@@ -116,7 +118,7 @@ License (see also LICENSE.txt)
 
 Copyright (c) 2019, The MITRE Corporation. All rights reserved.
 
-Approved for Public Release; Distribution Unlimited. Case Number 18-3138.
+Approved for Public Release; Distribution Unlimited. Case Number 18-3138-7.
 
 
 Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements.  See the NOTICE file distributed with this work for additional information regarding copyright ownership.  The ASF licenses this file to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.  You may obtain a copy of the License at
