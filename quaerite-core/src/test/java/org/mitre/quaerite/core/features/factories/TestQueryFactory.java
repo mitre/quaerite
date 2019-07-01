@@ -342,6 +342,16 @@ public class TestQueryFactory {
         assertMultiMatchWithinBounds(multiMatchQueries);
     }
 
+    @Test
+    public void testCorrectHandlingOfZeroWeightedFields() throws Exception {
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features_solr_3ex.json")
+        );
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>)experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
+        assertEquals(2619, qf.permute(10000).size());
+    }
+
     private void assertBoostingWithinBounds(List<BoostingQuery> bqs) {
         List<MultiMatchQuery> allQueries = new ArrayList<>();
         for (BoostingQuery bq : bqs) {

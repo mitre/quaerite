@@ -93,12 +93,13 @@ public abstract class StringListFeature<T extends StringListFeature> extends Abs
         if (this == o) return true;
         if (!(o instanceof StringListFeature)) return false;
         StringListFeature<?> that = (StringListFeature<?>) o;
-        return Objects.equals(strings, that.strings);
+        return Objects.equals(getName(), that.getName()) &&
+                Objects.equals(strings, that.strings);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(strings);
+        return Objects.hash(getName(), strings);
     }
 
     @Override

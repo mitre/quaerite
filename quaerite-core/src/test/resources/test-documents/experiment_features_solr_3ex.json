@@ -1,0 +1,79 @@
+{
+  "gaConfig": {
+    "numThreads": 6,
+    "population": 15,
+    "generations": 5,
+    "crossoverProbability": 0.2,
+    "mutationProbability": 0.7,
+    "mutationAmplitude": 0.1,
+    "reproductionProbability": 0.1,
+    "nFolds": 3
+  },
+  "scorers": [
+    {
+      "class": "AtLeastOneAtN",
+      "atN": 1
+    },
+    {
+      "class": "AtLeastOneAtN",
+      "atN": 3
+    },
+    {
+      "class": "AtLeastOneAtN",
+      "atN": 5
+    },
+    {
+      "class": "AtLeastOneAtN",
+      "atN": 10
+    },
+    {
+      "class": "AtLeastOneAtN",
+      "atN": 30
+    },
+    {
+      "class": "NDCG",
+      "atN": 10,
+      "params": {
+        "useForTrain": true,
+        "useForTest": true,
+        "exportPMatrix": true
+      }
+    },
+    {
+      "class": "TotalDocsReturned"
+    },
+    {
+      "class": "TotalElapsedTime"
+    }
+  ],
+  "featureFactories": {
+    "urls": [
+      "http://localhost:8983/solr/tmdb"
+    ],
+    "query": {
+      "edismax": {
+        "qf": {
+          "fields": [
+            "title",
+            "tb_title",
+            "tss_title",
+            "overview",
+            "tb_overview",
+            "tss_overview",
+            "people",
+            "tb_people",
+            "tss_people"
+          ],
+          "defaultWeights": [
+            "0.0",
+            "1.0",
+            "5.0",
+            "10.0"
+          ],
+          "minSetSize": 1,
+          "maxSetSize": 3
+        }
+      }
+    }
+  }
+}

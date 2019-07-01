@@ -78,12 +78,11 @@ public class WeightableField {
         if (!(o instanceof WeightableField)) return false;
         WeightableField that = (WeightableField) o;
         return Objects.equals(feature, that.feature) &&
-                Objects.equals(weight, that.weight) &&
-                Objects.equals(df, that.df);
+                Objects.equals(weight, that.weight);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(feature, weight, df);
+        return Objects.hash(feature, weight);
     }
 }

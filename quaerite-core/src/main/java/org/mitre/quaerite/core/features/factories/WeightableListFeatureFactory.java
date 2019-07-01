@@ -143,15 +143,15 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
 
     @Override
     public List<T> permute(int maxSize) {
-        List<T> collector = new ArrayList<>();
+        Set<T> collector = new HashSet<>();
         WeightableListFeature currFeatures = newInstance(getName());
         recurse(0, 0, maxSize, currFeatures, collector);
-        return collector;
+        return new ArrayList<>(collector);
     }
 
     private void recurse(int i, int depth, int maxSize,
                          WeightableListFeature currFeatures,
-                         List<T> collector) {
+                         Set<T> collector) {
 
         if (maxSetSize > -1 && currFeatures.size() >= maxSetSize) {
             return;

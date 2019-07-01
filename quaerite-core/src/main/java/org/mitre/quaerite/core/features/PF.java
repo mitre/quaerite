@@ -41,16 +41,4 @@ public class PF extends WeightableListFeature {
         }
         return deepCopy;
     }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PF)) return false;
-        return super.equals(o);
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
 }

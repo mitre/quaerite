@@ -38,17 +38,4 @@ public class QF extends WeightableListFeature {
         }
         return deepCopy;
     }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof QF)) return false;
-        return super.equals(o);
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
 }

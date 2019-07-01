@@ -118,11 +118,14 @@ public class WeightableListFeature extends AbstractFeature<WeightableListFeature
         if (this == o) return true;
         if (!(o instanceof WeightableListFeature)) return false;
         WeightableListFeature that = (WeightableListFeature) o;
-        return Objects.equals(weightableFields, that.weightableFields);
+        if (getName().equals(that.getName())) {
+            return Objects.equals(weightableFields, that.weightableFields);
+        }
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(weightableFields);
+        return Objects.hash(getName(), weightableFields);
     }
 }

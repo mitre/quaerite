@@ -32,15 +32,4 @@ public class BQ extends StringListFeature<BQ> {
         return new BQ(strings);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BQ)) return false;
-        return super.equals(o);
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
 }
