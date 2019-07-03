@@ -92,7 +92,7 @@ public class ElevateScraper extends DefaultHandler {
         if ("query".equals(name)) {
             inQuery = true;
             currentQuery = getValue("text", attrs);
-            currentQuery = currentQuery.trim();
+            //currentQuery = currentQuery.trim();
         } else if ("doc".equals(name)) {
             String id = getValue("id", attrs);
             if (idMatcher != null) {

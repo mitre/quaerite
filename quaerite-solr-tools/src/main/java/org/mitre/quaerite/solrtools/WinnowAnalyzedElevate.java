@@ -19,16 +19,20 @@ package org.mitre.quaerite.solrtools;
 
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -82,15 +86,52 @@ public class WinnowAnalyzedElevate {
                         .required(true)
                         .desc("winnowed elevate file (xml)").build()
         );
+
+        /**
+        If you have multiple logical indices in one index, and your
+        elevate file looks like:
+            index1-id10
+            index2-id10
+            index3-id10
+            index1-id11
+            index2-id11
+            index3-id11
+
+            it might be useful to sort the docs by logical index,
+            while maintaining the document order:
+            index1-id10
+            index1-id11
+            index2-id10
+            index2-id11
+            index3-id10
+            index3-id11
+
+            the command for this would be: -i index1,index2,index3
+         */
         OPTIONS.addOption(
-                Option.builder("r")
-                        .longOpt("removed")
+                Option.builder("i")
+                        .longOpt("idSort")
                         .hasArg(true)
-                        .required(true)
-                        .desc("elevate file for removed elements").build()
+                        .required(false)
+                        .desc("sort ids, comma-delimited list").build()
+        );
+
+        OPTIONS.addOption(
+                Option.builder("c")
+                        .longOpt("comment")
+                        .hasArg(false)
+                        .required(false)
+                        .desc("include removed entries in xml comments").build()
         );
     }
 
+    private final DocSorter docSorter;
+    private final boolean commentWinnowed;
+    WinnowAnalyzedElevate(DocSorter sorter, boolean commentWinnowed) {
+        this.docSorter = sorter;
+        this.commentWinnowed = commentWinnowed;
+
+    }
     public static void main(String[] args) throws Exception {
         CommandLine commandLine = null;
 
@@ -105,18 +146,17 @@ public class WinnowAnalyzedElevate {
         }
         Path inputElevate = Paths.get(commandLine.getOptionValue("e"));
         Path winnowElevate = Paths.get(commandLine.getOptionValue("w"));
-        Path removedElevate = Paths.get(commandLine.getOptionValue("r"));
 
         SearchClient client = SearchClientFactory.getClient(commandLine.getOptionValue("s"));
         String analysisField = commandLine.getOptionValue("f");
-
-        WinnowAnalyzedElevate winnowAnalyzedElevate = new WinnowAnalyzedElevate();
-        winnowAnalyzedElevate.execute(inputElevate, winnowElevate,
-                removedElevate, client, analysisField);
+        DocSorter docSorter = new DocSorter(commandLine.getOptionValue("i"));
+        boolean commentWinnowed = (commandLine.hasOption("c") ? true : false);
+        WinnowAnalyzedElevate winnowAnalyzedElevate = new WinnowAnalyzedElevate(docSorter, commentWinnowed);
+        winnowAnalyzedElevate.execute(inputElevate, winnowElevate, client, analysisField);
     }
 
     private void execute(Path inputElevate, Path winnowedElevate,
-                         Path removedElevate, SearchClient client, String analysisField)
+                         SearchClient client, String analysisField)
             throws Exception {
         Map<String, Elevate> elevateMap = ElevateScraper.scrape(inputElevate, null);
         Map<String, List<Elevate>> analyzed = new TreeMap<>();
@@ -132,7 +172,7 @@ public class WinnowAnalyzedElevate {
             }
         }
 
-        Map<String, Elevate> winnowed = new TreeMap<>();
+        Map<String, List<Elevate>> winnowed = new TreeMap<>();
         List<Elevate> extras = new ArrayList<>();
         for (Map.Entry<String, List<Elevate>> e : analyzed.entrySet()) {
             if (e.getValue().size() == 0) {
@@ -140,17 +180,16 @@ public class WinnowAnalyzedElevate {
             }
             Collections.sort(e.getValue(), Elevate.SORT_BY_SIZE_DECREASING);
 
-            winnowed.put(e.getValue().get(0).getQuery(), e.getValue().get(0));
+            winnowed.put(e.getValue().get(0).getQuery(), e.getValue());
             for (int i = 1; i < e.getValue().size(); i++) {
                 extras.add(e.getValue().get(i));
             }
         }
 
-        dumpElevates(winnowedElevate, winnowed.values());
-        dumpElevates(removedElevate, extras);
+        dumpElevates(winnowedElevate, winnowed);
     }
 
-    private void dumpElevates(Path elevateFile, Collection<Elevate> elevates) throws Exception {
+    private void dumpElevates(Path elevateFile, Map<String, List<Elevate>> elevates) throws Exception {
         try (OutputStream os = Files.newOutputStream(elevateFile)) {
             XMLStreamWriter out = XMLOutputFactory.newInstance()
                     .createXMLStreamWriter(
@@ -159,8 +198,15 @@ public class WinnowAnalyzedElevate {
             out.writeCharacters("\n");
             out.writeStartElement("elevate");
 
-            for (Elevate e : elevates) {
-                writeElevate(out, e);
+            for (Map.Entry<String, List<Elevate>> e : elevates.entrySet()) {
+                if (e.getValue().size() > 0) {
+                    writeElevate(out, e.getValue().get(0));
+                }
+                if (commentWinnowed) {
+                    for (int i = 1; i < e.getValue().size(); i++) {
+                        commentElevate(out, e.getValue().get(i));
+                    }
+                }
             }
             out.writeCharacters("\n");
             out.writeEndElement();//elevate
@@ -171,18 +217,83 @@ public class WinnowAnalyzedElevate {
 
     }
 
+    private void commentElevate(XMLStreamWriter out, Elevate elevate) throws XMLStreamException {
+        StringWriter writer = new StringWriter();
+        XMLStreamWriter comment = XMLOutputFactory.newInstance()
+                .createXMLStreamWriter(writer);
+        writeElevate(comment, elevate);
+        comment.writeCharacters("\n");
+        writer.flush();
+        out.writeCharacters("\n");
+        out.writeComment(writer.toString());
+    }
+
     private void writeElevate(XMLStreamWriter out, Elevate elevate) throws XMLStreamException {
         out.writeCharacters("\n");
         out.writeStartElement("query");
         out.writeAttribute("text", elevate.getQuery());
         out.writeCharacters("\n");
-        for (String id : elevate.getIds()) {
+
+        List<String> sorted = docSorter.sort(elevate.getIds());
+        if (sorted.size() != elevate.getIds().size()) {
+            throw new IllegalArgumentException(
+                    String.format(Locale.US, "something went wrong in sorting:" +
+                    "I see %s but there should be %s", sorted.size(),
+                    elevate.getIds().size()));
+        }
+        for (String id : sorted) {
             out.writeCharacters("\t");
             out.writeEmptyElement("doc");
             out.writeAttribute("id", id);
             out.writeCharacters("\n");
         }
         out.writeEndElement();
+    }
+
+    private static class DocSorter {
+        final List<Matcher> matchers;
+        private DocSorter(String commaDelimitedFields) {
+            if (commaDelimitedFields == null) {
+                matchers = Collections.emptyList();
+            } else {
+                matchers = new ArrayList<>();
+                for (String s : commaDelimitedFields.split(",")) {
+                    matchers.add(Pattern.compile(s).matcher(""));
+                }
+            }
+        }
+
+        private List<String> sort(List<String> list) {
+            if (matchers.size() == 0) {
+                return list;
+            }
+            List<List<String>> bins = new ArrayList<>();
+            //add one at the end for no match/default
+            for (int i = 0; i <= matchers.size(); i++) {
+                bins.add(new ArrayList<>());
+            }
+            for (String id : list) {
+                boolean inserted = false;
+                for (int i = 0; i < matchers.size() && inserted == false; i++) {
+                    if (matchers.get(i).reset(id).find()) {
+                        List<String> bin = bins.get(i);
+                        bin.add(id);
+                        inserted = true;
+                        break;
+                    }
+                }
+                if (!inserted) {
+                    bins.get(bins.size() - 1).add(id);
+                }
+            }
+            List<String> ret = new ArrayList<>();
+            for (List<String> bin : bins) {
+                for (String id : bin) {
+                    ret.add(id);
+                }
+            }
+            return ret;
+        }
     }
 }
 
