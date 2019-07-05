@@ -18,18 +18,21 @@ package org.mitre.quaerite.core.features;
 
 import java.util.List;
 
-public class BQ extends StringListFeature<BQ> {
+public class BQ extends ParameterizableStringListFeature {
 
 
     private static final String NAME = "bq";
 
-    public BQ(List<String> features) {
-        super(NAME, features);
+
+    public BQ(List<ParameterizableString> strings) {
+        super(NAME);
+        addAll(strings);
     }
 
     @Override
-    public BQ build(List<String> strings) {
-        return new BQ(strings);
+    public BQ deepCopy() {
+        BQ deepCopy = new BQ(parameterizableStrings);
+        return deepCopy;
     }
 
 }

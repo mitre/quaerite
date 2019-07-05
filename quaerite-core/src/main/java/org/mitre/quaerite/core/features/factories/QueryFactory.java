@@ -156,7 +156,9 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
         }
         if (method == null) {
             throw new RuntimeException(
-                    "I regret I couldn't find a method for: " + name);
+                    String.format(Locale.US,
+                    "I regret I couldn't find a method for: %s on class: %s",
+                            name, obj.getClass()));
         }
         try {
             method.invoke(q, obj);

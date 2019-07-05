@@ -26,13 +26,16 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gson.JsonElement;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 import org.mitre.quaerite.core.ExperimentFactory;
+import org.mitre.quaerite.core.features.BQ;
 import org.mitre.quaerite.core.features.CustomHandler;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.NegativeBoost;
@@ -40,6 +43,8 @@ import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.queries.BoostingQuery;
 import org.mitre.quaerite.core.queries.EDisMaxQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
+import org.mitre.quaerite.core.queries.Query;
+import org.mitre.quaerite.core.serializers.QuerySerializer;
 
 public class TestQueryFactory {
 
@@ -474,6 +479,100 @@ public class TestQueryFactory {
 
     }
 
+
+    @Test
+    public void testBQ() {
+        Set<String> expected = new HashSet<>();
+
+        expected.addAll(
+                Arrays.asList(new String[]{
+                        "ParameterizableStringListFeature{parameterizableStrings=" +
+                                "[max(recip(ms(NOW/DAY, date_field), 3.16e-11,1,1), 0.9)]}",
+                        "ParameterizableStringListFeature{parameterizableStrings=" +
+                                "[max(recip(ms(NOW/DAY, date_field), 3.16e-11,20,20), 0.1)]}",
+                        "ParameterizableStringListFeature{parameterizableStrings=" +
+                                "[max(recip(ms(NOW/DAY, date_field), 3.16e-11,20,20), 0.9)]}",
+                        "ParameterizableStringListFeature{parameterizableStrings=" +
+                                "[max(recip(ms(NOW/DAY, date_field), 3.16e-11,1,1), 0.1)]}"
+                }));
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features_solr_4.json")
+        );
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>) experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
+        ParameterizableStringListFactory fact = null;
+        for (FeatureFactory f : qf.factories) {
+            if (f.getClass().isAssignableFrom(ParameterizableStringListFactory.class)) {
+                fact = (ParameterizableStringListFactory)f;
+                break;
+            }
+        }
+
+        List<BQ> bqs = fact.permute(1000);
+        assertEquals(4, bqs.size());
+        int hit = 0;
+        for (BQ bq : bqs) {
+            if (expected.contains(bq.toString())) {
+                hit++;
+            }
+        }
+        assertEquals(4, hit);
+        experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features_solr_5.json")
+        );
+        qf = (QueryFactory<EDisMaxQuery>) experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
+        fact = null;
+        bqs = null;
+        for (FeatureFactory f : qf.factories) {
+            if (f.getClass().isAssignableFrom(ParameterizableStringListFactory.class)) {
+                fact = (ParameterizableStringListFactory)f;
+                break;
+            }
+
+        }
+        bqs = fact.permute(1000);
+        assertEquals(34, bqs.size());
+    }
+
+    @Test
+    public void testSerializationOfParameterizableStrings() throws Exception {
+        ExperimentFactory experimentFactory = ExperimentFactory.fromJson(
+                newReader("/test-documents/experiment_features_solr_5.json")
+        );
+        QueryFactory<EDisMaxQuery> qf = (QueryFactory<EDisMaxQuery>) experimentFactory
+                .getFeatureFactories().get(QueryFactory.NAME);
+
+        List<EDisMaxQuery> queries = qf.permute(1000);
+        QuerySerializer querySerializer = new QuerySerializer();
+        for (EDisMaxQuery q : queries) {
+            JsonElement el = querySerializer.serialize(q, null, null);
+            Query deserialized = querySerializer.deserialize(el, null, null);
+            assertEquals(q, deserialized);
+        }
+
+        for (int i = 0; i < 100; i++) {
+            EDisMaxQuery q1 = qf.random();
+            EDisMaxQuery q2 = qf.random();
+            Pair<EDisMaxQuery, EDisMaxQuery> pair = qf.crossover(q1, q2);
+            JsonElement el = querySerializer.serialize(pair.getLeft(), null, null);
+            Query deserialized = querySerializer.deserialize(el, null, null);
+            assertEquals(pair.getLeft(), deserialized);
+
+            el = querySerializer.serialize(pair.getRight(), null, null);
+            deserialized = querySerializer.deserialize(el, null, null);
+            assertEquals(pair.getRight(), deserialized);
+        }
+
+        for (int i = 0; i < 100; i++) {
+            EDisMaxQuery q = qf.random();
+            EDisMaxQuery mutated = qf.mutate(q, 0.8, 1.0);
+            JsonElement el = querySerializer.serialize(mutated, null, null);
+            Query deserialized = querySerializer.deserialize(el, null, null);
+            assertEquals(mutated, deserialized);
+        }
+
+    }
 
     private Reader newReader(String path) {
         return new BufferedReader(

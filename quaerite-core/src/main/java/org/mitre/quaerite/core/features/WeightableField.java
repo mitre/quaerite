@@ -23,9 +23,12 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class WeightableField {
+import org.mitre.quaerite.core.util.MathUtil;
+
+public class WeightableField extends AbstractFeature<WeightableField> {
 
     public static Float UNSPECIFIED_WEIGHT = null;
+    private static final String NAME = "wf";
 
     public static float DEFAULT_WEIGHT = 0;
     private static final Pattern WEIGHT_PATTERN =
@@ -37,6 +40,7 @@ public class WeightableField {
             DecimalFormatSymbols.getInstance(Locale.US));
 
     public WeightableField(String s) {
+        super(NAME);
         Matcher m = WEIGHT_PATTERN.matcher(s);
         if (m.matches()) {
             feature = m.group(1);
@@ -48,6 +52,7 @@ public class WeightableField {
     }
 
     public WeightableField(String feature, float weight) {
+        super(NAME);
         this.feature = feature;
         this.weight = weight;
     }
@@ -78,11 +83,18 @@ public class WeightableField {
         if (!(o instanceof WeightableField)) return false;
         WeightableField that = (WeightableField) o;
         return Objects.equals(feature, that.feature) &&
-                Objects.equals(weight, that.weight);
+                (weight == null && that.weight == null
+                        || (weight != null && that.weight != null &&
+                        MathUtil.equals(weight, that.weight, 0.1f)));
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(feature, weight);
+    }
+
+    @Override
+    public WeightableField deepCopy() {
+        return new WeightableField(getFeature(), getWeight());
     }
 }

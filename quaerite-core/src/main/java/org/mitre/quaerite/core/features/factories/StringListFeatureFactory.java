@@ -54,7 +54,7 @@ public class StringListFeatureFactory<T extends StringListFeature>
         super(name);
         if (minSetSize > -1 && maxSetSize > -1 && minSetSize > maxSetSize) {
             throw new IllegalArgumentException("minSetSize (" + minSetSize
-                    + ") must be > maxSetSize (" + maxSetSize + ")");
+                    + ") must be <= maxSetSize (" + maxSetSize + ")");
         }
         if (minSetSize > features.size()) {
             throw new IllegalArgumentException("minSetSize (" + minSetSize +

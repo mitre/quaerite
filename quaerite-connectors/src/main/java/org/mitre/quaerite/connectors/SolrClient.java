@@ -46,6 +46,7 @@ import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.features.CustomHandler;
+import org.mitre.quaerite.core.features.ParameterizableString;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.WeightableField;
@@ -288,13 +289,13 @@ public class SolrClient extends SearchClient {
             }
         }
         if (query.getBQ() != null) {
-            for (String bq : query.getBQ().getAll()) {
-                sb.append("&bq=").append(encode(bq));
+            for (ParameterizableString pString : query.getBQ().getParameterizableStrings()) {
+                sb.append("&bq=").append(encode(pString.toString()));
             }
         }
         if (query.getBF() != null) {
-            for (String bf : query.getBF().getAll()) {
-                sb.append("&bq=").append(encode(bf));
+            for (ParameterizableString bf : query.getBF().getParameterizableStrings()) {
+                sb.append("&bq=").append(encode(bf.toString()));
             }
         }
         i = 0;

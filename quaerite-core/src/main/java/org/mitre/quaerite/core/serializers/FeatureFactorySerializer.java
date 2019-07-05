@@ -43,6 +43,8 @@ import org.mitre.quaerite.core.features.Fuzziness;
 import org.mitre.quaerite.core.features.IntFeature;
 import org.mitre.quaerite.core.features.MultiMatchType;
 import org.mitre.quaerite.core.features.NegativeBoost;
+import org.mitre.quaerite.core.features.ParameterizableString;
+import org.mitre.quaerite.core.features.ParameterizableStringListFeature;
 import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.StringFeature;
 import org.mitre.quaerite.core.features.StringListFeature;
@@ -53,6 +55,8 @@ import org.mitre.quaerite.core.features.factories.FeatureFactories;
 import org.mitre.quaerite.core.features.factories.FeatureFactory;
 import org.mitre.quaerite.core.features.factories.FloatFeatureFactory;
 import org.mitre.quaerite.core.features.factories.IntFeatureFactory;
+import org.mitre.quaerite.core.features.factories.ParameterizableStringFactory;
+import org.mitre.quaerite.core.features.factories.ParameterizableStringListFactory;
 import org.mitre.quaerite.core.features.factories.QueryFactory;
 import org.mitre.quaerite.core.features.factories.QueryOperatorFeatureFactory;
 import org.mitre.quaerite.core.features.factories.StringFeatureFactory;
@@ -95,6 +99,8 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         if (WeightableListFeature.class.isAssignableFrom(clazz)) {
             JsonObject featureSetObj = (JsonObject) jsonFeatureFactory;
             return buildWeightableFeatureFactory(paramName, featureSetObj);
+        } else if (ParameterizableStringListFeature.class.isAssignableFrom(clazz)) {
+            return buildParametrizableStringListFeatureFactory(paramName, jsonFeatureFactory);
         } else if (FloatFeature.class.isAssignableFrom(clazz)) {
             return buildFloatFeatureFactory(paramName, jsonFeatureFactory);
         } else if (IntFeature.class.isAssignableFrom(clazz)) {
@@ -189,7 +195,6 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
     }
 
     private QueryFactory buildEDisMaxFactory(JsonObject obj) {
-        //TODO -- PICK UP HERE
         QueryFactory<EDisMaxQuery> factory = new QueryFactory<>("edismax", EDisMaxQuery.class);
         if (obj.has("pf2")) {
             factory.add(buildFeatureFactory("pf2", obj.get("pf2")));
@@ -274,6 +279,52 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         }
         return new QueryOperatorFeatureFactory(operators, integers, floats);
 
+    }
+
+    private FeatureFactory buildParametrizableStringListFeatureFactory(String paramName,
+                                                                       JsonElement jsonFeatureFactory) {
+        int minSetSize = -1;
+        int maxSetSize = -1;
+        List<String> fs = null;
+        if (jsonFeatureFactory.isJsonArray()) {
+            fs = toStringList(jsonFeatureFactory);
+        } else if (jsonFeatureFactory.isJsonPrimitive()) {
+            fs = new ArrayList<>();
+            fs.add(jsonFeatureFactory.getAsString());
+        } else {
+            if (!jsonFeatureFactory.isJsonObject()) {
+                throw new IllegalArgumentException("Expected array or json object for: " + paramName);
+            }
+            JsonObject obj = (JsonObject) jsonFeatureFactory;
+            if (obj.has(MIN_SET_SIZE_KEY)) {
+                minSetSize = obj.get(MIN_SET_SIZE_KEY).getAsInt();
+            }
+
+            if (obj.has(MAX_SET_SIZE_KEY)) {
+                maxSetSize = obj.get(MAX_SET_SIZE_KEY).getAsInt();
+            }
+
+            if (obj.has(VALUES_KEY)) {
+                fs = toStringList(obj.get(VALUES_KEY));
+            } else {
+                throw new IllegalArgumentException(paramName + " param requires a '" +
+                        VALUES_KEY + "'");
+            }
+        }
+        List<ParameterizableStringFactory> fields = new ArrayList<>();
+        int i = 0;
+        for (String f : fs) {
+            fields.add(new ParameterizableStringFactory<>(paramName, Integer.toString(i),
+                    ParameterizableString.class, f));
+            i++;
+        }
+
+        try {
+            return new ParameterizableStringListFactory(paramName,
+                    Class.forName(getClassName(paramName)), fields, minSetSize, maxSetSize);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     private FeatureFactory buildStringListFeatureFactory(String paramName, JsonElement jsonFeatureFactory) {
@@ -370,6 +421,9 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
             return ret;
         } else if (featureFactory instanceof StringFeatureFactory) {
             return stringListToJsonArr(((StringFeatureFactory) featureFactory).getStrings());
+        } else if (featureFactory instanceof ParameterizableStringListFactory) {
+            throw new IllegalArgumentException("not yet implemented");
+            //return stringListToJsonArr(((ParameterizableStringListFactory)featureFactory).getStrings());
         } else {
             throw new IllegalArgumentException("not yet implemented");
         }

@@ -16,6 +16,8 @@
  */
 package org.mitre.quaerite.core.queries;
 
+import java.util.Objects;
+
 import org.mitre.quaerite.core.features.BF;
 import org.mitre.quaerite.core.features.BQ;
 import org.mitre.quaerite.core.features.PF;
@@ -88,5 +90,22 @@ public class DisMaxQuery extends MultiFieldQuery {
         cp.setQueryStringName(getQueryStringName());
         cp.setQueryOperator(getQueryOperator());
         return cp;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DisMaxQuery)) return false;
+        if (!super.equals(o)) return false;
+        DisMaxQuery that = (DisMaxQuery) o;
+        return Objects.equals(bf, that.bf) &&
+                Objects.equals(bq, that.bq) &&
+                Objects.equals(pf, that.pf) &&
+                Objects.equals(ps, that.ps);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), bf, bq, pf, ps);
     }
 }

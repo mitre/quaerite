@@ -46,26 +46,14 @@ public class EDisMaxQuery extends DisMaxQuery {
         if (!super.equals(o)) return false;
         EDisMaxQuery that = (EDisMaxQuery) o;
         return Objects.equals(pf2, that.pf2) &&
-                Objects.equals(pf3, that.pf3);
+                Objects.equals(pf3, that.pf3) &&
+                Objects.equals(ps2, that.ps2) &&
+                Objects.equals(ps3, that.ps3);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), pf2, pf3);
-    }
-
-    @Override
-    public String toString() {
-        return "EDisMaxQuery{" +
-                "pf2=" + pf2 +
-                ", pf3=" + pf3 +
-                ", pf=" + pf +
-                ", bq=" + bq +
-                ", bf=" + bf +
-                ", qf=" + qf +
-                ", tie=" + tie +
-                ", qOp=" + qOp +
-                '}';
+        return Objects.hash(super.hashCode(), pf2, pf3, ps2, ps3);
     }
 
     @Override
@@ -118,5 +106,22 @@ public class EDisMaxQuery extends DisMaxQuery {
 
     public void setPs3(PS3 ps3) {
         this.ps3 = ps3;
+    }
+
+    @Override
+    public String toString() {
+        return "EDisMaxQuery{" +
+                "pf2=" + pf2 +
+                ", pf3=" + pf3 +
+                ", ps2=" + ps2 +
+                ", ps3=" + ps3 +
+                ", bf=" + bf +
+                ", bq=" + bq +
+                ", pf=" + pf +
+                ", ps=" + ps +
+                ", qf=" + qf +
+                ", tie=" + tie +
+                ", qOp=" + qOp +
+                '}';
     }
 }

@@ -1,0 +1,32 @@
+{
+  "scorers": [
+    {
+      "class": "NDCG",
+      "atN": 10
+    }
+  ],
+  "featureFactories": {
+    "urls": [
+      "http://localhost:8983/solr/tmdb"
+    ],
+    "query": {
+      "edismax": {
+        "qf": {
+          "fields":[
+            "title^4"
+            ],
+          "minSetSize": 1,
+          "maxSetSize": 1
+        },
+        "bq": {
+          "values": [
+            "max(recip(ms(NOW/DAY, date_field), 3.16e-11,[1,20],[$1]), [0.1,0.9])",
+            "max(recip(ms(NOW/DAY, date_field2), 3.16e-11,[1,10,100],[$1]), [0.1,0.9])"
+          ],
+          "minSetSize": 0,
+          "maxSetSize": 2
+        }
+      }
+    }
+  }
+}

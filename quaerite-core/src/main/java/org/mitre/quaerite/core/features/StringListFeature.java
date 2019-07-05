@@ -31,43 +31,43 @@ public abstract class StringListFeature<T extends StringListFeature> extends Abs
     public int size() {
         return strings.size();
     }
-/*
-    @Override
-    public Pair<T, T> crossover(T parentB) {
-        Set<String> union = new HashSet<>();
-        union.addAll(strings);
-        union.addAll(parentB.getAll());
-        List<String> unionList = new ArrayList<>();
-        unionList.addAll(union);
-        Collections.shuffle(unionList);
-        if (minSetSize == maxSetSize) {
-            List<String> listA = new ArrayList<>();
-            listA.addAll(strings);
-            T childA = build(listA, minSetSize, maxSetSize);
-            List<String> listB = new ArrayList<>();
-            listB.addAll(strings);
-            T childB = build(listB, minSetSize, maxSetSize);
-            return Pair.of((T)childA, (T)childB);
-        } else {
-            int numFeaturesA = MathUtil.RANDOM.nextInt(minSetSize, maxSetSize);
-            List<String> listA = new ArrayList<>();
-
-            for (int i = 0; i < numFeaturesA; i++) {
-                listA.add(unionList.get(i));
-            }
-            T childA = build(listA, minSetSize, maxSetSize);
-
+    /*
+        @Override
+        public Pair<T, T> crossover(T parentB) {
+            Set<String> union = new HashSet<>();
+            union.addAll(strings);
+            union.addAll(parentB.getAll());
+            List<String> unionList = new ArrayList<>();
+            unionList.addAll(union);
             Collections.shuffle(unionList);
-            List<String> listB = new ArrayList<>();
-            int numFeaturesB = MathUtil.RANDOM.nextInt(minSetSize, maxSetSize);
-            for (int i = 0; i < numFeaturesB; i++) {
-                listB.add(unionList.get(i));
+            if (minSetSize == maxSetSize) {
+                List<String> listA = new ArrayList<>();
+                listA.addAll(strings);
+                T childA = build(listA, minSetSize, maxSetSize);
+                List<String> listB = new ArrayList<>();
+                listB.addAll(strings);
+                T childB = build(listB, minSetSize, maxSetSize);
+                return Pair.of((T)childA, (T)childB);
+            } else {
+                int numFeaturesA = MathUtil.RANDOM.nextInt(minSetSize, maxSetSize);
+                List<String> listA = new ArrayList<>();
+
+                for (int i = 0; i < numFeaturesA; i++) {
+                    listA.add(unionList.get(i));
+                }
+                T childA = build(listA, minSetSize, maxSetSize);
+
+                Collections.shuffle(unionList);
+                List<String> listB = new ArrayList<>();
+                int numFeaturesB = MathUtil.RANDOM.nextInt(minSetSize, maxSetSize);
+                for (int i = 0; i < numFeaturesB; i++) {
+                    listB.add(unionList.get(i));
+                }
+                T childB = build(listB, minSetSize, maxSetSize);
+                return Pair.of(childA, childB);
             }
-            T childB = build(listB, minSetSize, maxSetSize);
-            return Pair.of(childA, childB);
         }
-    }
-*/
+    */
     @Override
     public T deepCopy() {
         List<String> clone = new ArrayList<>();

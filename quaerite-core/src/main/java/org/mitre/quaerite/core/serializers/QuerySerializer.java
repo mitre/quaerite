@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,6 +56,8 @@ import org.mitre.quaerite.core.features.PF3;
 import org.mitre.quaerite.core.features.PS;
 import org.mitre.quaerite.core.features.PS2;
 import org.mitre.quaerite.core.features.PS3;
+import org.mitre.quaerite.core.features.ParameterizableString;
+import org.mitre.quaerite.core.features.ParameterizableStringListFeature;
 import org.mitre.quaerite.core.features.QF;
 import org.mitre.quaerite.core.features.QueryOperator;
 import org.mitre.quaerite.core.features.StringFeature;
@@ -269,7 +272,6 @@ public class QuerySerializer extends AbstractFeatureSerializer
         }
         if (obj.has("ps3")) {
             q.setPs3(new PS3(obj.getAsJsonPrimitive("ps3").getAsInt()));
-
         }
     }
 
@@ -288,14 +290,10 @@ public class QuerySerializer extends AbstractFeatureSerializer
             q.setPF(pf);
         }
         if (obj.has("bf")) {
-            List<String> bfs = toStringList(obj.get("bf"));
-            BF bf = new BF(bfs);
-            q.setBF(bf);
+            q.setBF(new BF(getParameterizableStrings("bf", obj)));
         }
         if (obj.has("bq")) {
-            List<String> bqs = toStringList(obj.get("bq"));
-            BQ bq = new BQ(bqs);
-            q.setBQ(bq);
+            q.setBQ(new BQ(getParameterizableStrings("bq", obj)));
         }
         if (obj.has("ps")) {
             int ps = obj.get("ps").getAsJsonPrimitive().getAsInt();
@@ -303,6 +301,57 @@ public class QuerySerializer extends AbstractFeatureSerializer
         }
         deserializeMultiField((MultiFieldQuery) q, obj);
     }
+
+    private static List<ParameterizableString> getParameterizableStrings(
+            String name, JsonObject obj) {
+        JsonElement el = obj.get(name);
+
+        List<ParameterizableString> bqs = new ArrayList<>();
+        if (el.isJsonPrimitive()) {
+            bqs.add(new ParameterizableString("bq",
+                    obj.getAsJsonPrimitive().getAsString()));
+        } else if (el.isJsonArray()) {
+            //make sure that all elements are of the same type
+            AtomicBoolean isMap = new AtomicBoolean(false);
+            int i = 0;
+            for (JsonElement childElement : el.getAsJsonArray()) {
+                bqs.add(buildParameterizableString(i, isMap, "bq", childElement));
+                i++;
+            }
+        } else if (el.isJsonObject()) {
+            AtomicBoolean isMap = new AtomicBoolean(false);
+            bqs.add(buildParameterizableString(0, isMap, "bq", el.getAsJsonObject()));
+        }
+        return bqs;
+    }
+
+    private static ParameterizableString buildParameterizableString(int i, AtomicBoolean isMap,
+                                                                    String name, JsonElement element) {
+        if (element.isJsonPrimitive()) {
+            if (i > 0 && isMap.get()) {
+                throw new IllegalArgumentException(
+                        "Can't mix String with map in this array.  " +
+                                "Must be all same type"
+                );
+            }
+            isMap.set(false);
+            return new ParameterizableString(name, Integer.toString(i), element.getAsString());
+        } else if (element.isJsonObject()) {
+            if (i > 0 && isMap.get() == false) {
+                throw new IllegalArgumentException(
+                        "Can't mix String with map in this array.  " +
+                                "Must be all same type"
+                );
+            }
+            String id = JsonUtil.getSingleChildName(element.getAsJsonObject());
+            String val = element.getAsJsonObject().get(id).getAsString();
+            isMap.set(true);
+            return new ParameterizableString(name, id, val);
+        } else {
+            throw new IllegalArgumentException("I'm sorry, but this must be a String or an object");
+        }
+    }
+
 
     static void deserializeMultiField(MultiFieldQuery q, JsonObject obj) {
         QF qf = new QF();
@@ -707,6 +756,8 @@ public class QuerySerializer extends AbstractFeatureSerializer
                 jsonFields = JsonNull.INSTANCE;
             }
             return jsonFields;
+        } else if (feature instanceof ParameterizableStringListFeature) {
+            return serializeParameterizableStringListFeature((ParameterizableStringListFeature) feature);
         } else if (feature instanceof FloatFeature) {
             return new JsonPrimitive(((FloatFeature) feature).getValue());
         } else if (feature instanceof IntFeature) {
@@ -732,6 +783,18 @@ public class QuerySerializer extends AbstractFeatureSerializer
             throw new IllegalArgumentException("not yet implemented: " + feature);
         }
     }
+
+    private JsonElement serializeParameterizableStringListFeature(
+            ParameterizableStringListFeature feature) {
+        JsonArray jsonArray = new JsonArray();
+        for (ParameterizableString pString : feature.getParameterizableStrings()) {
+            JsonObject obj = new JsonObject();
+            obj.add(pString.getFactoryId(), new JsonPrimitive(pString.toString()));
+            jsonArray.add(obj);
+        }
+        return jsonArray;
+    }
+
 }
 
 

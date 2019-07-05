@@ -18,18 +18,19 @@ package org.mitre.quaerite.core.features;
 
 import java.util.List;
 
-public class BF extends StringListFeature<BF> {
+public class BF extends ParameterizableStringListFeature {
 
 
     private static final String NAME = "bf";
 
-    public BF(List<String> features) {
-        super(NAME, features);
+    public BF(List<ParameterizableString> features) {
+        super(NAME);
+        addAll(features);
     }
 
     @Override
-    public BF build(List<String> strings) {
-        return new BF(strings);
+    public BF deepCopy() {
+        BF deepCopy = new BF(parameterizableStrings);
+        return deepCopy;
     }
-
 }
