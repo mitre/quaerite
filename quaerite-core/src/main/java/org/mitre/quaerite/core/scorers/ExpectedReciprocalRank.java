@@ -34,6 +34,18 @@ import org.mitre.quaerite.core.SearchResultSet;
  */
 public class ExpectedReciprocalRank extends AbstractJudgmentScorer {
 
+    Double _maxScore;
+
+    public ExpectedReciprocalRank(int atN, double maxScore) {
+        super("ERR", atN);
+        _maxScore = maxScore;
+    }
+
+    ExpectedReciprocalRank(String name, int atN, double maxScore) {
+        super(name, atN);
+        _maxScore = maxScore;
+    }
+
     public ExpectedReciprocalRank(int atN) {
         super("ERR", atN);
     }
@@ -43,7 +55,8 @@ public class ExpectedReciprocalRank extends AbstractJudgmentScorer {
     }
     @Override
     public double score(Judgments judgments, SearchResultSet searchResultSet) {
-        double max = getMax(judgments);
+        double max = _maxScore != null ? _maxScore : getMax(judgments);
+        
         if (max < 0) {
             throw new IllegalArgumentException("maximum relevance grade must be > 0");
         }
