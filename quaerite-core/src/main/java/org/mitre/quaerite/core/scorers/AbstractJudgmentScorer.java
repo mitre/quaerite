@@ -17,6 +17,10 @@
  */
 package org.mitre.quaerite.core.scorers;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.mitre.quaerite.core.Judgments;
@@ -30,10 +34,17 @@ public abstract class AbstractJudgmentScorer
     private boolean useForTrain = false;
     private boolean useForTest = false;
     private boolean exportPMatrix = false;
-
+    private Map<String, String> params;
 
     public AbstractJudgmentScorer(String name, int atN) {
         super(name, atN);
+        params = Collections.EMPTY_MAP;
+    }
+
+    public AbstractJudgmentScorer(String name, int atN, Map<String, String> params) {
+        super(name, atN);
+        this.params = new HashMap<>();
+        this.params.putAll(params);
     }
 
     public abstract double score(Judgments judgments,
@@ -64,5 +75,24 @@ public abstract class AbstractJudgmentScorer
 
     public void setExportPMatrix() {
         this.exportPMatrix = true;
+    }
+
+    public void setParams(Map<String, String> map) {
+        params.clear();
+        params.putAll(map);
+    }
+
+    public Map<String, String> getParams() {
+        return params;
+    }
+
+    @Override
+    public String toString() {
+        return "AbstractJudgmentScorer{" +
+                "useForTrain=" + useForTrain +
+                ", useForTest=" + useForTest +
+                ", exportPMatrix=" + exportPMatrix +
+                ", params=" + params +
+                '}';
     }
 }

@@ -16,6 +16,10 @@
  */
 package org.mitre.quaerite.core.scorers;
 
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+
 import org.apache.commons.math3.util.FastMath;
 import org.mitre.quaerite.core.Judgments;
 import org.mitre.quaerite.core.SearchResultSet;
@@ -27,35 +31,60 @@ import org.mitre.quaerite.core.SearchResultSet;
  * I'd like to thank Max Irwin for his implementation, which I referenced
  * in addition to the original paper when implementing this.
  *
- * If a document has no judgment or judgment of 0, this will not grant
- * any weight to that document in computing ERR.
- * See also {@link RREExpectedReciprocalRank} for an alternative used by
- * <a href="https://github.com/SeaseLtd/rated-ranking-evaluator">rre</a>
+ * If a document has no judgment, this will grant a score of {@link #getNoJudgment()}.
+ *
+ * As of July, 2019, <a href="https://github.com/SeaseLtd/rated-ranking-evaluator">RRE's</a>
+ * implementation automatically rounds the value of the mean of 0 and {@link #getMaxScore()}
+ *
+ * If a "maxScore" is not specified, this will calculate the highest score
+ * _per_ {@link Judgments} object for each calculation.
+ *
+ * If a {@link Judgments} objects has a score that is higher than
+ * {@link #maxScore}, this scorer will throw an {@link IllegalArgumentException}.
  */
 public class ExpectedReciprocalRank extends AbstractJudgmentScorer {
 
-    Double _maxScore;
+    public static final String MAX_SCORE = "maxScore";
+    public static final String NO_JUDGMENT = "noJudgment";
 
-    public ExpectedReciprocalRank(int atN, double maxScore) {
-        super("ERR", atN);
-        _maxScore = maxScore;
+    public static final double DEFAULT_NO_JUDGMENT = Judgments.NO_JUDGMENT;
+
+    private final Double maxScore;
+    private final double noJudgment;
+
+    public ExpectedReciprocalRank(int atN, Map<String, String> params) {
+        super("ERR", atN, params);
+        if (params.containsKey(MAX_SCORE)) {
+            maxScore = Double.parseDouble(params.get(MAX_SCORE));
+        } else {
+            maxScore = null;
+        }
+        if (params.containsKey(NO_JUDGMENT)) {
+            noJudgment = Double.parseDouble(params.get(NO_JUDGMENT));
+        } else {
+            noJudgment = DEFAULT_NO_JUDGMENT;
+        }
+        if (noJudgment != DEFAULT_NO_JUDGMENT && maxScore != null &&
+                noJudgment > maxScore) {
+            throw new IllegalArgumentException(
+                    String.format(Locale.US,
+                            "noJudgment (%s) can't be > maxScore (%s)",
+                            noJudgment, maxScore));
+
+        }
     }
 
-    ExpectedReciprocalRank(String name, int atN, double maxScore) {
-        super(name, atN);
-        _maxScore = maxScore;
-    }
-
-    public ExpectedReciprocalRank(int atN) {
-        super("ERR", atN);
-    }
-
-    ExpectedReciprocalRank(String name, int atN) {
-        super(name, atN);
-    }
     @Override
     public double score(Judgments judgments, SearchResultSet searchResultSet) {
-        double max = _maxScore != null ? _maxScore : getMax(judgments);
+        double maxInTheseJudgments = getMax(judgments);
+        if (maxScore != null && maxInTheseJudgments > maxScore) {
+            throw new IllegalArgumentException(
+                    String.format(Locale.US,
+                            "Maximum in this jugment set (%s) is > than the max (%s)",
+                            maxInTheseJudgments, maxScore));
+
+        }
+        double max = maxScore != null ? maxScore : maxInTheseJudgments;
         
         if (max < 0) {
             throw new IllegalArgumentException("maximum relevance grade must be > 0");
@@ -83,7 +112,7 @@ public class ExpectedReciprocalRank extends AbstractJudgmentScorer {
 
     double getGrade(Judgments judgments, String id, double max) {
         if (!judgments.containsJudgment(id)) {
-            return Judgments.NO_JUDGMENT;
+            return noJudgment;
         }
         return judgments.getJudgment(id);
     }
@@ -100,16 +129,38 @@ public class ExpectedReciprocalRank extends AbstractJudgmentScorer {
         return -1.0;
     }
 
+    public Double getMaxScore() {
+        return maxScore;
+    }
+
+    public double getNoJudgment() {
+        return noJudgment;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ExpectedReciprocalRank)) return false;
-        return super.equals(o);
+        if (!super.equals(o)) return false;
+        ExpectedReciprocalRank that = (ExpectedReciprocalRank) o;
+        return Double.compare(that.noJudgment, noJudgment) == 0 &&
+                maxScore.equals(that.maxScore);
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(super.hashCode(), maxScore, noJudgment);
     }
 
+    @Override
+    public String toString() {
+        return "ExpectedReciprocalRank{" +
+                "maxScore=" + maxScore +
+                ", noJudgment=" + noJudgment +
+                ", useForTrain=" + getUseForTrain() +
+                ", useForTest=" + getUseForTest() +
+                ", exportPMatrix=" + getExportPMatrix() +
+                ", params=" + getParams() +
+                '}';
+    }
 }

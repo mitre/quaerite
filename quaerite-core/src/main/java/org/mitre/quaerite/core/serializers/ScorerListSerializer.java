@@ -101,6 +101,10 @@ public class ScorerListSerializer {
             }
             if (scorer instanceof AbstractJudgmentScorer) {
                 AbstractJudgmentScorer jScorer = (AbstractJudgmentScorer) scorer;
+                Map<String, String> origParams = jScorer.getParams();
+                for (Map.Entry<String, String> e : origParams.entrySet()) {
+                    params.add(e.getKey(), new JsonPrimitive(e.getValue()));
+                }
                 if (jScorer.getExportPMatrix()) {
                     params.add("exportPMatrix", new JsonPrimitive(true));
                 }
@@ -130,13 +134,23 @@ public class ScorerListSerializer {
 
                 Constructor con = null;
                 Scorer scorer = null;
-                try {
-                    con = cl.getConstructor(int.class);
-                    scorer = (Scorer) con.newInstance(atN);
-                } catch (NoSuchMethodException e) {
-                    //try zero argument constructor
-                    con = cl.getConstructor();
-                    scorer = (Scorer) con.newInstance();
+                if (params != null) {
+                    try {
+                        con = cl.getConstructor(int.class, Map.class);
+                        scorer = (Scorer) con.newInstance(atN, params);
+                    } catch (NoSuchMethodException e) {
+                        //swallow;
+                    }
+                }
+                if (scorer == null) {
+                    try {
+                        con = cl.getConstructor(int.class);
+                        scorer = (Scorer) con.newInstance(atN);
+                    } catch (NoSuchMethodException e) {
+                        //try zero argument constructor
+                        con = cl.getConstructor();
+                        scorer = (Scorer) con.newInstance();
+                    }
                 }
                 if (params != null) {
                     if (params.containsKey("useForTest")) {

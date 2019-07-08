@@ -1,0 +1,22 @@
+{
+  "scorers": [
+    {
+      "class": "ExpectedReciprocalRank",
+      "atN": 1,
+      "params":{
+        "maxScore": 100,
+        "noJudgment": 0.1
+      }
+    }
+  ],
+  "experiments": {
+    "title": {
+      "searchServerUrl": "http://localhost:8983/solr/tmdb",
+      "query": {
+        "edismax" : {
+          "qf": "title"
+        }
+      }
+    }
+  }
+}

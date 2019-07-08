@@ -18,7 +18,14 @@ package org.mitre.quaerite.core.scorers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
+import org.mitre.quaerite.core.ExperimentSet;
 import org.mitre.quaerite.core.serializers.ScorerListSerializer;
 
 public class TestScorerListSerializer {
@@ -31,6 +38,30 @@ public class TestScorerListSerializer {
         assertEquals(revivified.getClass().getCanonicalName(), revivified.getClass().getCanonicalName());
         assertEquals(scorer.getAtN(),
                 ((Scorer)revivified).getAtN());
+    }
+
+    @Test
+    public void testERR() throws Exception {
+        ExperimentSet experimentSet = null;
+        try (Reader reader = new BufferedReader(
+                new InputStreamReader(
+                        TestScorerListSerializer.class
+                                .getResourceAsStream("/test-documents/experiments_solr_err.json"),
+                        StandardCharsets.UTF_8))) {
+            experimentSet = ExperimentSet.fromJson(reader);
+        }
+        List<Scorer> scorers = experimentSet.getScorers();
+        ExpectedReciprocalRank err = (ExpectedReciprocalRank)scorers.get(0);
+        Double max = err.getMaxScore();
+        assertEquals(max, 100, 0.1);
+
+        double noJudgment = err.getNoJudgment();
+        assertEquals(0.1, noJudgment, 0.01);
+
+        String json = ScorerListSerializer.toJson(scorers);
+        List<Scorer> deserialized = ScorerListSerializer.fromJsonList(json);
+        System.out.println(deserialized);
+        assertEquals(scorers, deserialized);
     }
 
 }
