@@ -29,6 +29,10 @@ public class RREExpectedReciprocalRank extends ExpectedReciprocalRank {
     public RREExpectedReciprocalRank(int atN) {
         super("RRE_ERR", atN);
     }
+    
+    public RREExpectedReciprocalRank(int atN, double maxScore) {
+        super("RRE_ERR", atN, maxScore);
+    }
 
     @Override
     double getGrade(Judgments judgments, String id, double max) {
