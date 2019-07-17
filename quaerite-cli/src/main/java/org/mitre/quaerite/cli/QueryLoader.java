@@ -160,7 +160,7 @@ class QueryLoader {
             String querySet = (hasQuerySet) ? record.get(QUERY_SET) : QueryInfo.DEFAULT_QUERY_SET;
             QueryStrings queryStrings = getQueryStrings(queryStringNames, record);
             int queryCount = (hasCount) ? Integer.parseInt(record.get(COUNT)) : 1;
-            QueryInfo queryInfo = null;
+
             String queryId = record.get(QUERY_ID);
             if (StringUtils.isBlank(queryId)) {
                 throw new IllegalArgumentException("If the csv has a '" + QUERY_ID + "' column, " +
@@ -181,7 +181,7 @@ class QueryLoader {
                 String documentId = record.get(DOCUMENT_ID);
                 double relevanceScore =
                         Double.parseDouble(record.get(RELEVANCE));
-                Judgments judgments = judgmentsMap.get(queryInfo.getQueryId());
+                Judgments judgments = judgmentsMap.get(newQueryInfo.getQueryId());
                 judgments.addJudgment(documentId, relevanceScore);
             }
         }
