@@ -67,6 +67,7 @@ public class EDisMaxQuery extends DisMaxQuery {
         cp.ps3 = (ps3 != null) ? ps3.deepCopy() : null;
         cp.bq = (bq != null) ? bq.deepCopy() : null;
         cp.bf = (bf != null) ? bf.deepCopy() : null;
+        cp.boost = (boost != null) ? boost.deepCopy() : null;
         cp.qf = (qf != null) ? qf.deepCopy() : null;
         cp.tie = (tie != null) ? new TIE(tie.getValue()) : null;
         cp.setQueryString(getQueryString());
@@ -117,6 +118,7 @@ public class EDisMaxQuery extends DisMaxQuery {
                 ", ps3=" + ps3 +
                 ", bf=" + bf +
                 ", bq=" + bq +
+                ", boost=" + boost +
                 ", pf=" + pf +
                 ", ps=" + ps +
                 ", qf=" + qf +

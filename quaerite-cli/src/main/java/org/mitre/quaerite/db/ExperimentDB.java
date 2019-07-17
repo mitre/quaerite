@@ -55,7 +55,6 @@ import org.mitre.quaerite.core.scorers.SummingScoreAggregator;
 import org.mitre.quaerite.core.serializers.ScorerListSerializer;
 import org.mitre.quaerite.core.stats.ExperimentNameScorePair;
 import org.mitre.quaerite.core.stats.ExperimentScorePair;
-import org.mitre.quaerite.core.util.StringUtil;
 
 public class ExperimentDB implements Closeable {
 
@@ -679,7 +678,7 @@ public class ExperimentDB implements Closeable {
 
         String sql = "select experiment, " + columnName + " from scores_aggregated";
         if (!StringUtils.isBlank(querySet)) {
-            sql += " where query_set='"+querySet+"'";
+            sql += " where query_set='" + querySet + "'";
         }
         try (Statement st = connection.createStatement()) {
             try (ResultSet rs = st.executeQuery(sql)) {

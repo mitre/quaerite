@@ -20,6 +20,7 @@ import java.util.Objects;
 
 import org.mitre.quaerite.core.features.BF;
 import org.mitre.quaerite.core.features.BQ;
+import org.mitre.quaerite.core.features.DisMaxBoost;
 import org.mitre.quaerite.core.features.PF;
 import org.mitre.quaerite.core.features.PS;
 
@@ -30,6 +31,7 @@ public class DisMaxQuery extends MultiFieldQuery {
     protected BQ bq;
     protected PF pf;
     protected PS ps;
+    protected DisMaxBoost boost;
 
 
     public DisMaxQuery() {
@@ -77,6 +79,14 @@ public class DisMaxQuery extends MultiFieldQuery {
         this.ps = ps;
     }
 
+    public DisMaxBoost getBoost() {
+        return boost;
+    }
+
+    public void setBoost(DisMaxBoost boost) {
+        this.boost = boost;
+    }
+
     @Override
     public DisMaxQuery deepCopy() {
         DisMaxQuery cp = new DisMaxQuery();
@@ -85,6 +95,7 @@ public class DisMaxQuery extends MultiFieldQuery {
         cp.pf = (pf == null) ? null : pf.deepCopy();
         cp.ps = (ps == null) ? null : ps.deepCopy();
         cp.qf = (qf == null) ? null : qf.deepCopy();
+        cp.boost = (boost == null) ? null : boost.deepCopy();
         cp.tie = (tie == null) ? null : tie.deepCopy();
         cp.setQueryString(getQueryString());
         cp.setQueryStringName(getQueryStringName());
@@ -101,11 +112,13 @@ public class DisMaxQuery extends MultiFieldQuery {
         return Objects.equals(bf, that.bf) &&
                 Objects.equals(bq, that.bq) &&
                 Objects.equals(pf, that.pf) &&
-                Objects.equals(ps, that.ps);
+                Objects.equals(ps, that.ps) &&
+                Objects.equals(boost, that.boost);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), bf, bq, pf, ps);
+        return Objects.hash(super.hashCode(), bf, bq, pf, ps, boost);
     }
+
 }

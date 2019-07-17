@@ -78,7 +78,9 @@ public class AbstractFeatureSerializer {
         } else if (stringArr.isJsonArray()) {
             List<String> ret = new ArrayList<>();
             for (JsonElement el : ((JsonArray)stringArr)) {
-                ret.add(el.getAsJsonPrimitive().getAsString());
+                if (! el.isJsonNull()) {
+                    ret.add(el.getAsJsonPrimitive().getAsString());
+                }
             }
             return ret;
         } else {

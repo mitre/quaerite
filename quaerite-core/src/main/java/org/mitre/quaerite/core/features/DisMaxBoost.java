@@ -16,29 +16,23 @@
  */
 package org.mitre.quaerite.core.features;
 
+import java.util.List;
+
 /**
- * Used in Elastics BoostingQuery
+ * Used in Solr's DisMax and EDisMax queries
  */
-public class Boost extends FloatFeature {
+public class DisMaxBoost extends ParameterizableStringListFeature {
 
     private static final String NAME = "boost";
 
-    public Boost() {
-        super(NAME, 1.0f);
-    }
-    public Boost(float value) {
-        super(NAME, value);
+    public DisMaxBoost(List<ParameterizableString> strings) {
+        super(NAME);
+        addAll(strings);
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Boost)) return false;
-        return super.equals(o);
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
+    public DisMaxBoost deepCopy() {
+        DisMaxBoost deepCopy = new DisMaxBoost(parameterizableStrings);
+        return deepCopy;
     }
 }

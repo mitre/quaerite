@@ -171,7 +171,9 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
 
         if (features.get(i).hasWeight()) {
             base.add(features.get(i));
-            collector.add((T)base);
+            if (base.size() >= minSetSize) {
+                collector.add((T) base);
+            }
             recurse(i + 1, depth + 1, maxSize, base, collector);
         } else {
             int newDepth = depth + 1;
@@ -181,7 +183,9 @@ public class WeightableListFeatureFactory<T extends WeightableListFeature>
                     tmp.addAll(base.getWeightableFields());
                     tmp.add(
                             new WeightableField(features.get(i).getFeature(), f));
-                    collector.add(tmp);
+                    if (tmp.size() >= minSetSize) {
+                        collector.add(tmp);
+                    }
                     recurse(i + 1, newDepth, maxSize, tmp, collector);
                 } else {
                     recurse(i + 1, depth, maxSize, base, collector);

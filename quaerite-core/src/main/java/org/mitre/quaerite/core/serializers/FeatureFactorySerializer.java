@@ -38,6 +38,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import org.mitre.quaerite.core.features.Boost;
 import org.mitre.quaerite.core.features.CustomHandler;
+import org.mitre.quaerite.core.features.DisMaxBoost;
 import org.mitre.quaerite.core.features.FloatFeature;
 import org.mitre.quaerite.core.features.Fuzziness;
 import org.mitre.quaerite.core.features.IntFeature;
@@ -96,11 +97,17 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
 
     private FeatureFactory buildFeatureFactory(String paramName, JsonElement jsonFeatureFactory) {
         Class clazz = determineClass(paramName);
+        return buildFeatureFactory(paramName, jsonFeatureFactory, clazz);
+    }
+
+    private FeatureFactory buildFeatureFactory(String paramName,
+                                               JsonElement jsonFeatureFactory,
+                                               Class clazz) {
         if (WeightableListFeature.class.isAssignableFrom(clazz)) {
             JsonObject featureSetObj = (JsonObject) jsonFeatureFactory;
             return buildWeightableFeatureFactory(paramName, featureSetObj);
         } else if (ParameterizableStringListFeature.class.isAssignableFrom(clazz)) {
-            return buildParametrizableStringListFeatureFactory(paramName, jsonFeatureFactory);
+            return buildParametrizableStringListFeatureFactory(paramName, jsonFeatureFactory, clazz);
         } else if (FloatFeature.class.isAssignableFrom(clazz)) {
             return buildFloatFeatureFactory(paramName, jsonFeatureFactory);
         } else if (IntFeature.class.isAssignableFrom(clazz)) {
@@ -225,6 +232,9 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         if (obj.has("bf")) {
             factory.add(buildFeatureFactory("bf", obj.get("bf")));
         }
+        if (obj.has("boost")) {
+            factory.add(buildFeatureFactory("boost", obj.get("boost"), DisMaxBoost.class));
+        }
         addMultiFieldFeatures(factory, obj);
     }
 
@@ -282,7 +292,8 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
     }
 
     private FeatureFactory buildParametrizableStringListFeatureFactory(String paramName,
-                                                                       JsonElement jsonFeatureFactory) {
+                                                                       JsonElement jsonFeatureFactory,
+                                                                       Class clazz) {
         int minSetSize = -1;
         int maxSetSize = -1;
         List<String> fs = null;
@@ -320,8 +331,8 @@ public class FeatureFactorySerializer extends AbstractFeatureSerializer
         }
 
         try {
-            return new ParameterizableStringListFactory(paramName,
-                    Class.forName(getClassName(paramName)), fields, minSetSize, maxSetSize);
+            return new ParameterizableStringListFactory(paramName, clazz,
+                     fields, minSetSize, maxSetSize);
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }

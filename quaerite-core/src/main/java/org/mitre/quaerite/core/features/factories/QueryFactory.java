@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.mitre.quaerite.core.features.Feature;
+import org.mitre.quaerite.core.queries.DisMaxQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.util.MathUtil;
 
@@ -133,8 +134,13 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
     private void setFeature(Query q, Object obj) {
         String className = obj.getClass().getSimpleName();
+        //stinky -- figure out how to fix this
+        if (q instanceof DisMaxQuery && className.equals("DisMaxBoost")) {
+            className = "Boost";
+        }
         String name = "set" + className.substring(0,1)
                 .toUpperCase(Locale.US) + className.substring(1);
+
         Method method = null;
         if (! methodCache.containsKey(name)) {
             try {

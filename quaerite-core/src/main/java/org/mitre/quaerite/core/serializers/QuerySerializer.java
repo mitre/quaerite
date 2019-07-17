@@ -44,6 +44,7 @@ import org.mitre.quaerite.core.QueryStrings;
 import org.mitre.quaerite.core.features.BF;
 import org.mitre.quaerite.core.features.BQ;
 import org.mitre.quaerite.core.features.Boost;
+import org.mitre.quaerite.core.features.DisMaxBoost;
 import org.mitre.quaerite.core.features.Feature;
 import org.mitre.quaerite.core.features.FloatFeature;
 import org.mitre.quaerite.core.features.Fuzziness;
@@ -298,6 +299,9 @@ public class QuerySerializer extends AbstractFeatureSerializer
         if (obj.has("ps")) {
             int ps = obj.get("ps").getAsJsonPrimitive().getAsInt();
             q.setPS(new PS(ps));
+        }
+        if (obj.has("boost")) {
+            q.setBoost(new DisMaxBoost(getParameterizableStrings("boost", obj)));
         }
         deserializeMultiField((MultiFieldQuery) q, obj);
     }
@@ -721,6 +725,9 @@ public class QuerySerializer extends AbstractFeatureSerializer
             obj.add("ps", serializeFeature(query.getPS()));
         }
 
+        if (query.getBoost() != null) {
+            obj.add("boost", serializeFeature(query.getBoost()));
+        }
     }
 
     private void serializeMultiFieldComponents(MultiFieldQuery query, JsonObject obj) {
