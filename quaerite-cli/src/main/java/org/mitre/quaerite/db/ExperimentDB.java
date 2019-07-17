@@ -55,6 +55,7 @@ import org.mitre.quaerite.core.scorers.SummingScoreAggregator;
 import org.mitre.quaerite.core.serializers.ScorerListSerializer;
 import org.mitre.quaerite.core.stats.ExperimentNameScorePair;
 import org.mitre.quaerite.core.stats.ExperimentScorePair;
+import org.mitre.quaerite.core.util.StringUtil;
 
 public class ExperimentDB implements Closeable {
 
@@ -83,8 +84,12 @@ public class ExperimentDB implements Closeable {
     private PreparedStatement insertScoresAggregated;
 
     private PreparedStatement selectResults;
-    //cache of upserting scores keyed by scorer name
+
+    //cache of selecting scores keyed by scorer name
     private Map<String, PreparedStatement> selectScoreStatements = new HashMap<>();
+
+    //cache of selecting scores keyed by scorer name and specifying queryset
+    private Map<String, PreparedStatement> selectQuerySetScoreStatements = new HashMap<>();
 
     public static ExperimentDB openAndDrop(Path dbDir) throws SQLException, IOException {
         try {
@@ -581,15 +586,15 @@ public class ExperimentDB implements Closeable {
 
     public Map<String, Double> getScores(String querySet, String experimentName,
                                          String scorerName) throws SQLException {
-        PreparedStatement selectScores = selectScoreStatements.get(scorerName);
-        if (selectScores == null) {
-            selectScores = connection.prepareStatement("select query_id, "
-                    + scorerName + " from scores where query_set=? and experiment=?");
-            selectScoreStatements.put(scorerName, selectScores);
+        PreparedStatement selectScores = null;
+        if (StringUtils.isBlank(querySet)) {
+            selectScores = getSelectScores(selectScoreStatements, scorerName, false);
+            selectScores.setString(1, experimentName);
+        } else  {
+            selectScores = getSelectScores(selectQuerySetScoreStatements, scorerName, true);
+            selectScores.setString(1, querySet);
+            selectScores.setString(2, experimentName);
         }
-        selectScores.clearParameters();
-        selectScores.setString(1, querySet);
-        selectScores.setString(2, experimentName);
         Map<String, Double> values = new HashMap<>();
         try (ResultSet rs = selectScores.executeQuery()) {
             while (rs.next()) {
@@ -599,6 +604,24 @@ public class ExperimentDB implements Closeable {
             }
         }
         return values;
+    }
+
+    private PreparedStatement getSelectScores(
+            Map<String, PreparedStatement> map, String scorerName, boolean hasQuerySet) throws SQLException {
+        PreparedStatement selectScores = map.get(scorerName);
+        if (selectScores == null) {
+            if (hasQuerySet) {
+                selectScores = connection.prepareStatement("select query_id, "
+                        + scorerName + " from scores where query_set=? and experiment=?");
+            } else {
+                selectScores = connection.prepareStatement("select query_id, "
+                        + scorerName + " from scores where experiment=?");
+
+            }
+            map.put(scorerName, selectScores);
+        }
+        selectScores.clearParameters();
+        return selectScores;
     }
 
     public boolean hasScores(String experimentName) throws SQLException {
@@ -641,7 +664,7 @@ public class ExperimentDB implements Closeable {
         return false;
     }
 
-    public Map<String, Double> getKeyExperimentScore(Scorer scorer) throws SQLException {
+    public Map<String, Double> getKeyExperimentScore(Scorer scorer, String querySet) throws SQLException {
         Map<String, Double> map = new HashMap<>();
         String columnName;
         if (scorer instanceof SummingScoreAggregator) {
@@ -653,7 +676,11 @@ public class ExperimentDB implements Closeable {
         } else {
             throw new IllegalArgumentException("I don't yet support: " + scorer.getClass());
         }
+
         String sql = "select experiment, " + columnName + " from scores_aggregated";
+        if (!StringUtils.isBlank(querySet)) {
+            sql += " where query_set='"+querySet+"'";
+        }
         try (Statement st = connection.createStatement()) {
             try (ResultSet rs = st.executeQuery(sql)) {
                 while (rs.next()) {

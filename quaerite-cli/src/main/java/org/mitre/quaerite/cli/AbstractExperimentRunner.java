@@ -508,7 +508,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
             if (scorer instanceof AbstractJudgmentScorer &&
                     ((AbstractJudgmentScorer) scorer).getExportPMatrix()) {
                 Map<String, Double> aggregatedScores =
-                        experimentDB.getKeyExperimentScore(scorer);
+                        experimentDB.getKeyExperimentScore(scorer, querySet);
 
                 Map<String, Double> sorted = MapUtil.sortByDescendingValue(aggregatedScores);
                 List<String> experiments = new ArrayList();
