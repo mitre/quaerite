@@ -225,21 +225,15 @@ public class SolrClient extends SearchClient {
         sb.append("defType=edismax");
         int i = 0;
         if (query.getPf2() != null) {
-            sb.append("&pf2=");
             for (WeightableField f : query.getPf2().getWeightableFields()) {
-                if (i++ > 0) {
-                    sb.append(encode(" "));
-                }
+                sb.append("&pf2=");
                 sb.append(encode(f.toString()));
             }
         }
         i = 0;
         if (query.getPf3() != null) {
-            sb.append("&pf3=");
             for (WeightableField f : query.getPf3().getWeightableFields()) {
-                if (i++ > 0) {
-                    sb.append(encode(" "));
-                }
+                sb.append("&pf3=");
                 sb.append(encode(f.toString()));
             }
         }
@@ -259,12 +253,9 @@ public class SolrClient extends SearchClient {
         sb.append("&").append(handler.getCustomQueryKey())
                 .append("=").append(encode(query.getQueryString()));
         QF qf = query.getQF();
-        sb.append("&qf=");
         int i = 0;
         for (WeightableField f : qf.getWeightableFields()) {
-            if (i++ > 0) {
-                sb.append(encode(" "));
-            }
+            sb.append("&qf=");
             sb.append(encode(f.toString()));
         }
         if (query.getTie() != null) {
@@ -272,7 +263,7 @@ public class SolrClient extends SearchClient {
         }
         QueryOperator qop = query.getQueryOperator();
         if (qop.getOperator() == QueryOperator.OPERATOR.UNSPECIFIED) {
-            return;
+            //do nothing
         } else if (qop.getOperator() == QueryOperator.OPERATOR.AND) {
             sb.append("&q.op=AND");
         } else {
@@ -293,18 +284,23 @@ public class SolrClient extends SearchClient {
                 sb.append("&bq=").append(encode(pString.toString()));
             }
         }
+
         if (query.getBF() != null) {
             for (ParameterizableString bf : query.getBF().getParameterizableStrings()) {
-                sb.append("&bq=").append(encode(bf.toString()));
+                sb.append("&bf=").append(encode(bf.toString()));
             }
         }
+
+        if (query.getBoost() != null) {
+            for (ParameterizableString boost : query.getBoost().getParameterizableStrings()) {
+                sb.append("&boost=").append(encode(boost.toString()));
+            }
+        }
+
         i = 0;
         if (query.getPF() != null) {
-            sb.append("&pf=");
             for (WeightableField f : query.getPF().getWeightableFields()) {
-                if (i++ > 0) {
-                    sb.append(encode(" "));
-                }
+                sb.append("&pf=");
                 sb.append(encode(f.toString()));
             }
         }

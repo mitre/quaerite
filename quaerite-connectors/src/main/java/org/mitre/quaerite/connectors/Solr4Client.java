@@ -160,6 +160,7 @@ public class Solr4Client extends SolrClient {
         }
         tmp.append(")");
         sb.append(encode(tmp.toString()));
+        sb.append("&q.op=OR");
     }
 
 }
