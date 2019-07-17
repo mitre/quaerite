@@ -329,7 +329,9 @@ public class ExperimentDB implements Closeable {
         if (hasNamedQuerySets()) {
             List<String> querySets = new ArrayList<>();
             try (ResultSet rs = getQuerySets.executeQuery()) {
-                querySets.add(rs.getString(1));
+                while (rs.next()) {
+                    querySets.add(rs.getString(1));
+                }
             }
             return querySets;
         }
