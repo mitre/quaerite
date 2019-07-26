@@ -17,6 +17,7 @@
  */
 package org.mitre.quaerite.solrtools;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
@@ -45,6 +46,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.connectors.SearchClient;
+import org.mitre.quaerite.connectors.SearchClientException;
 import org.mitre.quaerite.connectors.SearchClientFactory;
 import org.mitre.quaerite.core.util.StringUtil;
 
@@ -159,6 +161,13 @@ public class WinnowAnalyzedElevate {
                          SearchClient client, String analysisField)
             throws Exception {
         Map<String, Elevate> elevateMap = ElevateScraper.scrape(inputElevate, null);
+        Map<String, List<Elevate>> winnowed = winnow(elevateMap, client, analysisField);
+        dumpElevates(winnowedElevate, winnowed);
+    }
+
+    public static Map<String, List<Elevate>> analyze (
+            Map<String, Elevate> elevateMap,
+            SearchClient client, String analysisField) throws IOException, SearchClientException {
         Map<String, List<Elevate>> analyzed = new TreeMap<>();
         for (String q : elevateMap.keySet()) {
             List<String> tokens = client.analyze(analysisField, q);
@@ -171,6 +180,15 @@ public class WinnowAnalyzedElevate {
                 analyzed.put(analyzedKey, e);
             }
         }
+        return analyzed;
+    }
+
+    public static Map<String, List<Elevate>> winnow(Map<String, Elevate> elevateMap,
+                                                    SearchClient client,
+                                                    String analysisField)
+            throws IOException, SearchClientException {
+
+        Map<String, List<Elevate>> analyzed = analyze(elevateMap, client, analysisField);
 
         Map<String, List<Elevate>> winnowed = new TreeMap<>();
         List<Elevate> extras = new ArrayList<>();
@@ -185,8 +203,7 @@ public class WinnowAnalyzedElevate {
                 extras.add(e.getValue().get(i));
             }
         }
-
-        dumpElevates(winnowedElevate, winnowed);
+        return winnowed;
     }
 
     private void dumpElevates(Path elevateFile, Map<String, List<Elevate>> elevates) throws Exception {
@@ -214,7 +231,6 @@ public class WinnowAnalyzedElevate {
             out.flush();
             out.close();
         }
-
     }
 
     private void commentElevate(XMLStreamWriter out, Elevate elevate) throws XMLStreamException {
