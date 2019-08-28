@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -148,10 +148,16 @@ public class ElevateElevateComparer {
                         couldAdd.add(cand);
                     }
                 }
+
                 if (couldAdd.size() > 0) {
                     System.out.println(q);
+                    for (String id : baselineIds) {
+                        System.out.println("\texisting\t" + id);
+                    }
                     for (String id : couldAdd) {
-                        System.out.println("\t" + id);
+                        if (!baselineIds.contains(id)) {
+                            System.out.println("\tcandidate\t" + id);
+                        }
                     }
                 }
             }
@@ -160,7 +166,7 @@ public class ElevateElevateComparer {
     }
 
     private Set<String> getIds(List<Elevate> elevates) {
-        Set<String> ids = new HashSet<>();
+        Set<String> ids = new LinkedHashSet<>();
         for (Elevate e : elevates) {
             for (String id : e.getIds()) {
                 ids.add(id);
