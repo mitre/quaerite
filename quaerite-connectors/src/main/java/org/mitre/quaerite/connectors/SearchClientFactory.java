@@ -51,9 +51,11 @@ public class SearchClientFactory {
                     throw new SearchClientException(
                             "couldn't find version major version: " + version);
                 }
+                int secondPeriod = version.indexOf(".", firstPeriod + 1);
                 int major = Integer.parseInt(version.substring(0, firstPeriod));
+                int minor = Integer.parseInt(version.substring(firstPeriod + 1, secondPeriod));
                 if (major < 7) {
-                    return new Solr4Client(url);
+                    return new Solr4Client(url, minor);
                 } else {
                     return new SolrClient(url);
                 }

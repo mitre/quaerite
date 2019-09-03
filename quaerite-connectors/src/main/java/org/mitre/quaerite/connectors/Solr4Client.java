@@ -36,11 +36,13 @@ public class Solr4Client extends SolrClient {
 
     static Logger LOG = Logger.getLogger(Solr4Client.class);
 
+    private final int minorVersion;
     /**
      * @param url url to Solr including /collection
      */
-    protected Solr4Client(String url) throws IOException, SearchClientException {
+    protected Solr4Client(String url, int minorVersion) throws IOException, SearchClientException {
         super(url);
+        this.minorVersion = minorVersion;
     }
 
 
@@ -97,7 +99,9 @@ public class Solr4Client extends SolrClient {
                     " :: " + fullResponse.getMsg());
             return Collections.EMPTY_LIST;
         }
+
         JsonElement root = fullResponse.getJson();
+
         JsonObject response = (JsonObject) ((JsonObject) root).get("response");
         long totalHits = response.get("numFound").getAsLong();
         if (response.has("docs")) {
@@ -163,4 +167,26 @@ public class Solr4Client extends SolrClient {
         sb.append("&q.op=OR");
     }
 
+    @Override
+    public Set<String> getCopyFields() throws IOException, SearchClientException {
+        //is this when the schema api was introduced?
+        //TODO: if necessary, figure out how to do this back in the day
+        if (minorVersion < 10) {
+            LOG.warn("can't get copy fields via schema in < 4.10");
+            return Collections.EMPTY_SET;
+        }
+        return super.getCopyFields();
+    }
+
+    @Override
+    public synchronized String getDefaultIdField()
+            throws IOException, SearchClientException {
+        //is this when the schema api was introduced?
+        //TODO: if necessary, figure out how to do this back in the day
+        if (minorVersion < 10) {
+            LOG.warn("Can't get default id field with schema API, returning 'id'");
+            return "id";
+        }
+        return super.getDefaultIdField();
+    }
 }

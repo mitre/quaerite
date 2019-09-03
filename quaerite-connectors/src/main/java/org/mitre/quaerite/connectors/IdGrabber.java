@@ -55,6 +55,10 @@ public abstract class IdGrabber implements Callable<Integer> {
 
     protected int addSet(ArrayBlockingQueue<Set<String>> ids, Set<String> set) throws InterruptedException {
         int sz = set.size();
+        //don't bother adding if set size == 0
+        if (sz == 0) {
+            return sz;
+        }
         boolean added = ids.offer(set, 1, TimeUnit.SECONDS);
         LOG.debug("id grabber: " + added + " " + ids.size());
         while (!added) {

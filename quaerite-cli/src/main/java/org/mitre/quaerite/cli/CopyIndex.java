@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -207,11 +208,18 @@ public class CopyIndex extends AbstractCLI {
                 Future<Integer> future = executorCompletionService.poll(1,
                         TimeUnit.SECONDS);
                 if (future != null) {
-                    Integer done = future.get();
-                    if (done < 0) {
-                        LOG.debug("id grabber is done");
-                    } else if (done > 0) {
-                        LOG.debug("finished: " + finished + " : " + done);
+                    Integer done = null;
+                    try {
+                        done = future.get();
+                    } catch (ExecutionException e) {
+                        LOG.error(e);
+                    }
+                    if (done != null) {
+                        if (done < 0) {
+                            LOG.debug("id grabber is done");
+                        } else if (done > 0) {
+                            LOG.debug("finished: " + finished + " : " + done);
+                        }
                     }
                     finished++;
                 }
