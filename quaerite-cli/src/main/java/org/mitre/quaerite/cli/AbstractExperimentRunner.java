@@ -439,22 +439,8 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         if (!Files.isDirectory(outputDir)) {
             Files.createDirectories(outputDir);
         }
+        dumpPerQuery(experimentDB, outputDir);
 
-        try (BufferedWriter writer = Files.newBufferedWriter(
-                outputDir.resolve("per_query_scores.csv"), StandardCharsets.UTF_8)) {
-            try (Statement st = experimentDB.getConnection().createStatement()) {
-                String select = experimentDB.hasNamedQuerySets() ?
-                        "select * from SCORES where QUERY_SET <> ''" :
-                        "select * from SCORES";
-                try (java.sql.ResultSet resultSet = st.executeQuery(select)) {
-                    writeHeaders(resultSet.getMetaData(), writer);
-                    while (resultSet.next()) {
-                        writeRow(resultSet, writer);
-                    }
-                }
-                writer.flush();
-            }
-        }
         String orderByPriority1 = null;
         String orderByPriority2 = null;
         for (Scorer scorer : experimentSet.getScorers()) {
@@ -497,6 +483,38 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         dumpSignificanceMatrices("", scorers, experimentDB, outputDir);
 
 
+    }
+
+    private static void dumpPerQuery(ExperimentDB experimentDB, Path outputDir) throws Exception {
+        StringBuilder select = new StringBuilder();
+        select.append("select " +
+                "s.query_id QUERY_ID, " +
+                "QUERY_NAME, " +
+                "s.query_set QUERY_SET, " +
+                "s.query_count QUERY_COUNT, " +
+                "EXPERIMENT");
+        for (String scorer : experimentDB.getScoreAggregatorNames()) {
+            select.append(", ").append(scorer);
+        }
+        select.append(" from SCORES s");
+        select.append(" join judgments j on s.query_id=j.query_id");
+        if (experimentDB.hasNamedQuerySets()) {
+            select.append(" where QUERY_SET <> ''");
+        }
+        select.append(" order by experiment, s.query_set, query_name");
+        try (BufferedWriter writer = Files.newBufferedWriter(
+                outputDir.resolve("per_query_scores.csv"), StandardCharsets.UTF_8)) {
+            try (Statement st = experimentDB.getConnection().createStatement()) {
+
+                try (java.sql.ResultSet resultSet = st.executeQuery(select.toString())) {
+                    writeHeaders(resultSet.getMetaData(), writer);
+                    while (resultSet.next()) {
+                        writeRow(resultSet, writer);
+                    }
+                }
+                writer.flush();
+            }
+        }
     }
 
     private static void dumpSignificanceMatrices(String querySet,

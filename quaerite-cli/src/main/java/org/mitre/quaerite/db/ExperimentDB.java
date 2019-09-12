@@ -140,7 +140,7 @@ public class ExperimentDB implements Closeable {
         );
 
         insertJudgments = connection.prepareStatement(
-                "insert into judgments (query_id, query_set, query_count, json) values (?,?,?,?)"
+                "insert into judgments (query_id, query_name, query_set, query_count, json) values (?,?,?,?,?)"
         );
 
         selectScorers = connection.prepareStatement(
@@ -196,6 +196,7 @@ public class ExperimentDB implements Closeable {
     private void initJudgments() throws SQLException {
         String sql = "CREATE TABLE IF NOT EXISTS JUDGMENTS (" +
                 "QUERY_ID VARCHAR(256) PRIMARY KEY," +
+                "QUERY_NAME VARCHAR(1024)," +
                 "QUERY_SET VARCHAR(256)," +
                 "QUERY_COUNT INTEGER," +
                 "JSON VARCHAR(10000));";
@@ -312,10 +313,11 @@ public class ExperimentDB implements Closeable {
             throws SQLException {
         insertJudgments.clearParameters();
         insertJudgments.setString(1, judgments.getQueryInfo().getQueryId());
-        insertJudgments.setString(2, judgments.getQuerySet());
+        insertJudgments.setString(2, judgments.getQueryInfo().getQueryStrings().toString());
+        insertJudgments.setString(3, judgments.getQuerySet());
         //this is to use later, potentially, in weighting scores for more frequent queries
-        insertJudgments.setInt(3, judgments.getQueryCount());
-        insertJudgments.setString(4, judgments.toJson());
+        insertJudgments.setInt(4, judgments.getQueryCount());
+        insertJudgments.setString(5, judgments.toJson());
         insertJudgments.execute();
     }
 

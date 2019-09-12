@@ -85,6 +85,9 @@ public class QueryStrings {
 
     @Override
     public String toString() {
+        if (map.size() == 1 && map.containsKey(DEFAULT_QUERY_NAME)) {
+            return map.get(DEFAULT_QUERY_NAME);
+        }
         return "QueryStrings{" +
                 "map=" + map +
                 '}';

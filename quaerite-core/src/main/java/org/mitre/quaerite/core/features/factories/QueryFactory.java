@@ -176,6 +176,10 @@ public class QueryFactory<T extends Query> extends AbstractFeatureFactory<T> {
 
     private Feature getFeature(Query q, AbstractFeatureFactory obj) {
         String className = obj.getName();
+        //total hack for q.op; TODO this is stinky...clean it up
+        if (className.equals("q.op")) {
+            className = "queryOperator";
+        }
         String name = "get" + className.substring(0,1).toUpperCase(Locale.US)
                 + className.substring(1);
         Method method = null;
