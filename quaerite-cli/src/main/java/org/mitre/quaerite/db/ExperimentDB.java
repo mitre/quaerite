@@ -107,7 +107,9 @@ public class ExperimentDB implements Closeable {
             throw new RuntimeException(e);
         }
         return new ExperimentDB(DriverManager.getConnection(
-                "jdbc:h2:" + dbDir.resolve("h2_database").toAbsolutePath()), false);
+                "jdbc:h2:" +
+                        dbDir.resolve("h2_database").toAbsolutePath()),
+                false);
     }
 
     ExperimentDB(Connection connection, boolean dropAll) throws SQLException {
@@ -140,7 +142,8 @@ public class ExperimentDB implements Closeable {
         );
 
         insertJudgments = connection.prepareStatement(
-                "insert into judgments (query_id, query_name, query_set, query_count, json) values (?,?,?,?,?)"
+                "insert into judgments (query_id, query_name, query_set, " +
+                        "query_count, json) values (?,?,?,?,?)"
         );
 
         selectScorers = connection.prepareStatement(
