@@ -499,7 +499,7 @@ public abstract class AbstractExperimentRunner extends AbstractCLI {
         select.append(" from SCORES s");
         select.append(" join judgments j on s.query_id=j.query_id");
         if (experimentDB.hasNamedQuerySets()) {
-            select.append(" where QUERY_SET <> ''");
+            select.append(" where s.QUERY_SET <> ''");
         }
         select.append(" order by experiment, s.query_set, query_name");
         try (BufferedWriter writer = Files.newBufferedWriter(
