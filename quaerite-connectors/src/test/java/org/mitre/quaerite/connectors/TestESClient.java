@@ -48,6 +48,7 @@ import org.mitre.quaerite.core.queries.MatchAllDocsQuery;
 import org.mitre.quaerite.core.queries.MultiMatchQuery;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.TermQuery;
+import org.mitre.quaerite.core.util.ConnectionConfig;
 
 /**
  * This class needs the tmdb collection up and running.
@@ -69,7 +70,8 @@ public class TestESClient {
 
     @Test
     public void testInit() throws Exception {
-        ESClient client = new ESClient("http://localhost:9200/tmdb");
+        ESClient client = new ESClient(ConnectionConfig.DEFAULT_CONNECTION_CONFIG,
+                "http://localhost:9200/tmdb");
         assertEquals("http://localhost:9200/", client.getESBase());
         assertEquals("http://localhost:9200/tmdb/", client.getUrl());
         assertEquals("tmdb", client.getESCollection());
@@ -77,7 +79,8 @@ public class TestESClient {
 
     @Test
     public void testCopyFields() throws Exception {
-        ESClient client = new ESClient("http://localhost:9200/tmdb");
+        ESClient client = new ESClient(ConnectionConfig.DEFAULT_CONNECTION_CONFIG,
+                "http://localhost:9200/tmdb");
         Collection copyFields = client.getCopyFields();
         Set<String> set = new HashSet<>(copyFields);
         assertTrue(set.contains("people"));

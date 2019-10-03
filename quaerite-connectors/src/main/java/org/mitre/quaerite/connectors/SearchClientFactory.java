@@ -27,10 +27,15 @@ import java.util.regex.Pattern;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.mitre.quaerite.core.util.ConnectionConfig;
 
 public class SearchClientFactory {
 
     public static SearchClient getClient(String url) throws IOException, SearchClientException {
+        return getClient(url, ConnectionConfig.DEFAULT_CONNECTION_CONFIG);
+    }
+
+    public static SearchClient getClient(String url, ConnectionConfig connectionConfig) throws IOException, SearchClientException {
 
         Matcher m = Pattern.compile("(https?://[^/]+)").matcher(url);
         if (!m.find()) {
@@ -39,7 +44,7 @@ public class SearchClientFactory {
         }
         String solrSystem = m.group(1) + "/solr/admin/info/system?wt=json";
         try {
-            byte[] bytes = HttpUtils.get(solrSystem);
+            byte[] bytes = HttpUtils.get(solrSystem, connectionConfig);
             try (Reader reader = new InputStreamReader(
                     new ByteArrayInputStream(bytes), StandardCharsets.UTF_8)) {
                 JsonElement root = new JsonParser().parse(reader);
@@ -55,16 +60,16 @@ public class SearchClientFactory {
                 int major = Integer.parseInt(version.substring(0, firstPeriod));
                 int minor = Integer.parseInt(version.substring(firstPeriod + 1, secondPeriod));
                 if (major < 7) {
-                    return new Solr4Client(url, minor);
+                    return new Solr4Client(connectionConfig, url, minor);
                 } else {
-                    return new SolrClient(url);
+                    return new SolrClient(connectionConfig, url);
                 }
             }
         } catch (SearchClientException e) {
             //swallow and try es
         }
         String es = m.group(1);
-        byte[] bytes = HttpUtils.get(es);
+        byte[] bytes = HttpUtils.get(es, connectionConfig);
         try (Reader reader = new InputStreamReader(
                 new ByteArrayInputStream(bytes), StandardCharsets.UTF_8)) {
             JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
@@ -72,9 +77,11 @@ public class SearchClientFactory {
             String number = version.get("number").getAsString();
             String major = number.substring(0,1);
             if (major.equals("6")) {
-                return new ES6Client(url);
+                testAuthentication(connectionConfig);
+                return new ES6Client(connectionConfig, url);
             } else if (major.equals("7")) {
-                return new ESClient(url);
+                testAuthentication(connectionConfig);
+                return new ESClient(connectionConfig, url);
             } else {
                 throw new IllegalArgumentException(
                         "I regret that I don't yet support: " + number);
@@ -82,6 +89,14 @@ public class SearchClientFactory {
         } catch (IOException e) {
             throw new SearchClientException(
                     "Couldn't find right client for: " + url);
+        }
+    }
+
+    private static void testAuthentication(ConnectionConfig connectionConfig) {
+        if (connectionConfig.getPassword() != null
+                || connectionConfig.getUser() != null) {
+            throw new IllegalArgumentException(
+                    "Authentication is not yet implemented for Elastic");
         }
     }
 }

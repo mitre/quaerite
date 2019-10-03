@@ -51,7 +51,9 @@ import org.mitre.quaerite.core.queries.SingleStringQuery;
 import org.mitre.quaerite.core.queries.TermQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.stats.TokenDF;
+import org.mitre.quaerite.core.util.ConnectionConfig;
 import org.mitre.quaerite.core.util.JsonUtil;
+import org.mitre.quaerite.core.util.StringUtil;
 
 public class ESClient extends SearchClient {
     private static final String _ID = "_id";
@@ -69,17 +71,13 @@ public class ESClient extends SearchClient {
 
     static Logger LOG = Logger.getLogger(ESClient.class);
 
-    private final String url;//must include esbase and es collection; must end in /
     private final String esBase;//must end in /
     private final String esCollection;//has no /
 
 
-    public ESClient(String url) {
-        String tmp = url;
-        if (!url.endsWith("/")) {
-            tmp = tmp + "/";
-        }
-        this.url = tmp;
+    public ESClient(ConnectionConfig connectionConfig, String url) {
+        super(connectionConfig, StringUtil.ensureEndsWithSlash(url));
+        String tmp = baseUrl;
         String base = tmp.substring(0, tmp.length() - 1);
         int indexOf = base.lastIndexOf("/");
         if (indexOf < 0) {
@@ -98,7 +96,7 @@ public class ESClient extends SearchClient {
             LOG.trace(jsonQuery);
         }
         //System.out.println(jsonQuery);
-        JsonResponse json = postJson(url + "_search", jsonQuery);
+        JsonResponse json = postJson(baseUrl + "_search", jsonQuery);
         if (json.getStatus() != 200) {
             throw new SearchClientException(json.getMsg());
         }
@@ -274,7 +272,7 @@ public class ESClient extends SearchClient {
     @Override
     public FacetResult facet(QueryRequest query) throws SearchClientException, IOException {
         String jsonRequest = buildFacetRequest(query);
-        JsonResponse jsonResponse = postJson(url + "_search", jsonRequest);
+        JsonResponse jsonResponse = postJson(baseUrl + "_search", jsonRequest);
         if (jsonResponse.getStatus() != 200) {
             throw new SearchClientException(jsonResponse.getMsg());
         }
@@ -325,7 +323,7 @@ public class ESClient extends SearchClient {
             sb.append(indexJson).append("\n");
             sb.append(GSON.toJson(tmp)).append("\n");
         }
-        JsonResponse response = postJson(url + "/_bulk", sb.toString());
+        JsonResponse response = postJson(baseUrl + "/_bulk", sb.toString());
         if (response.getStatus() != 200) {
             throw new SearchClientException(response.getMsg());
         }
@@ -353,7 +351,7 @@ public class ESClient extends SearchClient {
                     encode(StringUtils.join(whiteListFields, ','));
         }
 
-        JsonResponse response = postJson(url + "/_doc/_mget" + storedFields, GSON.toJson(map));
+        JsonResponse response = postJson(baseUrl + "/_doc/_mget" + storedFields, GSON.toJson(map));
         if (response.getStatus() != 200) {
             throw new SearchClientException(response.getMsg());
         }
@@ -434,7 +432,7 @@ public class ESClient extends SearchClient {
     public void deleteAll() throws SearchClientException, IOException {
         Map<String, Object> q = wrapAMap("query",
                 wrapAMap("match_all", Collections.EMPTY_MAP));
-        JsonResponse response = postJson(url + "_delete_by_query", GSON.toJson(q));
+        JsonResponse response = postJson(baseUrl + "_delete_by_query", GSON.toJson(q));
         if (response.getStatus() != 200) {
             throw new SearchClientException(response.getMsg());
         }
@@ -477,7 +475,7 @@ public class ESClient extends SearchClient {
     }
 
     protected String getUrl() {
-        return url;
+        return baseUrl;
     }
 
     //list: String, Object, String, Object,
@@ -508,7 +506,7 @@ public class ESClient extends SearchClient {
                 q.put("size", Integer.toString(batchSize));
                 q.put("stored_fields", Collections.EMPTY_LIST);
                 JsonResponse response = null;
-                response = postJson(url + "_search?scroll=5m", GSON.toJson(q));
+                response = postJson(baseUrl + "_search?scroll=5m", GSON.toJson(q));
                 JsonObject root = (JsonObject) response.getJson();
                 String scrollId = JsonUtil.getPrimitive(root, "_scroll_id", "");
                 SearchResultSet searchResultSet = scrapeIds(root, System.currentTimeMillis());

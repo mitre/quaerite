@@ -28,6 +28,7 @@ import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.queries.LuceneQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
+import org.mitre.quaerite.core.util.ConnectionConfig;
 
 /**
  * This should work on versions of Solr back to Solr 4.x
@@ -40,8 +41,8 @@ public class Solr4Client extends SolrClient {
     /**
      * @param url url to Solr including /collection
      */
-    protected Solr4Client(String url, int minorVersion) throws IOException, SearchClientException {
-        super(url);
+    protected Solr4Client(ConnectionConfig connectionConfig, String url, int minorVersion) throws IOException, SearchClientException {
+        super(connectionConfig, url);
         this.minorVersion = minorVersion;
     }
 
@@ -95,7 +96,7 @@ public class Solr4Client extends SolrClient {
         try {
             fullResponse = getJson(requestUrl);
         } catch (IOException | SearchClientException e) {
-            LOG.warn("problem with " + url + " and " + requestUrl +
+            LOG.warn("problem with " + baseUrl + " and " + requestUrl +
                     " :: " + fullResponse.getMsg());
             return Collections.EMPTY_LIST;
         }
@@ -135,8 +136,8 @@ public class Solr4Client extends SolrClient {
         //json is not back compat to 4.5.x
         //String json = "{ \"delete\": {\"query\":\"*:*\"} }";
         String xml = "<delete><query>*:*</query></delete>";
-        JsonResponse jsonResponse = postJson(url +
-                "/update?&commit=true&stream.body=" +
+        JsonResponse jsonResponse = postJson(baseUrl +
+                "update?&commit=true&stream.body=" +
                 encode(xml) + JSON_RESPONSE, xml);
         if (jsonResponse.getStatus() != 200) {
             throw new SearchClientException(jsonResponse.getMsg());

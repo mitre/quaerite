@@ -42,6 +42,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.mitre.quaerite.core.ExperimentConfig;
@@ -49,6 +50,7 @@ import org.mitre.quaerite.core.FacetResult;
 import org.mitre.quaerite.core.SearchResultSet;
 import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.stats.TokenDF;
+import org.mitre.quaerite.core.util.ConnectionConfig;
 
 public abstract class SearchClient implements Closeable {
 
@@ -57,22 +59,20 @@ public abstract class SearchClient implements Closeable {
     public abstract FacetResult facet(QueryRequest query) throws SearchClientException, IOException;
 
     static Logger LOG = Logger.getLogger(SearchClient.class);
-
+    final String baseUrl;
+    private final ConnectionConfig connectionConfig;
     private final CloseableHttpClient httpClient;
     private final JsonParser parser = new JsonParser();
 
-    public SearchClient() {
+    public SearchClient(ConnectionConfig connectionConfig, String url) {
+        this.connectionConfig = connectionConfig;
+        this.baseUrl = url;
         httpClient = HttpClients.createDefault();
     }
 
     protected byte[] get(String url) throws SearchClientException {
         //overly simplistic...need to add proxy, etc., but good enough for now
-        URI uri = null;
-        try {
-            uri = new URI(url);
-        } catch (URISyntaxException e) {
-            throw new IllegalArgumentException(e);
-        }
+        URI uri = getURI(url);
         HttpHost target = new HttpHost(uri.getHost(), uri.getPort());
         HttpGet httpGet = null;
         try {
@@ -89,7 +89,9 @@ public abstract class SearchClient implements Closeable {
         //httpGet.setHeader("Connection", "close");
 
         //try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-        try (CloseableHttpResponse httpResponse = httpClient.execute(target, httpGet)) {
+        HttpContext context = HttpUtils.getContext(target, connectionConfig);
+        try (CloseableHttpResponse httpResponse = httpClient.execute(target,
+                httpGet, context)) {
             if (httpResponse.getStatusLine().getStatusCode() != 200) {
                 String msg = new String(EntityUtils.toByteArray(
                         httpResponse.getEntity()), StandardCharsets.UTF_8);
@@ -103,8 +105,18 @@ public abstract class SearchClient implements Closeable {
         }
     }
 
+    private URI getURI(String url) {
+        try {
+            return new URI(url);
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
     protected JsonResponse postJson(String url, String json) throws IOException {
-        HttpPost httpRequest = new HttpPost(url);
+        URI uri = getURI(url);
+        HttpHost targetHost = new HttpHost(uri.getHost(), uri.getPort());
+        HttpPost httpRequest = new HttpPost();
         ByteArrayEntity entity = new ByteArrayEntity(json.getBytes(StandardCharsets.UTF_8));
         httpRequest.setEntity(entity);
         httpRequest.setHeader("Accept", "application/json");
@@ -113,8 +125,9 @@ public abstract class SearchClient implements Closeable {
         //httpPost.setHeader("Connection", "close");
 
         //try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        HttpContext context = HttpUtils.getContext(targetHost, connectionConfig);
 
-        try (CloseableHttpResponse response = httpClient.execute(httpRequest)) {
+        try (CloseableHttpResponse response = httpClient.execute(httpRequest, context)) {
             int status = response.getStatusLine().getStatusCode();
             if (status == 200) {
                 try (Reader reader = new BufferedReader(

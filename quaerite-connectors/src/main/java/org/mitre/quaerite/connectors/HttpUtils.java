@@ -23,15 +23,29 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.mitre.quaerite.core.util.ConnectionConfig;
 
 public class HttpUtils {
 
     public static byte[] get(String url) throws SearchClientException {
+        return get(url, ConnectionConfig.DEFAULT_CONNECTION_CONFIG);
+    }
+
+    public static byte[] get(String url, ConnectionConfig config) throws SearchClientException {
         //overly simplistic...need to add proxy, etc., but good enough for now
         URI uri = null;
         try {
@@ -52,7 +66,9 @@ public class HttpUtils {
         }
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            try (CloseableHttpResponse httpResponse = httpClient.execute(target, httpGet)) {
+            HttpContext context = getContext(target, config);
+            try (CloseableHttpResponse httpResponse = httpClient.execute(target,
+                    httpGet, context)) {
                 if (httpResponse.getStatusLine().getStatusCode() != 200) {
                     String msg = new String(EntityUtils.toByteArray(
                             httpResponse.getEntity()), StandardCharsets.UTF_8);
@@ -66,5 +82,19 @@ public class HttpUtils {
         catch (IOException e) {
             throw new SearchClientException(url, e);
         }
+    }
+
+    static HttpContext getContext(HttpHost targetHost, ConnectionConfig config) {
+        HttpClientContext context = HttpClientContext.create();
+        if (config.getUser() != null && config.getPassword() != null) {
+            CredentialsProvider credsProvider = new BasicCredentialsProvider();
+            credsProvider.setCredentials(AuthScope.ANY,
+                    new UsernamePasswordCredentials(config.getUser(), config.getPassword()));
+            AuthCache authCache = new BasicAuthCache();
+            authCache.put(targetHost, new BasicScheme());
+            context.setCredentialsProvider(credsProvider);
+            context.setAuthCache(authCache);
+        }
+        return context;
     }
 }

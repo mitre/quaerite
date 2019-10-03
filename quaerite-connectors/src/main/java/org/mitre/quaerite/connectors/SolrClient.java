@@ -58,6 +58,8 @@ import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.TermQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.stats.TokenDF;
+import org.mitre.quaerite.core.util.ConnectionConfig;
+import org.mitre.quaerite.core.util.StringUtil;
 
 /**
  * This should work with versions >= Solr 7.x
@@ -78,14 +80,15 @@ public class SolrClient extends SearchClient {
     static final Gson GSON = new Gson();
     private static String DEFAULT_ID_FIELD = "id";
 
-    final String url;
+
     String idField;
 
     /**
      * @param url url to Solr including /collection
      */
-    protected SolrClient(String url) throws IOException, SearchClientException {
-        this.url = url;
+    protected SolrClient(ConnectionConfig connectionConfig,
+                         String url) throws IOException, SearchClientException {
+        super(connectionConfig, StringUtil.ensureEndsWithSlash(url));
     }
 
     @Override
@@ -126,10 +129,7 @@ public class SolrClient extends SearchClient {
 
     String generateRequestURL(QueryRequest queryRequest) {
         StringBuilder sb = new StringBuilder();
-        sb.append(url);
-        if (!url.endsWith("/")) {
-            sb.append("/");
-        }
+        sb.append(baseUrl);
         CustomHandler handler = queryRequest.getCustomHandler();
         handler = (handler == null) ? DEFAULT_HANDLER : handler;
         sb.append(handler.getHandler());
@@ -350,8 +350,8 @@ public class SolrClient extends SearchClient {
             data.add(d.getFields());
         }
         String json = GSON.toJson(data);
-        JsonResponse response = postJson(url +
-                "/update/json?commitWithin=10000", json);
+        JsonResponse response = postJson(baseUrl +
+                "update/json?commitWithin=10000", json);
         if (response.getStatus() != 200) {
             throw new SearchClientException(response.getMsg());
         }
@@ -381,9 +381,9 @@ public class SolrClient extends SearchClient {
             qRequest.put("fields", fields);
         }
         String json = GSON.toJson(qRequest);
-        JsonResponse fullResponse = postJson(url + "/select", json);
+        JsonResponse fullResponse = postJson(baseUrl + "select", json);
         if (fullResponse.getStatus() != 200) {
-            LOG.warn("problem with " + url + " and " + json);
+            LOG.warn("problem with " + baseUrl + " and " + json);
             return Collections.EMPTY_LIST;
         }
         List<StoredDocument> documents = new ArrayList<>();
@@ -417,10 +417,7 @@ public class SolrClient extends SearchClient {
     @Override
     public Set<String> getCopyFields() throws IOException, SearchClientException {
         StringBuilder sb = new StringBuilder();
-        sb.append(url);
-        if (!url.endsWith("/")) {
-            sb.append("/");
-        }
+        sb.append(baseUrl);
         sb.append("schema/copyfields?wt=json");
         JsonResponse response = getJson(sb.toString());
         if (response.getStatus() != 200) {
@@ -442,7 +439,7 @@ public class SolrClient extends SearchClient {
     public synchronized String getDefaultIdField()
             throws IOException, SearchClientException {
         if (idField == null) {
-            JsonResponse jsonResponse = getJson(url + "/schema/uniquekey");
+            JsonResponse jsonResponse = getJson(baseUrl + "schema/uniquekey");
             if (jsonResponse.getStatus() != 200) {
                 throw new SearchClientException(jsonResponse.getMsg());
             }
@@ -455,7 +452,7 @@ public class SolrClient extends SearchClient {
     @Override
     public void deleteAll() throws SearchClientException, IOException {
         String json = "{ \"delete\": {\"query\":\"*:*\"} }";
-        postJson(url + "/update?&commit=true", json);
+        postJson(baseUrl + "update?&commit=true", json);
     }
 
     @Override
@@ -475,8 +472,8 @@ public class SolrClient extends SearchClient {
     public List<String> analyze(String field, String string)
             throws IOException, SearchClientException {
         StringBuilder request = new StringBuilder();
-        request.append(url);
-        request.append("/analysis/field?wt=json")
+        request.append(baseUrl);
+        request.append("analysis/field?wt=json")
                 .append("&analysis.fieldname=").append(encode(field));
         request.append("&analysis.fieldvalue=").append(encode(string));
         JsonResponse jsonResponse = getJson(request.toString());
@@ -501,7 +498,7 @@ public class SolrClient extends SearchClient {
     public List<TokenDF> getTerms(String field, String lower,
                                   int limit, int minCount) throws IOException, SearchClientException {
         StringBuilder request = new StringBuilder();
-        request.append(url).append("/terms?terms=true");
+        request.append(baseUrl).append("terms?terms=true");
         request.append("&terms.fl=").append(encode(field));
         request.append("&limit=" + limit);
         if (!StringUtils.isBlank(lower)) {

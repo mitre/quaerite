@@ -17,28 +17,50 @@
 package org.mitre.quaerite.core.features;
 
 
-public class URL extends StringFeature {
+import java.util.Objects;
+
+import org.mitre.quaerite.core.util.ConnectionConfig;
+
+public class URL implements Feature {
 
     private static final String NAME = "url";
 
-    public URL(String feature) {
-        super(NAME, feature);
+    private ConnectionConfig connectionConfig;
+    private String url;
+    public URL(ConnectionConfig connectionConfig, String url) {
+        this.connectionConfig = connectionConfig;
+        this.url = url;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public ConnectionConfig getConnectionConfig() {
+        return connectionConfig;
+    }
+
+    @Override
+    public String getName() {
+        return NAME;
     }
 
     @Override
     public URL deepCopy() {
-        return new URL(getFeature());
+        return new URL(connectionConfig, url);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof URL)) return false;
-        return super.equals(o);
+        URL url1 = (URL) o;
+        return Objects.equals(connectionConfig, url1.connectionConfig) &&
+                Objects.equals(url, url1.url);
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(connectionConfig, url);
     }
 }

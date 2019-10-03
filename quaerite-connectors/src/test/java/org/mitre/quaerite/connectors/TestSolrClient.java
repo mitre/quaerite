@@ -42,8 +42,9 @@ import org.mitre.quaerite.core.queries.Query;
 import org.mitre.quaerite.core.queries.TermQuery;
 import org.mitre.quaerite.core.queries.TermsQuery;
 import org.mitre.quaerite.core.stats.TokenDF;
+import org.mitre.quaerite.core.util.ConnectionConfig;
 
-@Disabled("need to have Solr tmdb instance running")
+//@Disabled("need to have Solr tmdb instance running")
 public class TestSolrClient {
 
     private static Query ALL_DOCS = new MatchAllDocsQuery();
@@ -51,7 +52,7 @@ public class TestSolrClient {
 
     @Test
     public void testCopyFields() throws Exception {
-        SolrClient client = new SolrClient(TMDB_URL);
+        SolrClient client = (SolrClient)SearchClientFactory.getClient(TMDB_URL);
         Set<String> copyFieldDests = client.getCopyFields();
         assertTrue(copyFieldDests.contains("tsss_directors"));
         assertTrue(copyFieldDests.contains("tsss_cast"));
@@ -61,7 +62,9 @@ public class TestSolrClient {
 
     @Test
     public void testFacets() throws Exception {
-        SolrClient client = new SolrClient(TMDB_URL);
+        SolrClient client = new SolrClient(
+                ConnectionConfig.DEFAULT_CONNECTION_CONFIG,
+                TMDB_URL);
         QueryRequest queryRequest = new QueryRequest(ALL_DOCS);
         queryRequest.setFacetField("genres_facet");
         queryRequest.setFacetLimit(20000);
@@ -271,6 +274,18 @@ public class TestSolrClient {
         rs = searchClient.search(new QueryRequest(q));
         assertEquals(1, rs.getTotalHits());
         assertTrue(rs.getIds().contains("374430"));
+    }
+
+    @Test
+    @Disabled("need to have a solr instance w basic authentication")
+    public void testAuthentication() throws Exception {
+        //change user, password and url
+        ConnectionConfig connectionConfig =
+                new ConnectionConfig("user", "password1234");
+        SearchClient client = SearchClientFactory.getClient("url", connectionConfig);
+        String s = "THE Quick brün FOX";
+        List<String> tokens = client.analyze("tm_title", s);
+        System.out.println(tokens);
     }
 
 }

@@ -31,4 +31,11 @@ public class StringUtil {
         }
         return sb.toString();
     }
+
+    public static String ensureEndsWithSlash(String url) {
+        if (!url.endsWith("/")) {
+            url = url + "/";
+        }
+        return url;
+    }
 }

@@ -20,12 +20,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonObject;
+import org.mitre.quaerite.core.util.ConnectionConfig;
 import org.mitre.quaerite.core.util.JsonUtil;
 
 public class ES6Client extends ESClient {
 
-    public ES6Client(String url) {
-        super(url);
+    public ES6Client(ConnectionConfig connectionConfig,
+                     String url) {
+        super(connectionConfig, url);
     }
 
     protected long getTotalHits(JsonObject hits) {
