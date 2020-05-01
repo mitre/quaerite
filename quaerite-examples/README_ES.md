@@ -16,6 +16,9 @@
   specific language governing permissions and limitations
   under the License.
 -->
+
+#NOTE: Active development of this project has moved to https://github.com/tballison/quaerite.  The namespaces in the new repo and on maven central have been converted from 'org.mitre' to 'org.tallison'. This repository is no longer actively maintained.
+
 _Quaerite_ Examples
 ===========================
 This module offers examples to get your hands dirty on example data
